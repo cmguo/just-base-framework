@@ -35,6 +35,10 @@ namespace boost
 #include FRAMEWORK_USER_CONFIG
 #endif
 
+#ifdef FRAMEWORK_WITH_GTEST
+#include "framework/TestHeader.h"
+#endif
+
 namespace framework
 {
     namespace configure
