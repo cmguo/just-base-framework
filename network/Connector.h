@@ -425,6 +425,7 @@ namespace framework
                 boost::system::error_code & ec)
             {
                 started_ = false;
+                canceled_ = false; 
                 ec.clear();
                 return ec;
             }
@@ -432,6 +433,7 @@ namespace framework
             void close()
             {
                 started_ = false;
+                canceled_ = false; 
             }
 
         public:
