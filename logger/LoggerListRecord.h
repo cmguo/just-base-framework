@@ -268,6 +268,17 @@ namespace framework
                 std::string str;
                 me.format(str);
                 strncpy(msg, str.c_str(), len);
+                if ( str.size() >= len && msg[len - 1] != '\n' )
+                {
+                    msg[len - 1] = '\n';
+                    return len;
+                }
+                else if ( str.size() < len && msg[str.size() - 1] != '\n' )
+                {
+                    msg[str.size()] = '\n';
+                    return str.size() + 1;
+                }
+
                 return str.size() > len ? len : str.size();
             }
 

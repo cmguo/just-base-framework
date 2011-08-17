@@ -5,8 +5,7 @@
 
 #include "framework/logger/Logger.h"
 #include "framework/logger/LoggerParam.h"
-
-#include <sstream>
+#include "framework/logger/LoggerFormatStreambuff.h"
 
 namespace framework
 {
@@ -171,10 +170,20 @@ namespace framework
             {
                 LoggerStreamRecord const & me = 
                     static_cast<LoggerStreamRecord const &>(base);
-                std::ostringstream oss;
+
+                FormatStreambuf streambuff( msg, len );
+                std::ostream oss( &streambuff );
                 me.format(oss);
-                strncpy(msg, oss.str().c_str(), len);
-                return oss.str().size() > len ? len : oss.str().size();
+                if ( msg[streambuff.size() - 1] != '\n' && streambuff.size() == len )
+                {
+                    msg[streambuff.size() - 1] = '\n';
+                }
+                else if ( msg[streambuff.size() - 1] != '\n' && streambuff.size() < len )
+                {
+                    oss << '\n';
+                }
+
+                return streambuff.size();
             }
 
             static void destroy_self(
@@ -195,7 +204,6 @@ namespace framework
         {
             return LoggerStreamRecord<_Pr>(params);
         }
-
 
     } // namespace logger
 } // namespace framework

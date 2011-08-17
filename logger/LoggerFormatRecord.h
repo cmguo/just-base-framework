@@ -5,8 +5,7 @@
 
 #include "framework/logger/Logger.h"
 #include "framework/logger/LoggerParam.h"
-
-#include <boost/format.hpp>
+#include "framework/logger/LoggerFormatString.h"
 
 namespace framework
 {
@@ -33,9 +32,9 @@ namespace framework
 
         public:
             void format(
-                boost::format & fmt) const
+                LoggerFormatString & lfs) const
             {
-                fmt % value_;
+                lfs % value_;
             }
 
         private:
@@ -68,9 +67,9 @@ namespace framework
 
         public:
             void format(
-                boost::format & fmt) const
+                LoggerFormatString & lfs) const
             {
-                fmt.parse(fmt_);
+                lfs.parse( fmt_ );
             }
 
         private:
@@ -127,10 +126,10 @@ namespace framework
 
         public:
             void format(
-                boost::format & fmt) const
+                LoggerFormatString & lfs ) const
             {
-                front_.format(fmt);
-                back_.format(fmt);
+                front_.format( lfs );
+                back_.format( lfs );
             }
 
         private:
@@ -170,10 +169,21 @@ namespace framework
             {
                 LoggerFormatRecord const & me = 
                     static_cast<LoggerFormatRecord const &>(base);
-                boost::format fmt;
-                me.format(fmt);
-                strncpy(msg, fmt.str().c_str(), len);
-                return fmt.str().size() > len ? len : fmt.str().size();
+
+                LoggerFormatString lfs( msg, len );
+                me.format(lfs);
+                if ( msg[lfs.size() - 1] != '\n' && lfs.size() == len )
+                {
+                    msg[lfs.size() - 1] = '\n';
+                    return lfs.size();
+                }
+                else if ( msg[lfs.size() - 1] != '\n' && lfs.size() < len )
+                {
+                    msg[lfs.size()] = '\n';
+                    return lfs.size() + 1;
+                }
+
+                return lfs.size();
             }
 
             static void destroy_self(
