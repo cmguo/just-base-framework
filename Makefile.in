@@ -1,3 +1,7 @@
+# 平台相关配置
+
+include $(PLATFORM_DIRECTORY)/framework_config.h
+
 ## 项目类型
 
 PROJECT_TYPE			:= lib
