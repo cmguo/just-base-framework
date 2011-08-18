@@ -22,6 +22,7 @@ namespace framework
 
         struct Logger
         {
+        public:
             enum
             {
                 kLevelError     = 0,    // 消息级别的定义
@@ -31,22 +32,28 @@ namespace framework
                 kLevelDebug,
                 kLevelDebug1,                kLevelDebug2,                kLevelNone            };
 
+        public:
             struct LoggerStreams
             {
-                LoggerStreams( ILoggerStream * stream ) : stream_( stream ), next( NULL ) {}
-                ILoggerStream * stream_;
-                LoggerStreams * next;
+                LoggerStreams( ILoggerStream * stream ) : stream_( stream ), is_del_( false ), next( NULL ) {}
+                ILoggerStream * stream_;            /// 引用流指针
+                bool is_del_;                     /// 是否被删除
+                LoggerStreams * next;               /// 下一个节点
             };
 
-            Logger * next;                      /// 下一个日志
-            std::string m_log_name_;            /// 日志名称
+        public:
+            Logger * next;                          /// 下一个日志
+            std::string m_log_name_;                /// 日志名称
             size_t mid_night_;
             size_t time_ver_;
-            char time_str_[40];                 /// 日期串
-            size_t m_max_level_;                /// 当前指向流的最大等级，用于二级过滤
-            LoggerStreams * mp_log_streams_;    /// 拥有的流
+            char time_str_[40];                     /// 日期串
+            size_t m_max_level_;                    /// 当前指向流的最大等级，用于二级过滤
+            LoggerStreams * mp_log_streams_;        /// 拥有的流
+            LoggerManager & m_log_mgr_;             /// 管理类的引用
+            boost::mutex streams_mutex_;            /// 锁
 
-            Logger( std::string const & name, size_t level = kLevelNone );
+        public:
+            Logger( LoggerManager & logmgr, std::string const & name );
             ~Logger();
 
             /// 插入一个流
@@ -55,25 +62,22 @@ namespace framework
             /// 删除一个流
             void delStream( ILoggerStream * ls );
 
+        public:
             /// 输出日志
-            void print_log(
-                size_t ver,
-                LoggerDefine * define,
+            void printLog(
                 LogModule const & module, 
                 size_t level, 
                 LoggerRecord const & record);
 
             /// 字符串打印
-            void print_string(
-                LoggerDefine * define,
+            void printString(
                 LogModule const & module,
                 size_t level, 
                 char const * txt, 
                 size_t len = 0);
 
             /// 打印十六进制
-            void print_hex(
-                LoggerDefine * define,
+            void printHex(
                 LogModule const & module,
                 size_t level, 
                 unsigned char const * data, 
@@ -93,7 +97,7 @@ namespace framework
                     return;
 
                 // 根据等级排序好的链表从小到大进行打印
-                module.logger_->print_log( LoggerManager::m_sec_ver_, LoggerManager::m_logdefine_, module, level, record);
+                module.logger_->printLog( module, level, record);
             }
 
             // 输出一条采用结构化信息格式的日志信息
@@ -124,7 +128,7 @@ namespace framework
                     || ( level > module.level ) /// 进行模块的最大等级过滤
                     || ( level > module.logger_->m_max_level_ ) )/// 进行流最大等级过滤
                     return;
-                module.logger_->print_string( LoggerManager::m_logdefine_, module, level, txt );
+                module.logger_->printString( module, level, txt );
             }
 
 
@@ -140,7 +144,7 @@ namespace framework
                     || ( level > module.level ) /// 进行模块的最大等级过滤
                     || ( level > module.logger_->m_max_level_ ) )/// 进行流最大等级过滤
                     return;
-                module.logger_->print_string( LoggerManager::m_logdefine_, module, level, txt, len );
+                module.logger_->printString(  module, level, txt, len );
             }
 
             // 输出一条采用16进制信息格式的日志信息
@@ -156,7 +160,7 @@ namespace framework
                     || ( level > module.level ) /// 进行模块的最大等级过滤
                     || ( level > module.logger_->m_max_level_ ) )/// 进行流最大等级过滤
                     return;
-                module.logger_->print_hex( LoggerManager::m_logdefine_, module, level, data, len );
+                module.logger_->printHex( module, level, data, len );
             }
 
       };

@@ -1,6 +1,7 @@
 #ifndef _FRAMEWORK_LOGGER_LOGGERMANAGER_H_
 #define _FRAMEWORK_LOGGER_LOGGERMANAGER_H_
 
+#include <boost/thread.hpp>
 #include <boost/thread/tss.hpp>
 
 namespace framework
@@ -37,11 +38,20 @@ namespace framework
             bool log_tid;
 
             boost::thread_specific_ptr<PidBuffer> str;
+            size_t str_len;
+
+            LoggerDefine()
+                : log_pid( false )
+                , log_tid( false )
+                , str_len( 0 ) { }
 
             char * get()
             {
                 if ( !str.get() )
+                {
                     str.reset( new PidBuffer( log_pid, log_tid ) );
+                    str_len = strlen( str.get()->pid_buffer_ );
+                }
 
                 return str.get()->pid_buffer_;
             }
@@ -95,7 +105,7 @@ namespace framework
             bool del_stream( ILoggerStream * ls );
 
             /// 创建一个日志模块
-            Logger & createLogger( std::string const & logName, size_t maxLevel = 0 );
+            Logger & createLogger( std::string const & logName );
 
             /// 查找流
             ILoggerStream & getStream( std::string const & streamName );
@@ -106,13 +116,15 @@ namespace framework
             /// 查找模块
             LogModule & getModule( std::string const & moduleName );
 
+            /// 获取当前版本号
+            size_t getVer() const { return m_sec_ver_; }
+
+            /// 获取进程线程定义
+            LoggerDefine & getLoggerDefine() { return *m_logdefine_; }
+
             /// 段输出
             void log_sec_beg() {++m_sec_ver_;}
             void log_sec_end() {++m_sec_ver_;}
-
-        public:
-            static size_t m_sec_ver_;
-            static LoggerDefine * m_logdefine_;
 
         private:
             /// 插入输出流链表
@@ -138,6 +150,14 @@ namespace framework
             Logger * m_loggers_;                /// 日志链表
             LogModule * m_logmodules_;          /// 模块链表
             Logger * m_default_logger_;         /// 默认日志
+
+            /// 线程锁
+            boost::mutex m_stream_mutex_;
+            boost::mutex m_logger_mutex_;
+            boost::mutex m_module_mutex_;
+
+            size_t m_sec_ver_;
+            LoggerDefine * m_logdefine_;
 
             std::map< std::string , std::map< std::string , std::string > > m_module_info_;
 
