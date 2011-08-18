@@ -38,8 +38,15 @@ namespace framework
                 return boost::filesystem::path();
             }
 #else
+
+#ifdef __FreeBSD__
+#  define PROC_EXE "file"
+#else
+#  define PROC_EXE "exe"
+#endif
             boost::system::error_code ec;
-            boost::filesystem::path ph(read_symlink("/proc/self/exe", ec));
+            boost::filesystem::path ph_h( "/proc/self" );
+            boost::filesystem::path ph(read_symlink(ph_h / PROC_EXE , ec));
             return ph;
 #endif
         }
