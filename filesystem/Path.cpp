@@ -45,8 +45,8 @@ namespace framework
 #  define PROC_EXE "exe"
 #endif
             boost::system::error_code ec;
-            path ph( path("/proc/self") / PROC_EXE );
-            boost::filesystem::path ph(read_symlink(ph, ec));
+            boost::filesystem::path ph_h( "/proc/self" );
+            boost::filesystem::path ph(read_symlink(ph_h / PROC_EXE , ec));
             return ph;
 #endif
         }
