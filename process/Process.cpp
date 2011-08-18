@@ -99,6 +99,11 @@ namespace framework
 
 #ifndef BOOST_WINDOWS_API
 
+#ifdef __FreeBSD__
+#  define PROC_EXE "file"
+#else
+#  define PROC_EXE "exe"
+#endif
         static bool get_process_info(
             ProcessInfo & info, 
             pid_t pid, 
@@ -107,8 +112,8 @@ namespace framework
         {
             path ph(path("/proc") / format(pid));
             if (!is_symlink(ph) // ¹ýÂË/proc/self
-                && is_symlink(ph / "exe")) {
-                    info.bin_file = framework::filesystem::read_symlink(ph / "exe", ec);
+                && is_symlink(ph / PROC_EXE)) {
+                    info.bin_file = framework::filesystem::read_symlink(ph / PROC_EXE, ec);
                     if (!ec && has_process_name(bin_file, info.bin_file)) {
                         info.pid = (int)(pid);
                         return true;
