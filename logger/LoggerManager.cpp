@@ -82,16 +82,15 @@ namespace framework
 
         //---------------------------------------------------------------------
         // class LoggerManager
-        LoggerDefine * LoggerManager::m_logdefine_ = NULL;
-        size_t LoggerManager::m_sec_ver_ = 0;
-
         /// 构造、析构
         LoggerManager::LoggerManager()
             : m_log_streams_( NULL )
             , m_loggers_( NULL )
             , m_logmodules_( NULL )
             , m_default_logger_( NULL )
+            , m_sec_ver_( 0 )
         {
+            m_logdefine_ = new LoggerDefine;
         }
 
         LoggerManager::~LoggerManager()
@@ -130,10 +129,6 @@ namespace framework
         {
             ConfigModule & logger_mgr_config = conf.register_module( "LoggerManager" );
 
-            m_logdefine_ = new LoggerDefine;
-            m_logdefine_->log_pid = false;
-            m_logdefine_->log_tid = false;
-
             /// 进程ID、线程ID打印标识
             logger_mgr_config << CONFIG_PARAM_NAME_RDWR( "log_pid", m_logdefine_->log_pid );
             logger_mgr_config << CONFIG_PARAM_NAME_RDWR( "log_tid", m_logdefine_->log_tid );
@@ -146,20 +141,18 @@ namespace framework
             logger_mgr_config << CONFIG_PARAM_NAME_RDWR( "log_default", defaultLog );
 
             std::string logStreams;
-            size_t maxLevel = 0;
             Logger * lg = NULL;
 
             if ( defaultLog.empty() )
             {
-                lg = new Logger( "Default", maxLevel );
+                lg = new Logger( *this, "Default" );
             }
             else
             {
                 std::string tmp = "Logger_" + defaultLog;
-                conf.register_module( tmp ) << CONFIG_PARAM_NAME_RDONLY( "logstreams", logStreams )
-                    << CONFIG_PARAM_NAME_RDONLY( "maxlevel", maxLevel );
+                conf.register_module( tmp ) << CONFIG_PARAM_NAME_RDONLY( "logstreams", logStreams );
 
-                lg = new Logger( defaultLog, maxLevel );
+                lg = new Logger( *this, defaultLog );
 
                 std::string stream;
                 boost::system::error_code ec;
@@ -291,9 +284,9 @@ namespace framework
         }
 
         /// 创建一个日志模块
-        Logger & LoggerManager::createLogger( std::string const & logName, size_t maxLevel )
+        Logger & LoggerManager::createLogger( std::string const & logName )
         {
-            Logger * lg = new Logger( logName, maxLevel );
+            Logger * lg = new Logger( *this, logName );
             return *( insertLoggerList( lg ) );
         }
 
@@ -341,6 +334,7 @@ namespace framework
         {
             if ( !ls ) return NULL;
 
+            boost::mutex::scoped_lock lock( m_stream_mutex_ );
             m_log_streams_ == NULL ? m_log_streams_ = ls : ls->next = m_log_streams_, m_log_streams_ = ls;
 
             return m_log_streams_;
@@ -351,6 +345,7 @@ namespace framework
         {
             if ( !lg ) return NULL;
 
+            boost::mutex::scoped_lock lock( m_logger_mutex_ );
             m_loggers_ == NULL ? m_loggers_ = lg : lg->next = m_loggers_, m_loggers_ = lg;
 
             return m_loggers_;
@@ -361,6 +356,7 @@ namespace framework
         {
             if ( !lm ) return NULL;
 
+            boost::mutex::scoped_lock lock( m_module_mutex_ );
             m_logmodules_ == NULL ? m_logmodules_ = lm : lm->next = m_logmodules_, m_logmodules_ = lm;
 
             return m_logmodules_;
@@ -406,6 +402,7 @@ namespace framework
                     }
                     else
                     {
+                        ls = new LoggerStdStream( false );
                         // any other streams ...
                     }
 
@@ -434,11 +431,9 @@ namespace framework
                     && it->first.substr( pos + 1, it->first.size() -  pos ) != m_default_logger_->m_log_name_ )
                 {
                     std::string logStreams;
-                    size_t maxLevel = kLevelNone;
-                    conf.register_module( it->first ) << CONFIG_PARAM_NAME_RDONLY( "logstreams", logStreams )
-                        << CONFIG_PARAM_NAME_RDONLY( "maxlevel", maxLevel );
+                    conf.register_module( it->first ) << CONFIG_PARAM_NAME_RDONLY( "logstreams", logStreams );
 
-                    Logger * lg = new Logger( it->first.substr( pos + 1, it->first.size() - pos ), maxLevel );
+                    Logger * lg = new Logger( *this, it->first.substr( pos + 1, it->first.size() - pos ) );
 
                     std::string stream;
                     boost::system::error_code ec;

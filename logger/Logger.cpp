@@ -21,11 +21,12 @@ namespace framework
         char const * const gp_newline = "\n";
         char const * line_fmt = "%08Xh:  %X%X %X%X %X%X %X%X  %X%X %X%X %X%X %X%X  %X%X %X%X %X%X %X%X  %X%X %X%X %X%X %X%X\n";
 
-        Logger::Logger( std::string const & name, size_t level )
+        Logger::Logger( LoggerManager & logmgr, std::string const & name )
             : next( NULL )
             , m_log_name_( name )
-            , m_max_level_( level )
+            , m_max_level_( kLevelNone )
             , mp_log_streams_( NULL )
+            , m_log_mgr_( logmgr )
 
         {
             strncpy(time_str_, "<0000-00-00 00:00:00>", sizeof(time_str_));
@@ -52,6 +53,8 @@ namespace framework
         {
             if ( !ls ) return;
 
+            boost::mutex::scoped_lock lock( streams_mutex_ );
+
             if ( m_max_level_ == kLevelNone ) m_max_level_ = ls->log_lvl;
             else
                 m_max_level_ = ls->log_lvl > m_max_level_ ? ls->log_lvl : m_max_level_;
@@ -65,6 +68,12 @@ namespace framework
                 LoggerStreams * pre = mp_log_streams_, * next = mp_log_streams_;
                 while ( next )
                 {
+                    if ( next->is_del_ && next->stream_ == ls )
+                    {/// 首先判断当前节点的流是否是以前删除的
+                        next->is_del_ = false;
+                        break;
+                    }
+
                     if ( next->stream_->log_lvl < ls->log_lvl )
                     {
                         if ( pre == next )
@@ -98,10 +107,7 @@ namespace framework
             while ( *pre )
             {
                 if ( (*pre)->stream_ == ls ) {
-                    LoggerStreams *p = *pre;
-                    *pre = p->next;
-                    delete p;
-                    /// 不要清空，保留
+                    (*pre)->is_del_ = true; /// 标记被删除
                     break;
                 }
                 pre = &(*pre)->next;
@@ -109,9 +115,7 @@ namespace framework
         }
 
         /// 输出日志
-        void Logger::print_log(
-            size_t ver,
-            LoggerDefine * define,
+        void Logger::printLog(
             LogModule const & module, 
             size_t level, 
             LoggerRecord const & record)
@@ -119,15 +123,15 @@ namespace framework
             LoggerStreams * cur = mp_log_streams_;
             while ( cur && cur->stream_->log_lvl >= level )
             {/// 内部格式化串
-                if ( cur->stream_->is_del_ ) 
+                if ( cur->is_del_ || cur->stream_->is_del_ ) 
                 {/// 当前流已经被删除
                     cur = cur->next;
                     continue;
                 }
 
-                if ( cur->stream_->stream_ver != ver )
+                if ( cur->stream_->stream_ver != m_log_mgr_.getVer() )
                 {
-                    if ( time_ver_ != ver )
+                    if ( time_ver_ != m_log_mgr_.getVer() )
                     {
                         int t_diff = (int)(time(NULL) - mid_night_);
                         if (t_diff >= 24 * 60 * 60) 
@@ -150,7 +154,7 @@ namespace framework
                         time_str_[TIME_START + 7] = second % 10 + '0';
                         time_str_[TIME_START + 9] = '\n';
 
-                        time_ver_ = ver;
+                        time_ver_ = m_log_mgr_.getVer();
                     }
                     ILoggerStream::muti_buffer_t buffers[1];
                     buffers[0].buffer   = time_str_;
@@ -158,7 +162,7 @@ namespace framework
 
                     cur->stream_->write( buffers, 1 );
 
-                    cur->stream_->stream_ver = ver;
+                    cur->stream_->stream_ver = m_log_mgr_.getVer();
                 }
 
                 ILoggerStream::muti_buffer_t buffers[4];
@@ -168,8 +172,8 @@ namespace framework
                 buffers[0].len      = lvl_str_len;
                 buffers[1].buffer   = module.name;
                 buffers[1].len      = strlen( module.name );
-                buffers[2].buffer   = define->get();
-                buffers[2].len      = strlen( define->get() );
+                buffers[2].buffer   = m_log_mgr_.getLoggerDefine().get();
+                buffers[2].len      = m_log_mgr_.getLoggerDefine().str_len;
                 buffers[3].buffer   = msg;
                 buffers[3].len      = len;
                 cur->stream_->write( buffers, 4 );
@@ -179,8 +183,7 @@ namespace framework
         }
 
         /// 字符串打印
-        void Logger::print_string(
-            LoggerDefine * define,
+        void Logger::printString(
             LogModule const & module,
             size_t level, 
             char const * txt, 
@@ -189,7 +192,7 @@ namespace framework
             LoggerStreams * cur = mp_log_streams_;
             while ( cur && cur->stream_->log_lvl >= level )
             {
-                if ( cur->stream_->is_del_ ) 
+                if ( cur->is_del_ || cur->stream_->is_del_ ) 
                 {/// 当前流已经被删除
                     cur = cur->next;
                     continue;
@@ -200,8 +203,8 @@ namespace framework
                 buffers[0].len      = lvl_str_len;
                 buffers[1].buffer   = module.name;
                 buffers[1].len      = strlen( module.name );
-                buffers[2].buffer   = define->get();
-                buffers[2].len      = strlen( define->get() );
+                buffers[2].buffer   = m_log_mgr_.getLoggerDefine().get();
+                buffers[2].len      = m_log_mgr_.getLoggerDefine().str_len;
                 buffers[3].buffer   = txt;
                 buffers[3].len      = len ? len : strlen( txt );
                 buffers[4].buffer   = gp_newline;
@@ -215,8 +218,7 @@ namespace framework
         static char const chex[] = "0123456789ABCDEF";
 
         /// 打印十六进制
-        void Logger::print_hex(
-            LoggerDefine * define,
+        void Logger::printHex(
             LogModule const & module,
             size_t level, 
             unsigned char const * data, 
@@ -225,7 +227,7 @@ namespace framework
             LoggerStreams * cur = mp_log_streams_;
             while ( cur && cur->stream_->log_lvl >= level )
             {
-                if ( cur->stream_->is_del_ ) 
+                if ( cur->is_del_ || cur->stream_->is_del_ ) 
                 {/// 当前流已经被删除
                     cur = cur->next;
                     continue;
@@ -237,8 +239,8 @@ namespace framework
                 buffers[0].len      = lvl_str_len;
                 buffers[1].buffer   = module.name;
                 buffers[1].len      = strlen( module.name );
-                buffers[2].buffer   = define->get();
-                buffers[2].len      = strlen( define->get() );
+                buffers[2].buffer   = m_log_mgr_.getLoggerDefine().get();
+                buffers[2].len      = m_log_mgr_.getLoggerDefine().str_len;
                 buffers[3].buffer   = gp_newline;
                 buffers[3].len      = 1;
                 cur->stream_->write( buffers, 4 );
@@ -305,7 +307,7 @@ namespace framework
                 cur = mp_log_streams_;
                 while ( cur && cur->stream_->log_lvl >= level )
                 {
-                    if ( cur->stream_->is_del_ ) 
+                    if ( cur->is_del_ || cur->stream_->is_del_ ) 
                     {/// 当前流已经被删除
                         cur = cur->next;
                         continue;
@@ -361,7 +363,7 @@ namespace framework
             cur = mp_log_streams_;
             while ( cur && cur->stream_->log_lvl >= level )
             {
-                if ( cur->stream_->is_del_ ) 
+                if ( cur->is_del_ || cur->stream_->is_del_ ) 
                 {/// 当前流已经被删除
                     cur = cur->next;
                     continue;
