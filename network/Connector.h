@@ -516,7 +516,6 @@ namespace framework
                         boost::asio::detail::mutex::scoped_lock lock(mutex_);
                         if (canceled_) {
                             ec = boost::asio::error::operation_aborted;
-                            canceled_ = false;
                         } else {
                             boost::asio::socket_base::non_blocking_io cmd(non_block_);
                             socket_.open(base_endpoint_type(e).protocol(), ec)
