@@ -93,3 +93,34 @@ namespace framework
 } // namespace framework
 
 #endif // _FRAMEWORK_LOGGER_LOGGERFORMATSTRING_H_
+
+
+
+#ifdef  INCLUDE_TEST
+
+#ifndef _FRAMEWORK_LOGGER_LOGGERFORMATSTRING_TEST_H_
+#define _FRAMEWORK_LOGGER_LOGGERFORMATSTRING_TEST_H_
+
+#ifndef FRAMEWORK_LOGGER_DECLARE 
+#define FRAMEWORK_LOGGER_DECLARE
+MODULE_DECLARE("framework_logger", "darrenhe", "leochen");
+#endif
+
+/*LoggerFormatString::parse()½Ó¿Ú²âÊÔ*/
+TEST(framework_logger, string_parse)
+{
+	char buf[20];
+	LoggerFormatString lfs(buf, 20);
+	lfs.parse("123%A456%B789%C000");
+
+	EXPECT_EQ(3, lfs.m_totalParam);
+	EXPECT_EQ(3, lfs.m_pos[0]);
+	EXPECT_EQ(8, lfs.m_pos[1]);
+	EXPECT_EQ(13, lfs.m_pos[2]);
+}
+
+
+
+#endif //_FRAMEWORK_LOGGER_LOGGERFORMATSTRING_TEST_H_
+ 
+#endif  //INCLUDE_TEST
