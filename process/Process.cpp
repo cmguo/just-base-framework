@@ -520,7 +520,12 @@ namespace framework
                 }
 #define MAXFILE 65535
                 for(; i < MAXFILE; ++i)    //关闭父进程打开的文件描述符，主要是为了关闭socket
-                    ::close(i);
+				{
+#ifdef __ANDROID__
+					if ( i < 8 || i > 18 )
+#endif
+                        ::close(i);
+				}
 #undef MAXFILE
                 if (execvp(filename, &cmdArr.at(0)) < 0) {
                     framework::this_process::notify_wait(last_system_error());
