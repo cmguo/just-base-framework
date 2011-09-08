@@ -68,4 +68,8 @@ PROJECT_DEPENDS			:= \
 
 ## 该项目特定的引用库
 
+ifeq ($(findstring win32,$(PLATFORM_NAME)),)
 PROJECT_DEPEND_LIBRARYS		:= $(PROJECT_DEPEND_LIBRARYS) dl rt
+else
+PROJECT_DEPEND_LIBRARYS		:= $(PROJECT_DEPEND_LIBRARYS) ws2_32 psapi iphlpapi mswsock
+endif
