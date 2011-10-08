@@ -3,7 +3,7 @@
 #ifndef _FRAMEWORK_LOGGER_SECTION_H_
 #define _FRAMEWORK_LOGGER_SECTION_H_
 
-#include "framework/logger/LoggerManager.h"
+#include "framework/logger/Logger.h"
 
 namespace framework
 {
@@ -14,8 +14,8 @@ namespace framework
         {
         public:
             LoggerSection(
-                LoggerManager & loggermgr = global_logger_mgr())
-                : loggermgr_(loggermgr)
+                Logger & logger = global_logger())
+                : logger_(logger)
                 , started_(false)
             {
                 start();
@@ -28,20 +28,20 @@ namespace framework
 
             void start()
             {
-                loggermgr_.log_sec_beg();
+                logger_.log_sec_beg();
                 started_ = true;
             }
 
             void stop()
             {
                 if (started_) {
-                    loggermgr_.log_sec_end();
+                    logger_.log_sec_end();
                     started_ = false;
                 }
             }
 
         private:
-            LoggerManager & loggermgr_;
+            Logger & logger_;
             bool started_;
         };
 

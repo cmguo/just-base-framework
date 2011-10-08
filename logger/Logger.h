@@ -1,103 +1,145 @@
 // Logger.h
 
+/** 日志模块，一个支持多输出流和等级过滤的日志系统。
+
+日志由日志管理对象（Logger的实例）进行处理。一个日志管理对象包含若干个日志输出流（LogStream）
+
+有三种类型的输出流：
+* 文件输出流：向普通文件输出
+* 终端输出流：向标准输出输出
+* UDP输出流：向某个UDP端口输出
+
+输出流还定义了其他一些控制参数：
+* Append：是否采用追加模式输出，只对文件输出流有效
+* Color：是否带有颜色、下划线等控制转义字符
+* Level：可以接受的最大日志信息等级
+
+日志输出的记录格式如下：
+日志记录项  = 时间戳 + CRLF + (日志信息项 + CRLF)(多个)
+时间戳      = <YYYY-MM-DD hh:mm:ss>
+日志信息项  = 中括号 + 消息级别 + 中括号 + 消息字符串
+日志信息项  = 符号* + 结构化信息
+日志信息项  = 符号# + 以十六进制显示的信息
+消息级别    = ERROR|ALARM|EVENT|INFOR|DEBUG
+
+关于消息级别，一般由如下约定：
+* ERROR：  等级0，内部严重错误，必须重启，实际程序可能已经自动结束
+* ALARM：  等级1，内部一般错误及外部（其他模块或者其他设备）错误，应检查网络连接状态和相关模块和设备的状况
+* EVENT：  等级2，发生的事件记录，正常
+* INFOR：  等级3，事件相关信息，较详细的信息，正常
+* DEBUG：  等级4、5、6，调试信息
+
+日志信息的等级由消息级别和一个等级微调值共同决定（两者之和），微调值可以调整信息项的等级，
+以更加精确的过滤部分消息，微调值不改变消息级别本身。
+
+在通过日志管理对象输出日志记录时，时间戳是由管理对象自动加上的，只需要输出每一个日志信息项，
+但是需要告诉管理对象在一组日志信息项中哪一项是日志记录的开始项，哪一项是日志记录的结束项。输出
+每个日志信息项时都需指定消息级别和等级微调值（默认为0），
+*/
+
 #ifndef _FRAMEWORK_LOGGER_LOGGER_H_
 #define _FRAMEWORK_LOGGER_LOGGER_H_
 
 #include "framework/logger/LoggerRecord.h"
-#include "framework/logger/LoggerManager.h"
+
+#include <stdarg.h>
 
 namespace framework
 {
+    namespace configure
+    {
+        class ConfigModule;
+        class Config;
+    }
+
     namespace logger
     {
-        /// 日志错误等级定义
-        enum LogLevel
-        {
-            kLevelError     = 0,    // 消息级别的定义
-            kLevelAlarm,
-            kLevelEvent,
-            kLevelInfor,
-            kLevelDebug,
-            kLevelDebug1,            kLevelDebug2,            kLevelNone        };
+#define LOGS_START  "["
+#define LOGS_END    "]"
 
-        struct Logger
+        // 将消息级别和等级微调值组合成一个数值进行传递
+#define MAKE_LOG_LEVEL(level, sub_level) (level | (sub_level << 4))
+
+        class IWriteStream;
+        class Logger
         {
         public:
             enum
             {
-                kLevelError     = 0,    // 消息级别的定义
-                kLevelAlarm,
-                kLevelEvent,
-                kLevelInfor,
-                kLevelDebug,
-                kLevelDebug1,                kLevelDebug2,                kLevelNone            };
-
-        public:
-            struct LoggerStreams
-            {
-                LoggerStreams( ILoggerStream * stream ) : stream_( stream ), is_del_( false ), next( NULL ) {}
-                ILoggerStream * stream_;            /// 引用流指针
-                bool is_del_;                     /// 是否被删除
-                LoggerStreams * next;               /// 下一个节点
+                kLevelError		= 0,	// 消息级别的定义
+                kLevelAlarm, 
+                kLevelEvent, 
+                kLevelInfor, 
+                kLevelDebug, 
+                kLevelDebug1, 
+                kLevelDebug2, 
+                kLevelNone, 
+                kSubLevel0		= 0x00, // 等级微调值的定义
+                kSubLevel1		= 0x10, 
+                kSubLevel2		= 0x20, 
+                kSubLevel3		= 0x30, 
+                kLogStart		= 0x0100, // 日志记录开始的标志
+                kLogEnd			= 0x0200, // 日志记录结束的标志
+                kLogSingle = kLogStart | kLogEnd, // 单个日志信息项组成的日志记录，既是开始项，又是结束项
             };
 
         public:
-            Logger * next;                          /// 下一个日志
-            std::string m_log_name_;                /// 日志名称
-            size_t mid_night_;
-            size_t time_ver_;
-            char time_str_[40];                     /// 日期串
-            size_t m_max_level_;                    /// 当前指向流的最大等级，用于二级过滤
-            LoggerStreams * mp_log_streams_;        /// 拥有的流
-            LoggerManager & m_log_mgr_;             /// 管理类的引用
-            boost::mutex streams_mutex_;            /// 锁
-
-        public:
-            Logger( LoggerManager & logmgr, std::string const & name );
+            Logger();
             ~Logger();
 
-            /// 插入一个流
-            void insertStream( ILoggerStream * ls );
+        public:
+            // 从配置文件读取输出流的定义
+            boost::system::error_code load_config(
+                framework::configure::Config & conf);
 
-            /// 删除一个流
-            void delStream( ILoggerStream * ls );
+            void pause();
+
+            void resume();
+
+            void log_sec_beg() {++sec_ver_;}
+
+            void log_sec_end() {++sec_ver_;}
+
+            // 增加一个输出流
+            bool add_stream(
+                IWriteStream * os );
+
+            // 删除一个输出流
+            bool del_stream( IWriteStream * os );
 
         public:
-            /// 输出日志
-            void printLog(
-                LogModule const & module, 
-                size_t level, 
-                LoggerRecord const & record);
+            class LogModule
+            {
+                friend class Logger;
 
-            /// 字符串打印
-            void printString(
-                LogModule const & module,
-                size_t level, 
-                char const * txt, 
-                size_t len = 0);
+                LogModule(
+                    Logger & logger)
+                    : logger(logger)
+                {
+                }
 
-            /// 打印十六进制
-            void printHex(
-                LogModule const & module,
-                size_t level, 
-                unsigned char const * data, 
-                size_t len);
+                LogModule * next;
+                Logger & logger;
+                char const * name;
+                size_t level;
+            };
 
+            LogModule & register_module(
+                char const * name, 
+                size_t level = 2); // the default level
+
+        public:
             template <typename _Rec>
             static inline void log(
                 LogModule const & module, 
                 size_t level, 
                 _Rec const & record)
             {
-                if ( !( &module ) ) return; /// MultiThread env.
-                if ( level >= kLevelNone
-                    || level < 0
-                    || ( level > module.level ) /// 进行模块的最大等级过滤
-                    || ( level > module.logger_->m_max_level_ ) )/// 进行流最大等级过滤
+                if ( !( &module ) ) return;/// 防止在多线程环境下，一个模块还未注册，另一个线程访问出错
+                if (level + module.level > module.logger.max_level_ || level >= kLevelNone) {
                     return;
-
-                // 根据等级排序好的链表从小到大进行打印
-                module.logger_->printLog( module, level, record);
+                }
+                module.logger.private_log(module, level, record);
             }
 
             // 输出一条采用结构化信息格式的日志信息
@@ -108,12 +150,8 @@ namespace framework
                 char const * fmt, 
                 void const * var)
             {
-                if ( !( &module ) ) return; /// MultiThread env.
-                if ( level >= kLevelNone
-                    || level < 0
-                    || ( level > module.level ) /// 进行模块的最大等级过滤
-                    || ( level > module.logger_->m_max_level_ ) )/// 进行流最大等级过滤
-                    return;
+                if ( !( &module ) ) return;
+                module.logger.private_print_struct(module, level, title, fmt, var);
             }
 
             // 输出一条内容较长的日志信息，如果消息内容可能超过1024字节，使用此接口，否则会被中间截断
@@ -122,15 +160,9 @@ namespace framework
                 size_t level, 
                 char const * txt)
             {
-                if ( !( &module ) ) return; /// MultiThread env.
-                if ( level >= kLevelNone
-                    || level < 0
-                    || ( level > module.level ) /// 进行模块的最大等级过滤
-                    || ( level > module.logger_->m_max_level_ ) )/// 进行流最大等级过滤
-                    return;
-                module.logger_->printString( module, level, txt );
+                if ( !( &module ) ) return;
+                module.logger.private_print_string(module, level, txt);
             }
-
 
             static inline void print_string(
                 LogModule const & module, 
@@ -138,13 +170,8 @@ namespace framework
                 char const * txt, 
                 size_t len)
             {
-                if ( !( &module ) ) return; /// MultiThread env.
-                if ( level >= kLevelNone
-                    || level < 0
-                    || ( level > module.level ) /// 进行模块的最大等级过滤
-                    || ( level > module.logger_->m_max_level_ ) )/// 进行流最大等级过滤
-                    return;
-                module.logger_->printString(  module, level, txt, len );
+                if ( !( &module ) ) return;
+                module.logger.private_print_string(module, level, txt, len);
             }
 
             // 输出一条采用16进制信息格式的日志信息
@@ -154,19 +181,118 @@ namespace framework
                 unsigned char const * data, 
                 size_t len)
             {
-                if ( !( &module ) ) return; /// MultiThread env.
-                if ( level >= kLevelNone
-                    || level < 0
-                    || ( level > module.level ) /// 进行模块的最大等级过滤
-                    || ( level > module.logger_->m_max_level_ ) )/// 进行流最大等级过滤
-                    return;
-                module.logger_->printHex( module, level, data, len );
+                if ( !( &module ) ) return;
+                module.logger.private_print_hex(module, level, data, len);
             }
 
-      };
+        private:
+            struct LogStream;
+
+            struct LogDefine;
+
+            // 增加一个输出流
+            bool add_stream(
+                LogStream * ls);
+
+            bool backup_open_file(
+                LogStream * ls);
+
+        private:
+            void at_new_time();
+
+            void private_log(
+                LogModule const & module, 
+                size_t level, 
+                LoggerRecord const & record);
+
+            // 输出一条采用结构化信息格式的日志信息
+            void private_print_struct(
+                LogModule const & module, 
+                size_t level, 
+                char const * title, 
+                char const * fmt, 
+                void const * var);
+
+            // 输出一条内容较长的日志信息，如果消息内容可能超过1024字节，使用此接口，否则会被中间截断
+            void private_print_string(
+                LogModule const & module, 
+                size_t level, 
+                char const * txt);
+
+            void private_print_string(
+                LogModule const & module, 
+                size_t level, 
+                char const * txt, 
+                size_t len);
+
+            // 输出一条采用16进制信息格式的日志信息
+            void private_print_hex(
+                LogModule const & module, 
+                size_t level, 
+                unsigned char const * data, 
+                size_t len);
+
+        private:
+            /// 线程锁
+            class Lock;
+            Lock * lock_;
+
+            /// 今天开始时刻
+            time_t mid_night_;
+
+        private:
+            size_t sec_ver_;
+            size_t time_sec_ver_;
+            char time_str_[40];
+            char msg_str_[1024];
+            size_t max_level_;
+            configure::ConfigModule * conf_;
+            LogStream * stream_lst_;
+            LogStream * stream_lst_bak_;
+            LogModule * module_lst_;
+            LogDefine * log_def_;
+            bool paused_;
+        };
+
+        extern Logger & glog;
+
+        Logger & global_logger();
+
+        inline static Logger & _slog(...)
+        {
+            return global_logger();
+        }
 
     } // namespace logger
 } // namespace framework
+
+#define FRAMEWORK_LOGGER_DECLARE_LOGGER(name) \
+    inline static framework::logger::Logger & _slog() \
+{ \
+    static framework::logger::Logger log; \
+    return log; \
+}
+
+#define FRAMEWORK_LOGGER_DECLARE_MODULE(name) \
+    inline static framework::logger::Logger::LogModule const & _slogm() \
+{ \
+    using framework::logger::_slog; \
+    static framework::logger::Logger::LogModule const & module = \
+    _slog().register_module(name); \
+    return module; \
+}
+
+#define FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL(name, lvl) \
+    inline static framework::logger::Logger::LogModule const & _slogm() \
+{ \
+    using framework::logger::_slog; \
+    static framework::logger::Logger::LogModule const & module = \
+    _slog().register_module(name, lvl); \
+    return module; \
+}
+
+#define FRAMEWORK_LOGGER_DECLARE_MODULE_USE_BASE(base) \
+    using base::_slogm
 
 #define LOG_PKT(lvl, name, fmt, dat) \
     framework::logger::Logger::print_struct(_slogm(), lvl, name, fmt, dat)
@@ -175,275 +301,9 @@ namespace framework
     framework::logger::Logger::print_string(_slogm(), lvl, str)
 
 #define LOG_STR_LEN(lvl, str, len) \
-    framework::logger::Logger::print_string(_slogm(), lvl, str, len)
+    framework::logger::Logger::print_string(_slogm()(, lvl, str, len)
 
 #define LOG_HEX(lvl, dat, len) \
     framework::logger::Logger::print_hex(_slogm(), lvl, dat, len)
 
 #endif // _FRAMEWORK_LOGGER_LOGGER_H_
-
-
-
-/*Logger.h接口测试代码*/
-#ifdef INCLUDE_TEST
-
-#ifndef _FRAMEWORK_LOGGER_LOGGER_TEST_H_
-#define _FRAMEWORK_LOGGER_LOGGER_TEST_H_
-
-#ifndef FRAMEWORK_LOGGER_DECLARE 
-#define FRAMEWORK_LOGGER_DECLARE
-MODULE_DECLARE("framework_logger", "darrenhe", "leochen");
-#endif
-
-#include "framework/logger/LoggerManager.h"
-#include "framework/logger/LoggerStream.h"
-#include "framework/logger/LoggerStdStream.h"
-#include "framework/logger/LoggerRecord.h"
-using namespace framework::logger;
-
-/*logger::insertStream()接口测试*/
-TEST(framework_logger, insert_streams)
-{
-	LoggerManager lg_mgr;
-	/*流插入正确性测试*/
-	std::string log_name = "log";
-	Logger lg(lg_mgr, log_name);
-	LoggerStdStream *lgss = new LoggerStdStream();
-	ILoggerStream * il = lgss;
-	il->log_lvl = 2;
-	lg.insertStream(il);
-	bool b;
-	if(lg.mp_log_streams_->stream_ == NULL)
-		b = false;
-	else
-		b = true;
-	EXPECT_TRUE(b);
-
-	LoggerStdStream *lgss1 = new LoggerStdStream();
-	ILoggerStream * il1 = lgss1;
-	il1->log_lvl = 4;
-	lg.insertStream(il1);
-	if(lg.mp_log_streams_->next == NULL)
-		b = false;
-	else
-		b = true;
-	EXPECT_TRUE(b);
-
-	/*插入流按照日志等级排列测试*/
-	if (lg.mp_log_streams_->stream_ == il1  && lg.mp_log_streams_->next->stream_ == il)
-	{
-		b = true;
-	}
-	else
-		b = false;
-	EXPECT_TRUE(b);
-}
-
-/*logger::delStream()接口测试*/
-TEST(framework_logger, delete_stream)
-{
-	/*流删除正确性测试*/
-	LoggerManager lg_mgr;
-	Logger log(lg_mgr, "log");
-	LoggerStdStream *lgss = new LoggerStdStream();
-	ILoggerStream * il = lgss;
-	log.insertStream(il);
-	LoggerStdStream *lgss1 = new LoggerStdStream();
-	ILoggerStream * il1 = lgss1;
-	log.insertStream(il1);
-
-	//删除一个流
-	log.delStream(il1);
-	
-	bool b;
-	if(log.mp_log_streams_ != NULL)
-		b = true;
-	else
-		b = false;
-	EXPECT_TRUE(b);
-
-	if(log.mp_log_streams_->next == NULL)
-		b = true;
-	else
-		b = false;
-	EXPECT_TRUE(b);
-
-	//删除第二个流
-	log.delStream(il);
-	if(log.mp_log_streams_ == NULL)
-		b = true;
-	else
-		b = false;
-	EXPECT_TRUE(b);
-
-}
-
-
-/*Logger::printLog()接口测试*/
-
-/*自定义Log输出流类型，继承父类ILoggerStream*/
-class LogStream : public ILoggerStream
-{
-public:
-	LogStream(){}	
-
-	~LogStream(){}
-
-	virtual void write( 
-		muti_buffer_t const * logmsgs, 
-		size_t len  )
-	{
-		if ((1 == len || 4 == len) && logmsgs != NULL)
-		{
-			m_write_status = true;
-		}
-		else
-			m_write_status = false;
-	}
-
-	bool m_write_status ;
-};
-
-/*自定义LoggerRecord子类LoggerRecordSon*/
-class LoggerRecordSon : public LoggerRecord
-{						
-public:
-	LoggerRecordSon():LoggerRecord(format_message, destroy)
-	{
-
-	}
-	static size_t format_message( LoggerRecord const & rec, char * msg, size_t len )
-	{
-        return 0;
-	}
-	static void destroy(LoggerRecord const & rec)
-	{
-		return;
-	}
-
-};
-
-TEST(framework_logger, log_print)
-{
-	LoggerManager lg_mgr;
-	Logger log(lg_mgr, "log");
-
-	/*向log流队列插入两个LogStream类型的流*/
-	LogStream *lgs = new LogStream();
-	ILoggerStream *ils = lgs;
-	log.insertStream(ils);
-	LogStream *lgs1 = new LogStream();
-	ILoggerStream *ils1 = lgs1;
-	log.insertStream(ils1);	
-
-	LoggerRecordSon  *lrs = new LoggerRecordSon();
-	LoggerRecord *lr = lrs;
-	
-	LogModule lm(&log, "test");
-
-	log.printLog(lm, 6, *lr);
-	EXPECT_TRUE(lgs->m_write_status);
-	EXPECT_TRUE(lgs1->m_write_status);
-}
-
-
-/*Logger::printString()接口测试*/
-/*自定义string输出流类型，继承父类ILoggerStream*/
-class StringStream : public ILoggerStream
-{
-public:
-	StringStream(std::string const &txt):m_txt_(txt)	
-	{ }		
-
-	~StringStream(){}
-
-	virtual void write( 
-		muti_buffer_t const * logmsgs, 
-		size_t len  )
-	{
-		if (logmsgs[3].buffer == m_txt_)
-		{
-			m_write_status = true;
-		}
-		else
-			m_write_status = false;
-	}
-
-	bool m_write_status ;
-private:
-	std::string m_txt_;
-};
-
-TEST(framework_logger, string_print)
-{
-	LoggerManager lg_mgr;
-	Logger log(lg_mgr, "string");
-    //向log流队列插入一个流
-	StringStream *ss1 = new StringStream("test_sprintstring1");
-	ILoggerStream *il1 = ss1;
-	Logger::LoggerStreams *ls = new Logger::LoggerStreams(il1);
-	log.mp_log_streams_ = ls;
-    //再向log流队列插入一个流
-	StringStream *ss2 = new StringStream("test_sprintstring2");
-	ILoggerStream *il2 = ss2;
-    log.insertStream(il2);
-
-	LogModule lm(&log, "test");
-	log.print_string(lm, 6, "test_sprintstring1");
-	EXPECT_TRUE(ss1->m_write_status);
-	log.print_string(lm, 6, "test_sprintstring2");
-	EXPECT_TRUE(ss2->m_write_status);
-
-}
-
-/*Logger::print_hex()接口测试*/
-/*自定义十六进制输出流类型，继承父类ILoggerStream*/
-class HexStream : public ILoggerStream
-{
-public:
-	HexStream( ){ }		
-
-	~HexStream( ){ }
-
-	virtual void write( 
-		muti_buffer_t const * logmsgs, 
-		size_t len  )
-	{
-		if ((1 == len || 4 == len) && NULL != logmsgs)
-		{
-			m_write_status = true;
-		}
-		else
-			m_write_status = false;
-	}
-
-	bool m_write_status ;
-
-};
-
-TEST(framework_logger, hex_print)
-{
-	
-	LoggerManager lg_mgr;
-	Logger log(lg_mgr, "hex");
-	//向log流队列插入一个流
-	HexStream *hs1 = new HexStream();
-	ILoggerStream *il1 = hs1;
-	Logger::LoggerStreams *ls = new Logger::LoggerStreams(il1);
-	log.mp_log_streams_ = ls;
-	//再向log流队列插入一个流
-	HexStream *hs2 = new HexStream();
-	ILoggerStream *il2 = hs2;
-	log.insertStream(il2);
-
-	LogModule lm(&log, "test");
-	unsigned char const c = 'a';
-	log.print_hex(lm, 6, &c, 20);
-	EXPECT_TRUE(hs1->m_write_status);
-	EXPECT_TRUE(hs2->m_write_status);
-
-}
-
-#endif //_FRAMEWORK_LOGGER_LOGGER_TEST_H_
-#endif //INCLUDE_TEST
-

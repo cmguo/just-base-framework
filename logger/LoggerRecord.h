@@ -3,6 +3,8 @@
 #ifndef _FRAMEWORK_LOGGER_RECORD_H_
 #define _FRAMEWORK_LOGGER_RECORD_H_
 
+#include "framework/logger/Logger.h"
+
 namespace framework
 {
     namespace logger

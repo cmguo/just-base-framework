@@ -5,7 +5,8 @@
 
 #include "framework/logger/Logger.h"
 #include "framework/logger/LoggerParam.h"
-#include "framework/logger/LoggerFormatString.h"
+
+#include <boost/format.hpp>
 
 namespace framework
 {
@@ -32,9 +33,9 @@ namespace framework
 
         public:
             void format(
-                LoggerFormatString & lfs) const
+                boost::format & fmt) const
             {
-                lfs % value_;
+                fmt % value_;
             }
 
         private:
@@ -67,9 +68,9 @@ namespace framework
 
         public:
             void format(
-                LoggerFormatString & lfs) const
+                boost::format & fmt) const
             {
-                lfs.parse( fmt_ );
+                fmt.parse(fmt_);
             }
 
         private:
@@ -126,10 +127,10 @@ namespace framework
 
         public:
             void format(
-                LoggerFormatString & lfs ) const
+                boost::format & fmt) const
             {
-                front_.format( lfs );
-                back_.format( lfs );
+                front_.format(fmt);
+                back_.format(fmt);
             }
 
         private:
@@ -169,21 +170,10 @@ namespace framework
             {
                 LoggerFormatRecord const & me = 
                     static_cast<LoggerFormatRecord const &>(base);
-
-                LoggerFormatString lfs( msg, len );
-                me.format(lfs);
-                if ( msg[lfs.size() - 1] != '\n' && lfs.size() == len )
-                {
-                    msg[lfs.size() - 1] = '\n';
-                    return lfs.size();
-                }
-                else if ( msg[lfs.size() - 1] != '\n' && lfs.size() < len )
-                {
-                    msg[lfs.size()] = '\n';
-                    return lfs.size() + 1;
-                }
-
-                return lfs.size();
+                boost::format fmt;
+                me.format(fmt);
+                strncpy(msg, fmt.str().c_str(), len);
+                return fmt.str().size() > len ? len : fmt.str().size();
             }
 
             static void destroy_self(
