@@ -14,11 +14,19 @@
 #include <Iphlpapi.h>
 #pragma comment(lib, "Iphlpapi.lib")
 #else
-#  include <net/if_arp.h>
+#  include <net/if.h>
 #  include <sys/types.h>
 #  include <sys/stat.h>
 #  include <fcntl.h>
 #  ifdef __FreeBSD__
+#    define FRAMEWORK_NETWORK_HAVE_SOCKADDR_LEN
+#    define ifr_ifindex ifr_index
+#    define ifr_netmask ifr_addr
+#    include <net/if_dl.h>
+#  endif
+#  ifdef __MACH__
+#    define FRAMEWORK_NETWORK_HAVE_SOCKADDR_LEN
+#    define ifr_netmask ifr_addr
 #    include <net/if_dl.h>
 #  endif
 #endif
@@ -116,8 +124,6 @@ namespace framework
 
 #else
 
-#ifndef __APPLE__
-
         boost::system::error_code enum_interface(
             std::vector<Interface> & interfaces)
         {
@@ -189,13 +195,13 @@ namespace framework
                 }
 
                 char const * last_name = "";
-#ifdef __FreeBSD__
+#ifndef SIOCGIFHWADDR
                 char const * hwaddr = NULL;
 #endif
                 for (char * ptr = ifc.ifc_buf; ptr < ifc.ifc_buf + ifc.ifc_len; ) {
                     struct ifreq * ifr = (struct ifreq *)ptr;
                     size_t len = 0;
-#ifndef __FreeBSD__
+#ifndef FRAMEWORK_NETWORK_HAVE_SOCKADDR_LEN
                     switch (ifr->ifr_addr.sa_family) {
                                 case AF_INET6:
                                     len = sizeof(struct sockaddr_in6);
@@ -207,10 +213,10 @@ namespace framework
                     }
 #else
                     len = std::max(sizeof(struct sockaddr), (size_t)ifr->ifr_addr.sa_len);
-#endif // __FreeBSD__
+#endif
                     ptr += sizeof(ifr->ifr_name) + len; /* for next one in buffer */
 
-#ifdef __FreeBSD__
+#ifndef SIOCGIFHWADDR
                     /* assumes that AF_LINK precedes AF_INET or AF_INET6 */
                     if (ifr->ifr_addr.sa_family == AF_LINK) {
                         struct sockaddr_dl * sdl = (struct sockaddr_dl *) &ifr->ifr_addr;
@@ -256,13 +262,13 @@ namespace framework
                 struct ifreq ifrcopy;
                 ::memcpy(ifrcopy.ifr_name, inf.name, sizeof(ifrcopy.ifr_name));
                 ifrcopy.ifr_name[sizeof(ifrcopy.ifr_name) - 1] = '\0';
+#ifndef SIOCGIFINDEX
+		inf.index = 0;
+#else
                 if (!(::ioctl(fd, SIOCGIFINDEX, (char *)&ifrcopy))) {
-#ifdef __FreeBSD__
-#  define ifr_ifindex ifr_index
-#  define ifr_netmask ifr_addr
-#endif
                     inf.index = ifrcopy.ifr_ifindex;
                 }
+#endif
                 if (!(::ioctl (fd, SIOCGIFMETRIC, (char *)&ifrcopy))) {
                     inf.metric = ifrcopy.ifr_metric;
                 }
@@ -291,7 +297,6 @@ namespace framework
             ::close(fd);
             return boost::system::error_code();
         }
-#endif // __APPLE__
 
 #endif
 

@@ -47,12 +47,12 @@ namespace framework
 
             static _InternetProtocol v4()
             {
-                 return _InternetProtocol::v4();
+                return _InternetProtocol::v4();
             }
 
             static _InternetProtocol v6()
             {
-                 return _InternetProtocol::v6();
+                return _InternetProtocol::v6();
             }
         };
 
@@ -67,7 +67,7 @@ namespace framework
                     resolve_time = connect_time = (boost::uint32_t)-1;
                     last_error.clear();
                 }
-                
+
                 void zero()
                 {
                     resolve_time = connect_time = 0;
@@ -190,7 +190,7 @@ namespace framework
                 }
                 if ((ec == boost::asio::error::in_progress || 
                     ec == boost::asio::error::already_started)) {
-                    ec = boost::asio::error::would_block;
+                        ec = boost::asio::error::would_block;
                 }
             }
 
@@ -244,7 +244,7 @@ namespace framework
                 if (ec == boost::asio::error::in_progress || 
                     ec == boost::asio::error::already_started || 
                     ec == boost::asio::error::would_block) {
-                    ec = boost::asio::error::would_block;
+                        ec = boost::asio::error::would_block;
                 } else if (ec == boost::asio::error::already_connected) {
                     ec = boost::system::error_code();
                 } else {
@@ -425,24 +425,24 @@ namespace framework
                 boost::system::error_code & ec)
             {
                 started_ = false;
-                canceled_ = false; 
                 ec.clear();
+                canceled_ = false;
                 return ec;
             }
 
             void close()
             {
                 started_ = false;
-                canceled_ = false; 
+                canceled_ = false;
             }
 
         public:
             typedef detail::ConnectorStatistics Statistics;
-            
-			Statistics const & stat() const
-			{
-				return stat_;
-			}
+
+            Statistics const & stat() const
+            {
+                return stat_;
+            }
 
         private:
         private:
@@ -454,7 +454,7 @@ namespace framework
             resolver_type resolver_;
             resolver_iterator resolver_iterator_;
             boost::asio::detail::mutex & mutex_;
-			Statistics stat_;
+            Statistics stat_;
         };
 
         namespace detail

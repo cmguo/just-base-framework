@@ -30,7 +30,12 @@ namespace framework
                     struct sigaction act;
                     act.sa_sigaction = &signal::sigaction;
                     act.sa_flags = SA_RESTART | SA_SIGINFO;
+                    // on mac os / ios , sigemptyset is a mocro
+#ifndef sigemptyset
                     ::sigemptyset(&act.sa_mask);
+#else
+                    sigemptyset(&act.sa_mask);
+#endif
                     ::sigaction(sig_.value(), &act, &old_action_);
 #endif
                 }
