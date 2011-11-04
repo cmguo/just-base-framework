@@ -176,6 +176,11 @@ namespace framework
                 && svc_.find_first_not_of("0123456789") == std::string::npos;
         }
 
+        Endpoint NetName::endpoint() const
+        {
+            return Endpoint((Endpoint::ProtocolEnum)protocol_, host_, port());
+        }
+
         void NetName::ip(
             unsigned long v)
         {
