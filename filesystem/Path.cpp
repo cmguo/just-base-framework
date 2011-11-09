@@ -76,10 +76,14 @@ namespace framework
         boost::filesystem::path framework_temp_path()
         {
             boost::filesystem::path framework_tmp_dir = temp_path();
-            std::string dirname = "framework_";
-            dirname += framework::version_string();
-            framework_tmp_dir /= boost::filesystem::path( dirname );
-            boost::filesystem::create_directories(framework_tmp_dir);
+            try {
+                std::string dirname = "framework_";
+                dirname += framework::version_string();
+                framework_tmp_dir /= boost::filesystem::path( dirname );
+                boost::filesystem::create_directories(framework_tmp_dir);
+            } catch ( ... ) {
+                // do nothing here
+            }
             return framework_tmp_dir;
         }
 

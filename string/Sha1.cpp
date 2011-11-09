@@ -20,7 +20,7 @@ namespace framework { namespace string { namespace detail {
 } } }
 #elif (defined BOOST_WINDOWS_API)
 #  if _MSC_VER > 1300
-#    include <altcomcli.h>
+#    include <atlcomcli.h>
 #  endif
 #  include <atlcrypt.h>
 namespace framework { namespace string { namespace detail {
@@ -38,9 +38,9 @@ namespace framework { namespace string { namespace detail {
         HRESULT hr = context->alg.Initialize(context->ctx);
         assert(SUCCEEDED(hr));
     }
-    void SHA1_Update(SHA1_CTX * context, unsigned char* data, uint32_t len)
+    void SHA1_Update(SHA1_CTX * context, unsigned char* data, boost::uint32_t len)
     {
-        HRESULT hr = context->alg.AddData(data, size);
+        HRESULT hr = context->alg.AddData(data, len);
         assert(SUCCEEDED(hr));
     }
     void SHA1_Final(unsigned char digest[20], SHA1_CTX* context)
