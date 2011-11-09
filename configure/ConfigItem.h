@@ -157,6 +157,11 @@ namespace framework
                 delete &this_item;
             }
 
+            T init_value() const
+            {
+                return T();
+            }
+
             // ≤ª‘ –Ì
             void init_value(
                 T const & t)
