@@ -57,7 +57,7 @@ namespace framework
             // big endian 后三个字节，第一个字节为0
             // little endian 前三个字节，最后一个字节为0
             boost::uint32_t n_;
-        }
+        };
 
         namespace BytesOrder
         {
