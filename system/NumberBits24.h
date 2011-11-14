@@ -3,7 +3,7 @@
 #ifndef _FRAMEWORK_SYSTEM_NUMBER_BITS_24_H_
 #define _FRAMEWORK_SYSTEM_NUMBER_BITS_24_H_
 
-#include "frameowrk/system/BytesOrder.h"
+#include "framework/system/BytesOrder.h"
 
 namespace framework
 {
