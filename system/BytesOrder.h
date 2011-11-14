@@ -53,6 +53,17 @@ namespace framework
 
                 template <
                 >
+                struct call_rotate<1>
+                {
+                    static inline boost::uint16_t invoke(
+                        boost::uint16_t v)
+                    {
+                        return v;
+                    }
+                };
+
+                template <
+                >
                 struct call_rotate<2>
                 {
                     static inline boost::uint16_t invoke(
