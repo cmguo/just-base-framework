@@ -143,7 +143,7 @@ namespace framework
                 std::string & str)
             {
                 C const & this_item = static_cast<C const &>(item);
-                T t;
+                T t = T();
                 boost::system::error_code ec = this_item.get_value(t);
                 if (!ec)
                     ec = framework::string::format2(str, t);
