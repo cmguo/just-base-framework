@@ -17,21 +17,21 @@ namespace framework
         public:
             LimitNumber(
                 Ty n = 0)
-                : mask(1 << N)
+                : mask_(1 << N)
                 , low_bits_(n)
                 , high_bits_(0)
             {
-                assert(n < mask);
+                assert(n < mask_);
             }
  
         public:
             Ty transfer(
                 Ty n)
             {
-                assert(n < mask);
+                assert(n < mask_);
                 if ((low_bits_ ^ n) & mask_) {
                     if (low_bits_ & mask_) {
-                        high_bits_ += mask;
+                        high_bits_ += mask_;
                     }
                 }
                 low_bits_ = n;
