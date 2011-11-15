@@ -17,7 +17,7 @@ namespace framework
         public:
             LimitNumber(
                 Ty n = 0)
-                : mask_(1 << N)
+                : mask_((Ty)1 << N)
                 , low_bits_(n)
                 , high_bits_(0)
             {
