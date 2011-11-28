@@ -5,6 +5,7 @@
 
 #ifdef BOOST_WINDOWS_API
 #  include <Windows.h>
+#  include"framework/system/LimitNumber.h"
 #elif (defined __MACH__)
 #  include<mach/mach_time.h>
 #else
@@ -31,7 +32,8 @@ namespace framework
         Time Time::now()
         {
 #ifdef BOOST_WINDOWS_API
-            return Time(::GetTickCount());
+            static framework::system::LimitNumber< 32 > limitNum;
+            return Time( limitNum.transfer( ::GetTickCount() ) );
 #elif (defined __MACH__)
 	static struct mach_timebase_info info = get_mach_timebase_info();
         boost::uint64_t t = mach_absolute_time() / 1000 / 1000;
@@ -43,7 +45,7 @@ namespace framework
             int res = clock_gettime(CLOCK_MONOTONIC, &t);
             (void)res; // gcc warning
             assert(0 == res);
-            boost::uint64_t val = t.tv_sec * 1000 + t.tv_nsec / 1000 / 1000;
+            boost::uint64_t val = ( boost::uint64_t )t.tv_sec * 1000 + t.tv_nsec / 1000 / 1000;
             return Time(val);
 #endif
         }
