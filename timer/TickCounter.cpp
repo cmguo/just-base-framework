@@ -4,11 +4,11 @@
 #include "framework/timer/TickCounter.h"
 
 #ifdef BOOST_WINDOWS_API
-#  include <Windows.h>
+#  include <windows.h>
 #  include "framework/system/LimitNumber.h"
 #  pragma comment(lib, "Kernel32.lib")
 #elif (defined __MACH__)
-#  include<mach/mach_time.h>
+#  include <mach/mach_time.h>
 #else
 #  include <sys/time.h>
 //#  include <time.h>

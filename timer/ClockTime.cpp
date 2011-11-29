@@ -4,10 +4,10 @@
 #include "framework/timer/ClockTime.h"
 
 #ifdef BOOST_WINDOWS_API
-#  include <Windows.h>
-#  include"framework/system/LimitNumber.h"
+#  include <windows.h>
+#  include "framework/system/LimitNumber.h"
 #elif (defined __MACH__)
-#  include<mach/mach_time.h>
+#  include <mach/mach_time.h>
 #else
 #  include <time.h>
 #  ifndef CLOCK_MONOTONIC
