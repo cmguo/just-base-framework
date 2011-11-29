@@ -5,7 +5,7 @@
 #include "framework/system/ErrorCode.h"
 using namespace framework::system;
 
-#include <Windows.h>
+#include <windows.h>
 #include <boost/interprocess/sync/interprocess_mutex.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 

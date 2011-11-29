@@ -21,8 +21,10 @@ using namespace boost::system;
 #include <fstream>
 
 #ifdef BOOST_WINDOWS_API
-#  include <Windows.h>
-#  include <Winternl.h>
+#  include <windows.h>
+#  ifndef __MINGW32__
+#    include <winternl.h>
+#  endif
 #  ifdef UNDER_CE
 #    ifndef STARTF_USESTDHANDLES
 #       define STARTF_USESTDHANDLES     0x00000100
@@ -36,7 +38,7 @@ using namespace boost::system;
 #  else
 #    include <fcntl.h>
 #    include <io.h>
-#    include <Psapi.h>
+#    include <psapi.h>
 #    pragma comment(lib, "Psapi.lib")
 #  endif
 #else

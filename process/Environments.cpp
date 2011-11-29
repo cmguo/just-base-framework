@@ -4,7 +4,7 @@
 #include "framework/process/Environments.h"
 
 #ifdef BOOST_WINDOWS_API
-#  include <Windows.h>
+#  include <windows.h>
 #else
 #  include <stdlib.h>
 #endif
@@ -27,7 +27,6 @@ namespace framework
             }
 #else
             char Buffer[64];
-            HANDLE hParent = INVALID_HANDLE_VALUE;
             if (::GetEnvironmentVariable(
                 "FRAMEWORK_PROCESS_PARENT_ID", 
                 Buffer, 

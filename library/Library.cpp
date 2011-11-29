@@ -12,7 +12,7 @@ using namespace boost::system;
 #include <iostream>
 
 #ifdef BOOST_WINDOWS_API
-#include <Windows.h>
+#include <windows.h>
 #else
 #include <dlfcn.h>
 #endif
@@ -91,7 +91,7 @@ namespace framework
             std::string const & name) const
         {
 #ifdef BOOST_WINDOWS_API
-            return ::GetProcAddress((HMODULE)handle_, name.c_str());
+            return (void *)::GetProcAddress((HMODULE)handle_, name.c_str());
 #else
             return ::dlsym(handle_, name.c_str());
 #endif

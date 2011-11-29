@@ -11,7 +11,7 @@
 
 #ifdef BOOST_WINDOWS_API
 #include <windows.h>
-#include <Iphlpapi.h>
+#include <iphlpapi.h>
 #pragma comment(lib, "Iphlpapi.lib")
 #else
 #  include <net/if.h>

@@ -11,7 +11,7 @@ using namespace framework::logger;
 
 #include <assert.h>
 
-#include <Windows.h>
+#include <windows.h>
 
 namespace framework
 {

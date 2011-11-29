@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #ifdef BOOST_WINDOWS_API
-#  include <Windows.h>
+#  include <windows.h>
 #else
 #  include <unistd.h>
 #  include <sys/mman.h>

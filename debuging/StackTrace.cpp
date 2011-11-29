@@ -3,6 +3,8 @@
 #include "framework/Framework.h"
 #include "framework/debuging/BackTrace.h"
 
+#ifndef BOOST_WINDOWS_API
+
 #if (__GNUC__ > 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ > 4))
 
 #define NO_INSTRUMENT_FUNCTION __attribute__((__no_instrument_function__))
@@ -313,3 +315,5 @@ extern "C"
 }
 
 #endif
+
+#endif // BOOST_WINDOWS_API

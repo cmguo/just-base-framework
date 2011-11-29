@@ -4,7 +4,7 @@
 #include "framework/process/FileMutex.h"
 
 #ifdef BOOST_WINDOWS_API
-#  include <Windows.h>
+#  include <windows.h>
 #else
 #  include <stdlib.h>
 #  include <signal.h>
