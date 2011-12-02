@@ -166,6 +166,7 @@ namespace framework
                             --line;
                             ++colon;
                             len -= (colon - ptr);
+                            ptr = colon;
                         } else {
                             ::memmove(buf, ptr, len);
                             ptr = buf;
