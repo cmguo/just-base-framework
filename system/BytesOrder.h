@@ -47,51 +47,59 @@ namespace framework
                 }
 
                 template <
-                    size_t _Sz
+                    typename _Ty, 
+                    size_t _Sz = sizeof(_Ty)
                 >
                 struct call_rotate;
 
                 template <
+                    typename _Ty
                 >
                 struct call_rotate<1>
                 {
-                    static inline boost::uint16_t invoke(
-                        boost::uint16_t v)
+                    static inline _Ty invoke(
+                        _Ty v)
                     {
                         return v;
                     }
                 };
 
                 template <
+                    typename _Ty
                 >
                 struct call_rotate<2>
                 {
-                    static inline boost::uint16_t invoke(
-                        boost::uint16_t v)
+                    static inline _Ty invoke(
+                        _Ty v)
                     {
-                        return rotate(v);
+                        boost::uint16_t r = rotate(*(boost::uint16_t*)&v);
+                        return *(_Ty *)&r;
                     }
                 };
 
                 template <
+                    typename _Ty
                 >
                 struct call_rotate<4>
                 {
-                    static inline boost::uint32_t invoke(
-                        boost::uint32_t v)
+                    static inline _Ty invoke(
+                        _Ty v)
                     {
-                        return rotate(v);
+                        boost::uint32_t r = rotate(*(boost::uint32_t*)&v);
+                        return *(_Ty *)&r;
                     }
                 };
 
                 template <
+                    typename _Ty
                 >
                 struct call_rotate<8>
                 {
-                    static inline boost::uint64_t invoke(
-                        boost::uint64_t v)
+                    static inline _Ty invoke(
+                        _Ty v)
                     {
-                        return rotate(v);
+                        boost::uint64_t r = rotate(*(boost::uint64_t*)&v);
+                        return *(_Ty *)&r;
                     }
                 };
 
@@ -123,7 +131,7 @@ namespace framework
             inline _Ty host_to_little_endian(
                 _Ty v)
             {
-                return detail::call_rotate<sizeof(v)>::invoke(v);
+                return detail::call_rotate<_Ty>::invoke(v);
             }
 
             template <
@@ -132,7 +140,7 @@ namespace framework
             inline _Ty little_endian_to_host(
                 _Ty v)
             {
-                return detail::call_rotate<sizeof(v)>::invoke(v);
+                return detail::call_rotate<_Ty>::invoke(v);
             }
 
 #elif (defined BOOST_LITTLE_ENDIAN)
@@ -143,7 +151,7 @@ namespace framework
             inline _Ty host_to_big_endian(
                 _Ty v)
             {
-                return detail::call_rotate<sizeof(v)>::invoke(v);
+                return detail::call_rotate<_Ty>::invoke(v);
             }
 
             template <
@@ -152,7 +160,7 @@ namespace framework
             inline _Ty big_endian_to_host(
                 _Ty v)
             {
-                return detail::call_rotate<sizeof(v)>::invoke(v);
+                return detail::call_rotate<_Ty>::invoke(v);
             }
 
             template <
