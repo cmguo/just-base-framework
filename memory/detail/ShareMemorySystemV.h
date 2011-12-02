@@ -31,6 +31,11 @@ namespace framework
                 file_name += "_";
                 file_name += format(iid);
                 int fd = ::open(file_name.c_str(), O_CREAT, S_IRWXG | S_IRWXO | S_IRWXU);
+		if ( -1 == fd )
+        	{
+	            const char* err_msg = "SystemV share memory create fail!";
+                    throw std::runtime_error( err_msg );
+            	}
                 ::close(fd);
                 return file_name;
             }
