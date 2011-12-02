@@ -136,7 +136,7 @@ namespace framework
                 size_t len = 0;
                 while (true) {
                     if (ptr == buf) {
-                    	len += ::read(fd, ptr, sizeof(buf));
+                    	len += ::read(fd, ptr + len, sizeof(buf) - len);
                         if (buf + len <= ptr)
                             break;
                     }
