@@ -55,7 +55,7 @@ namespace framework
                 template <
                     typename _Ty
                 >
-                struct call_rotate<1>
+                struct call_rotate<_Ty, 1>
                 {
                     static inline _Ty invoke(
                         _Ty v)
@@ -67,7 +67,7 @@ namespace framework
                 template <
                     typename _Ty
                 >
-                struct call_rotate<2>
+                struct call_rotate<_Ty, 2>
                 {
                     static inline _Ty invoke(
                         _Ty v)
@@ -80,7 +80,7 @@ namespace framework
                 template <
                     typename _Ty
                 >
-                struct call_rotate<4>
+                struct call_rotate<_Ty, 4>
                 {
                     static inline _Ty invoke(
                         _Ty v)
@@ -93,7 +93,7 @@ namespace framework
                 template <
                     typename _Ty
                 >
-                struct call_rotate<8>
+                struct call_rotate<_Ty, 8>
                 {
                     static inline _Ty invoke(
                         _Ty v)
