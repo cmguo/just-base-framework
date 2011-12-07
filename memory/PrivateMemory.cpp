@@ -63,5 +63,41 @@ namespace framework
 #endif
         }
 
+        void * PrivateMemory::alloc_with_id(
+            size_t id, 
+            size_t size)
+        {
+            for ( OrderedUnidirList< PriMemItem >::pointer p = primems_.first(); p; p = primems_.next(p)) 
+            {
+                if ( p->n_ == id ) return NULL;
+            }
+            size = align_object( size );
+            void * ptr = alloc_block( size );
+            if ( !ptr ) return NULL;
+            PriMemItem * pitem = new PriMemItem( id, ptr, size );
+            primems_.push( pitem );
+
+            return ptr;
+        }
+
+        void * PrivateMemory::get_by_id(
+            size_t id)
+        {
+            for ( OrderedUnidirList< PriMemItem >::pointer p = primems_.first(); p; p = primems_.next(p)) 
+            {
+                if ( p->n_ == id ) return p->ptr_;
+            }
+
+            return NULL;
+        }
+
+        void PrivateMemory::close( boost::system::error_code & ec )
+        {
+            for ( OrderedUnidirList< PriMemItem >::pointer p = primems_.first(); p; p = primems_.next(p)) 
+            {
+                free_block( p->ptr_, p->size_ );
+            }
+        }
+
     }
 }

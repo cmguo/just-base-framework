@@ -4,11 +4,36 @@
 #define _FRAMEWORK_MEMORY_PRIVATE_MEMORY_H_
 
 #include "framework/memory/MemoryPage.h"
+#include "framework/container/OrderedUnidirList.h"
+using namespace framework::container;
+using namespace framework::generic;
 
 namespace framework
 {
     namespace memory
     {
+
+        struct PriMemItem
+            : OrderedUnidirListHook< PriMemItem, NativePointerTraits<PriMemItem> >::type
+        {
+            PriMemItem(
+                size_t n, void * ptr, size_t size )
+                : n_(n)
+                , ptr_(ptr)
+                , size_(size)
+            {
+            }
+
+            bool operator < (
+                PriMemItem const & r) const
+            {
+                return n_ < r.n_;
+            }
+
+            size_t n_;
+            void * ptr_;
+            size_t size_;
+        };
 
         class PrivateMemory
             : public MemoryPage
@@ -26,6 +51,19 @@ namespace framework
             void free_block(
                 void * addr, 
                 size_t size);
+
+        public:
+            void * alloc_with_id(
+                size_t id, 
+                size_t size);
+
+            void * get_by_id(
+                size_t id);
+
+            void close( boost::system::error_code & ec );
+
+        private:
+            OrderedUnidirList< PriMemItem > primems_;
         };
 
     } // namespace memory
