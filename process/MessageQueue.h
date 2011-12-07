@@ -4,12 +4,20 @@
 #define _FRAMEWORK_PROCESS_MESSAGE_QUEUE_H_
 
 #include <framework/container/List.h>
+#include <framework/memory/MemoryPage.h>
+#if defined( FRAMEWORK_MESSAGEQUEUE_SINGLE_PROCESS )
+#include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/locks.hpp>
+#include <framework/memory/PrivateMemory.h>
+#else
 #include <framework/memory/SharedMemory.h>
 #include <framework/memory/SharedMemoryPointer.h>
 #include <framework/memory/MemoryReference.h>
 #include <framework/memory/SharedMemoryIdPointer.h>
-#include <framework/memory/MemoryPage.h>
 #include <framework/process/Mutex.h>
+#endif
+
 using namespace framework::string;
 using namespace framework::memory;
 
@@ -51,13 +59,26 @@ namespace framework
 
         struct MessageNode
         {
+#if defined( FRAMEWORK_MESSAGEQUEUE_SINGLE_PROCESS )
+            struct MessageNode * next;
+#else
             framework::memory::SharedMemoryPointer<MessageNode, QUEUE_SHARED_MEMORY_INST_ID> next;
+#endif
             boost::uint32_t size;
             boost::uint8_t  data[1];
         };
 
         struct InternalMessage
         {
+#if defined( FRAMEWORK_MESSAGEQUEUE_SINGLE_PROCESS )
+            struct Hook
+                : framework::container::ListHook<
+                Hook,
+                framework::generic::NativePointerTraits<Hook>
+                >::type
+            {
+            };
+#else
             struct Hook
                 : framework::container::ListHook<
                 Hook,
@@ -65,6 +86,7 @@ namespace framework
                 >::type
             {
             };
+#endif
             typedef framework::container::List<Hook> ListType;
 
             Hook            hook[2];
@@ -74,10 +96,23 @@ namespace framework
             boost::uint32_t sender_id;
             boost::uint32_t size;
             boost::uint32_t time;
+#if defined( FRAMEWORK_MESSAGEQUEUE_SINGLE_PROCESS )
+            struct MessageNode * next;
+#else
             framework::memory::SharedMemoryPointer<MessageNode, QUEUE_SHARED_MEMORY_INST_ID> next;
+#endif
             boost::uint8_t  data[1];
         };
 
+#if defined( FRAMEWORK_MESSAGEQUEUE_SINGLE_PROCESS )
+        struct MemoryObject
+            : framework::container::ListHook<
+            MemoryObject
+            , framework::generic::NativePointerTraits<MemoryObject>
+            >::type
+        {
+        };
+#else
         struct MemoryObject
             : framework::container::ListHook<
             MemoryObject
@@ -85,11 +120,21 @@ namespace framework
             >::type
         {
         };
+#endif
 
         typedef framework::container::List<MemoryObject> MemoryObjectPool;
 
         struct User
         {
+#if defined( FRAMEWORK_MESSAGEQUEUE_SINGLE_PROCESS )
+            struct Hook
+                : framework::container::ListHook<
+                Hook
+                , framework::generic::NativePointerTraits<Hook>
+                >::type
+            {
+            };
+#else
             struct Hook
                 : framework::container::ListHook<
                 Hook
@@ -97,6 +142,7 @@ namespace framework
                 >::type
             {
             };
+#endif
             typedef framework::container::List<Hook> ListType;
 
             Hook                             hook;
@@ -122,7 +168,11 @@ namespace framework
             User::ListType            users;
             InternalMessage::ListType level_messages[8];
             MemoryObjectPool          free_messages_;
+#if defined( FRAMEWORK_MESSAGEQUEUE_SINGLE_PROCESS )
+            boost::mutex mutex;
+#else
             framework::process::Mutex mutex;
+#endif
             boost::uint32_t           is_alloc;
             boost::uint32_t           is_first_alloc;
         };
@@ -130,7 +180,11 @@ namespace framework
         class MessageQueue
         {
         public:
+#if defined( FRAMEWORK_MESSAGEQUEUE_SINGLE_PROCESS )
+            MessageQueue(std::string const & owner , PrivateMemory & shm)
+#else
             MessageQueue(std::string const & owner , SharedMemory & shm)
+#endif
                 : owner_(owner)
                 , shm_(shm)
                 , entry_(NULL)
@@ -628,11 +682,15 @@ namespace framework
             }
 
         private:
-            std::string owner_;
-            SharedMemory & shm_;
+            std::string owner_; 
             Entry * entry_;
-            boost::uint32_t user_id_;
             std::map<std::string, User *> user_cache_;
+            boost::uint32_t user_id_;
+#if defined( FRAMEWORK_MESSAGEQUEUE_SINGLE_PROCESS )
+            PrivateMemory & shm_;
+#else
+            SharedMemory & shm_;
+#endif
         };
     }
 }
