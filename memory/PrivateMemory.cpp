@@ -67,23 +67,36 @@ namespace framework
             size_t id, 
             size_t size)
         {
-            for ( OrderedUnidirList< PriMemItem >::pointer p = primems_.first(); p; p = primems_.next(p)) 
+            if ( private_pool_ == NULL )
             {
-                if ( p->n_ == id ) return NULL;
+                void * ptrpool = alloc_block( page_size() );
+                private_pool_ = new ( ptrpool ) InternalData;
+                private_pool_->alloc_pos_ = sizeof( InternalData );
             }
-            size = align_object( size );
-            void * ptr = alloc_block( size );
-            if ( !ptr ) return NULL;
-            PriMemItem * pitem = new PriMemItem( id, ptr, size );
-            primems_.push( pitem );
+            else
+            {// 找到了，则返回空，表示已经存在
+                if ( get_by_id( id ) ) return NULL;
+            }
 
-            return ptr;
+            void * objptr = private_pool_ + private_pool_->alloc_pos_ + sizeof( PriMemItem );
+            size = align_object( size + sizeof( PriMemItem ) );
+
+            assert( private_pool_->alloc_pos_ + size < page_size() );
+
+            private_pool_->primems_.push( 
+                new ( private_pool_ + private_pool_->alloc_pos_ ) PriMemItem( id, objptr, size ) );
+            private_pool_->alloc_pos_ += size;
+
+
+            return objptr;
         }
 
         void * PrivateMemory::get_by_id(
             size_t id)
         {
-            for ( OrderedUnidirList< PriMemItem >::pointer p = primems_.first(); p; p = primems_.next(p)) 
+            if ( private_pool_ == NULL ) return NULL;
+            
+            for ( OrderedUnidirList< PriMemItem >::pointer p = private_pool_->primems_.first(); p; p = private_pool_->primems_.next(p)) 
             {
                 if ( p->n_ == id ) return p->ptr_;
             }
@@ -93,9 +106,10 @@ namespace framework
 
         void PrivateMemory::close( boost::system::error_code & ec )
         {
-            for ( OrderedUnidirList< PriMemItem >::pointer p = primems_.first(); p; p = primems_.next(p)) 
+            if ( private_pool_ )
             {
-                free_block( p->ptr_, p->size_ );
+                private_pool_->primems_.clear();
+                free_block( private_pool_, page_size() );
             }
         }
 

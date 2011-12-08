@@ -39,6 +39,12 @@ namespace framework
             : public MemoryPage
         {
         public:
+            PrivateMemory()
+                : private_pool_( NULL )
+            {
+            }
+
+        public:
             static size_t min_block_size()
             {
                 return page_size();
@@ -63,7 +69,18 @@ namespace framework
             void close( boost::system::error_code & ec );
 
         private:
-            OrderedUnidirList< PriMemItem > primems_;
+            typedef struct _tInternalData
+            {
+                _tInternalData()
+                    : alloc_pos_( 0 )
+                {
+                    primems_.clear();
+                }
+
+                OrderedUnidirList< PriMemItem > primems_;
+                size_t alloc_pos_;
+            } InternalData;
+            InternalData * private_pool_;
         };
 
     } // namespace memory
