@@ -683,14 +683,14 @@ namespace framework
 
         private:
             std::string owner_; 
-            Entry * entry_;
-            std::map<std::string, User *> user_cache_;
-            boost::uint32_t user_id_;
 #if defined( FRAMEWORK_MESSAGEQUEUE_SINGLE_PROCESS )
             PrivateMemory & shm_;
 #else
             SharedMemory & shm_;
 #endif
+            Entry * entry_;
+            std::map<std::string, User *> user_cache_;
+            boost::uint32_t user_id_;
         };
     }
 }
