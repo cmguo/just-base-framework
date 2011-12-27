@@ -4,12 +4,14 @@
 #include "framework/debuging/CoreDump.h"
 
 #ifdef BOOST_WINDOWS_API
-#  include <Windows.h>
+#  include <windows.h>
 #  include <time.h>
-#  include <DbgHelp.h>
 #  include <shlwapi.h>
 #  pragma comment(lib, "shlwapi")
-#  pragma comment(lib, "dbghelp")
+#  ifndef __MINGW32__
+#    include <DbgHelp.h>
+#    pragma comment(lib, "dbghelp")
+#  endif
 #else
 #  include <sys/time.h>
 #  include <sys/resource.h>
@@ -26,6 +28,8 @@ namespace framework
 {
     namespace debuging
     {
+
+#ifndef __MINGW32__
 
         //==============================================================================
         // 根据输入的标志、文件打开一个输出文件并返回句柄
@@ -70,7 +74,7 @@ namespace framework
         }
 
         static LONG WINAPI KeDumpDebugger(LPTSTR lpszTag, PEXCEPTION_POINTERS ExceptionInfo)
-        {
+        { 
             const TCHAR szMiniDump[] = { TEXT("Crash.DMP") };
             HANDLE hFile = GetDumpFile(lpszTag, szMiniDump, GENERIC_WRITE);
             if(hFile == INVALID_HANDLE_VALUE) return 0;
@@ -101,10 +105,16 @@ namespace framework
             return ExceptionFilter(lpExceptionInfo);
         }
 
+#endif
+
         bool core_dump_install()
         {
+#ifndef __MINGW32__
             SetUnhandledExceptionFilter(ExceptionFilter);
             return true;
+#else
+            return false;
+#endif
         }
 
     }
