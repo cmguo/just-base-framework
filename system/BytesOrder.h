@@ -50,7 +50,14 @@ namespace framework
                     typename _Ty, 
                     size_t _Sz = sizeof(_Ty)
                 >
-                struct call_rotate;
+                struct call_rotate
+                {
+                    static inline _Ty invoke(
+                        _Ty v)
+                    {
+                        return rotate(v);
+                    }
+                };
 
                 template <
                     typename _Ty
