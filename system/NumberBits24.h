@@ -73,30 +73,6 @@ namespace framework
 
             }
 
-            inline framework::system::UInt24 host_to_big_endian(
-                framework::system::UInt24 v)
-            {
-                return framework::system::UInt24(host_to_big_endian((boost::uint32_t)v));
-            }
-
-            inline framework::system::UInt24 big_endian_to_host(
-                framework::system::UInt24 v)
-            {
-                return framework::system::UInt24(big_endian_to_host((boost::uint32_t)v));
-            }
-
-            inline framework::system::UInt24 host_to_little_endian(
-                framework::system::UInt24 v)
-            {
-                return framework::system::UInt24(host_to_little_endian((boost::uint32_t)v));
-            }
-
-            inline framework::system::UInt24 little_endian_to_host(
-                framework::system::UInt24 v)
-            {
-                return framework::system::UInt24(little_endian_to_host((boost::uint32_t)v));
-            }
-
         }
 
     }
