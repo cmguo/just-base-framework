@@ -20,13 +20,13 @@ namespace framework
             boost::uint8_t size;
             boost::uint8_t size_left;
             boost::uint8_t mask_bit_test;
-            boost::uint8_t mask_bit;
+            _Ty mask_bit;
 #if (!defined BOOST_BIG_ENDIAN)
             boost::uint8_t data_off;
 #endif
             _Ty mask_byte_test;
             _Ty mask_byte;
-            _Ty sign_off; // 有符号的差值
+            _Ty sign_off; // diffrence between signed & unsinged integer
         };
 
 
@@ -45,7 +45,7 @@ namespace framework
         {
             VTable<_Ty> tbl;
             boost::uint8_t mask_bit_test = 0xff;
-            boost::uint8_t mask_bit = 0x80;
+            _Ty mask_bit = 0x80;
             _Ty mask_byte_test = (~(_Ty)0) << 7;
             _Ty sign_off = 0x3f;
             for (size_t i = 0; i < sizeof(_Ty); ++i) {
@@ -57,7 +57,7 @@ namespace framework
                 tbl.tbl[i].mask_bit_test = ~mask_bit_test;
                 mask_bit_test >>= 1;
                 tbl.tbl[i].mask_bit = mask_bit;
-                mask_bit >>= 1;
+                mask_bit <<= 7;
                 tbl.tbl[i].mask_byte_test = mask_byte_test;
                 tbl.tbl[i].mask_byte = ~mask_byte_test;
                 mask_byte_test = mask_byte_test << 7;
@@ -70,7 +70,7 @@ namespace framework
         template <
             typename _Ty
         >
-        static VTable<_Ty> const & v_tbl()
+        inline VTable<_Ty> const & v_tbl()
         {
             static VTable<_Ty> tbl = make_v_tbl<_Ty>();
             return tbl;
@@ -96,7 +96,7 @@ namespace framework
             }
  
             VariableNumber(
-                boost::uint8_t b = 0)
+                boost::uint8_t b)
                 : v_(v(b))
                 , n_(0)
             {
@@ -174,30 +174,12 @@ namespace framework
                 return VariableNumber(v_, n_ & (~v_.mask_bit));
             }
 
-            boost::uint8_t * data()
-            {
-#if (defined BOOST_BIG_ENDIAN)
-                return (boost::uint8_t *)&n_;
-#else
-                return (boost::uint8_t *)&n_ + v_.data_off;
-#endif
-            }
- 
-            boost::uint8_t const * data() const
-            {
-#if (defined BOOST_BIG_ENDIAN)
-                return (boost::uint8_t const *)&n_;
-#else
-                return (boost::uint8_t const *)&n_ + v_.data_off;
-#endif
-            }
- 
         private:
             VariableNumber(
                 VDef<_Ty> const & v, 
                 _Ty n)
-                : v_(v_)
-                , n_(n_)
+                : v_(v)
+                , n_(n)
             {
             }
  
