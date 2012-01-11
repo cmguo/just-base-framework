@@ -136,7 +136,7 @@ namespace framework
 
             bool is_unknown() const
             {
-                return (tbl[m].mask_byte & n) == tbl[m].mask_byte;
+                return (v_.mask_byte & n) == v_.mask_byte;
             }
 
         public:
