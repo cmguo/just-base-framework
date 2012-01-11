@@ -109,6 +109,15 @@ namespace framework
             {
             }
  
+            static VariableNumber unknown(
+                size_t c)
+            {
+                --c;
+                assert(c < sizeof(_Ty));
+                VDef<_Ty> const & v = v_tbl<_Ty>().tbl[c];
+                return VariableNumber(v, v.mask_byte);
+            }
+
         public:
             operator _Ty() const
             {
@@ -125,6 +134,12 @@ namespace framework
                 return v_.size;
             }
 
+            bool is_unknown() const
+            {
+                return (tbl[m].mask_byte & n) == tbl[m].mask_byte;
+            }
+
+        public:
             VariableNumber & operator=(
                 VariableNumber const & r)
             {
@@ -287,6 +302,10 @@ namespace framework
                     m = (b + e) / 2;
                 }
                 assert((tbl[m].mask_byte_test & n) == 0);
+                if ((tbl[m].mask_byte & n) == tbl[m].mask_byte) { // special: avoid unknown size
+                    assert(m < sizeof(_Ty) - 1);
+                    ++m;
+                }
                 return tbl[m];
             }
 
