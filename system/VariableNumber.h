@@ -44,7 +44,7 @@ namespace framework
         inline VTable<_Ty> make_v_tbl()
         {
             VTable<_Ty> tbl;
-            boost::uint8_t mask_bit_test = 0xff;
+            boost::uint8_t mask_bit_test = 0x7f;
             _Ty mask_bit = 0x80;
             _Ty mask_byte_test = (~(_Ty)0) << 7;
             _Ty sign_off = 0x3f;
@@ -276,13 +276,13 @@ namespace framework
                 VDef<_Ty> const (& tbl)[sizeof(_Ty)] = v_tbl<_Ty>().tbl;
                 while (m > b || m < e) {
                     if (tbl[m].mask_bit_test & n) {
-                        b = m + 1;
-                    } else {
                         e = m;
+                    } else {
+                        b = m + 1;
                     }
                     m = (b + e) / 2;
                 }
-                assert((tbl[m].mask_bit_test & n) == 0);
+                assert((tbl[m].mask_bit & ((_Ty)n << (m * 8))) == tbl[m].mask_bit);
                 return tbl[m];
             }
 
