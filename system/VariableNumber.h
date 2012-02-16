@@ -98,7 +98,11 @@ namespace framework
             VariableNumber(
                 boost::uint8_t b)
                 : v_(v(b))
-                , n_(0)
+#if (defined BOOST_BIG_ENDIAN)
+                , n_((_Ty)b << (v_.size * 8 - 8))
+#else
+                , n_((_Ty)b << (sizeof(_Ty) * 8 - v_.size * 8))
+#endif
             {
             }
  
