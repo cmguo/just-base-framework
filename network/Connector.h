@@ -116,6 +116,7 @@ namespace framework
                 , started_(false)
                 , connect_started_(false)
                 , canceled_(false)
+                , canceled_forever_(false)
                 , resolver_(io_svc)
                 , mutex_(mutex)
             {
@@ -259,6 +260,7 @@ namespace framework
             {
                 if (netname.is_digit()) {
                     if (!started_) {
+                        canceled_ = canceled_forever_;
                         stat_.reset();
                         stat_.resolve_time = 0;
                         endpoint_type e;
@@ -315,7 +317,7 @@ namespace framework
                     }
                 } else {
                     if (!started_) {
-                        started_ = true;
+                        canceled_ = canceled_forever_;
                         stat_.reset();
                         connect_started_ = false;
                         boost::asio::detail::mutex::scoped_lock lock(mutex_);
@@ -334,6 +336,7 @@ namespace framework
                             canceled_ = false;
                             return ec = boost::asio::error::operation_aborted;
                         }
+                        started_ = true;
                     }
                     resolver_iterator end;
                     for (; resolver_iterator_ != end; ++resolver_iterator_) {
@@ -405,6 +408,24 @@ namespace framework
                 netname_type const & netname, 
                 ConnectHandler const & handler);
 
+            boost::system::error_code cancel_forever(
+                boost::system::error_code & ec)
+            {
+                canceled_ = true;
+                canceled_forever_ = true;
+                resolver_.cancel(ec);
+                return ec;
+            }
+
+            void cancel_forever()
+            {
+                canceled_ = true;
+                canceled_forever_ = true;
+                boost::system::error_code ec;
+                cancel(ec);
+                boost::asio::detail::throw_error(ec);
+            }
+
             boost::system::error_code cancel(
                 boost::system::error_code & ec)
             {
@@ -445,12 +466,12 @@ namespace framework
             }
 
         private:
-        private:
             bool non_block_;
             boost::uint32_t time_out_; // ms
             bool started_;
             bool connect_started_;
             bool canceled_;
+            bool canceled_forever_;
             resolver_type resolver_;
             resolver_iterator resolver_iterator_;
             boost::asio::detail::mutex & mutex_;
@@ -670,6 +691,7 @@ namespace framework
             netname_type const & netname, 
             ConnectHandler const & handler)
         {
+            canceled_ = canceled_forever_;
             if (netname.is_digit()) {
                 stat_.reset();
                 stat_.resolve_time = 0;

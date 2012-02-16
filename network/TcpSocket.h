@@ -288,6 +288,36 @@ namespace framework
                 return ec;
             }
 
+            void cancel_forever()
+            {
+                boost::asio::detail::mutex::scoped_lock lock(mutex_);
+                connector_.cancel_forever();
+                // 取消异步操作，在某些平台仅仅close或者shutdown不能取消异步操作
+                super::cancel();
+#ifndef BOOST_WINDOWS_API
+                // linux 需要shutdown套接字才能取消同步阻塞操作
+                super::shutdown(boost::asio::socket_base::shutdown_both);
+#else           // win32 shutdown套接字会发生错误
+                super::close();
+#endif
+            }
+
+            boost::system::error_code cancel_forever(
+                boost::system::error_code & ec)
+            {
+                boost::asio::detail::mutex::scoped_lock lock(mutex_);
+                connector_.cancel_forever(ec);
+                // 取消异步操作，在某些平台仅仅close或者shutdown不能取消异步操作
+                super::cancel(ec);
+#ifndef BOOST_WINDOWS_API
+                // linux 需要shutdown套接字才能取消同步阻塞操作
+                super::shutdown(boost::asio::socket_base::shutdown_both, ec);
+#else           // win32 shutdown套接字会发生错误
+                super::close(ec);
+#endif
+                return ec;
+            }
+
             void close()
             {
                 boost::asio::detail::mutex::scoped_lock lock(mutex_);
