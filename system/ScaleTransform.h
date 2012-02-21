@@ -155,6 +155,16 @@ namespace framework
                 return (n > last_in_) ? inc(n - last_in_) : dec(last_in_ - n);
             }
 
+            boost::uint64_t set(
+                boost::uint64_t out, 
+                boost::uint64_t left = 0)
+            {
+                last_in_ = 0;
+                last_out_ = out;
+                last_left_ = left;
+                return last_in_;
+            }
+ 
             boost::uint64_t get() const
             {
                 return last_out_;
