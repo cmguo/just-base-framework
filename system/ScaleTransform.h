@@ -11,12 +11,31 @@ namespace framework
         class ScaleTransform
         {
         public:
+            ScaleTransform()
+                : scale_in_(1)
+                , scale_out_(1)
+                , last_in_(0)
+                , last_out_(0)
+                , last_left_(0)
+            {
+            }
+ 
             ScaleTransform(
                 boost::uint64_t scale_in, 
                 boost::uint64_t scale_out)
-                : last_in_(0)
+                : scale_in_(1)
+                , scale_out_(1)
+                , last_in_(0)
                 , last_out_(0)
                 , last_left_(0)
+            {
+                reset(scale_in, scale_out);
+            }
+ 
+        public:
+            void reset(
+                boost::uint64_t scale_in, 
+                boost::uint64_t scale_out)
             {
                 boost::uint64_t cd = common_divisor(scale_in, scale_out);
                 scale_in_ = scale_in / cd;
@@ -42,9 +61,9 @@ namespace framework
                         t.left -= scale_in_;
                     }
                 }
+                last_in_ = last_out_ = last_left_ = 0;
             }
- 
-        public:
+
             boost::uint64_t inc(
                 boost::uint64_t n)
             {
