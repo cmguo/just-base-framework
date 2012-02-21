@@ -64,6 +64,17 @@ namespace framework
                 last_in_ = last_out_ = last_left_ = 0;
             }
 
+            boost::uint64_t inc()
+            {
+                last_out_ += trans1_[1].out;
+                last_left_ += trans1_[1].left;
+                if (last_left_ >= scale_in_) {
+                    ++last_out_;
+                    last_left_ -= scale_in_;
+                }
+                return last_out_;
+            }
+
             boost::uint64_t inc(
                 boost::uint64_t n)
             {
