@@ -66,6 +66,7 @@ namespace framework
 
             boost::uint64_t inc()
             {
+                ++last_in_;
                 last_out_ += trans1_[1].out;
                 last_left_ += trans1_[1].left;
                 if (last_left_ >= scale_in_) {
@@ -78,6 +79,7 @@ namespace framework
             boost::uint64_t inc(
                 boost::uint64_t n)
             {
+                last_in_ += n;
                 if (scale_in_ == 1) {
                     if (scale_out_ == 1) {
                         return last_out_ += n;
@@ -114,6 +116,7 @@ namespace framework
             boost::uint64_t dec(
                 boost::uint64_t n)
             {
+                last_in_ -= n;
                 if (scale_in_ == 1) {
                     if (scale_out_ == 1) {
                         return last_out_ += n;
