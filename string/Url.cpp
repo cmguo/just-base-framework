@@ -64,7 +64,7 @@ namespace framework
         error_code Url::from_string(
             std::string const & url)
         {
-#define PROTOCOL    "[a-zA-Z]+"
+#define PROTOCOL    "[a-zA-Z][a-zA-Z0-9]+"
 #define USER        "[^:/@]+"
 #define PASS        USER
 #define HOST        "[-\\w]+(?:\\.[-\\w]+)*"
@@ -73,7 +73,7 @@ namespace framework
 #define PARAM       "[-a-zA-Z0-9+&@/%=~_|!:,.;\\(\\)]*"
 #define AUCHOR      PARAM
 
-            static std::string expr = "^(?:("PROTOCOL"):/{1,2}(?:(?:("USER")(?::("PASS"))?@)?("HOST")(?::("PORT"))?)?)("PATH")?(?:\\?("PARAM"))?(?:#("AUCHOR"))?$";
+            static std::string expr = "^(?:("PROTOCOL"):/{1,2}(?:(?:("USER")(?::("PASS"))?@)?("HOST")(?::("PORT"))?)?)("PATH")(?:\\?("PARAM"))?(?:#("AUCHOR"))?$";
 
             std::string const * p_url(&url);
             if (std::find_if(url.begin(), url.end(), not_graph()) != url.end()) {
