@@ -8,6 +8,16 @@ namespace framework
     namespace system
     {
 
+        /* 
+            at the beginning
+                out * scale_in + left = in * scale_out
+            let in = 1, then
+                out * scale_in + left = scale_out
+            because left < scale_in, so we have
+                out = scale_out / scale_in
+                left = scale_out - out * scale_in
+         */
+
         class ScaleTransform
         {
         public:
@@ -33,13 +43,43 @@ namespace framework
             }
  
         public:
+            static boost::uint64_t static_transfer(
+                boost::uint64_t scale_in, 
+                boost::uint64_t scale_out, 
+                boost::uint64_t n)
+            {
+                boost::uint64_t out = scale_out / scale_in;
+                boost::uint64_t left = scale_out - out * scale_in;
+                boost::uint64_t out2 = 0;
+                boost::uint64_t left2 = 0;
+                while (n) {
+                    if (n & 1) {
+                        out2 += out;
+                        left2 += left;
+                        if (left2 >= scale_in) {
+                            ++out2;
+                            left2 -= scale_in;
+                        }
+                    }
+                    n >>= 1;
+                    out <<= 1;
+                    left <<= 1;
+                    if (left >= scale_in) {
+                        ++out;
+                        left -= scale_in;
+                    }
+                }
+                return out2;
+            }
+
+        public:
             void reset(
                 boost::uint64_t scale_in, 
                 boost::uint64_t scale_out)
             {
-                boost::uint64_t cd = common_divisor(scale_in, scale_out);
-                scale_in_ = scale_in / cd;
-                scale_out_ = scale_out / cd;
+                common_divisor_ = common_divisor(scale_in, scale_out);
+                scale_in_ = scale_in / common_divisor_;
+                scale_out_ = scale_out / common_divisor_;
                 Transform t = {0, 0};
                 trans1_.resize(256);
                 for (size_t i = 0; i < 256; ++i) {
@@ -130,19 +170,19 @@ namespace framework
                     last_left_ -= trans1_[n & 0xff].left;
                 } else {
                     --last_out_;
-                    last_left_ += scale_out_ - trans1_[n & 0xff].left;
+                    last_left_ += scale_in_ - trans1_[n & 0xff].left;
                 }
                 n >>= 8;
                 if (n) {
                     size_t i = 0;
                     do {
                         if (n & 1) {
-                            last_out_ += trans2_[i].out;
+                            last_out_ -= trans2_[i].out;
                             if (last_left_ >= trans2_[i].left) {
                                 last_left_ -= trans2_[i].left;
                             } else {
                                 --last_out_;
-                                last_left_ += scale_out_ - trans2_[i].left;
+                                last_left_ += scale_in_ - trans2_[i].left;
                             }
                         }
                         n >>= 1;
@@ -173,6 +213,16 @@ namespace framework
                 return last_out_;
             }
  
+            boost::uint64_t scale_in() const
+            {
+                return scale_in_ * common_divisor_;
+            }
+ 
+            boost::uint64_t scale_out() const
+            {
+                return scale_out_ * common_divisor_;
+            }
+ 
         private:
             static boost::uint64_t common_divisor(
                 boost::uint64_t scale_in, 
@@ -201,6 +251,7 @@ namespace framework
 
             boost::uint64_t scale_in_;
             boost::uint64_t scale_out_;
+            boost::uint64_t common_divisor_;
             std::vector<Transform> trans1_;
             std::vector<Transform> trans2_;
 
