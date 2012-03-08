@@ -17,9 +17,8 @@ namespace framework
             : OrderedUnidirListHook< PriMemItem, NativePointerTraits<PriMemItem> >::type
         {
             PriMemItem(
-                size_t n, void * ptr, size_t size )
+                size_t n, size_t size )
                 : n_(n)
-                , ptr_(ptr)
                 , size_(size)
             {
             }
@@ -31,7 +30,6 @@ namespace framework
             }
 
             size_t n_;
-            void * ptr_;
             size_t size_;
         };
 
