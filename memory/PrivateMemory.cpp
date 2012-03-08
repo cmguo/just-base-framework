@@ -84,7 +84,7 @@ namespace framework
             assert( private_pool_->alloc_pos_ + size < page_size() );
 
             private_pool_->primems_.push( 
-                new ( private_pool_ + private_pool_->alloc_pos_ ) PriMemItem( id, size ) );
+                new ( ( char * )private_pool_ + private_pool_->alloc_pos_ ) PriMemItem( id, size ) );
             private_pool_->alloc_pos_ += size;
 
             return objptr;
