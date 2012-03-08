@@ -69,24 +69,23 @@ namespace framework
         {
             if ( private_pool_ == NULL )
             {
-                void * ptrpool = alloc_block( page_size() );
+                void * ptrpool = alloc_block( align_page( page_size() ) );
                 private_pool_ = new ( ptrpool ) InternalData;
-                private_pool_->alloc_pos_ = sizeof( InternalData );
+                private_pool_->alloc_pos_ = align_object( sizeof( InternalData ) );
             }
             else
             {// 找到了，则返回空，表示已经存在
                 if ( get_by_id( id ) ) return NULL;
             }
 
-            void * objptr = private_pool_ + private_pool_->alloc_pos_ + sizeof( PriMemItem );
-            size = align_object( size + sizeof( PriMemItem ) );
+            void * objptr = ( char * )private_pool_ + private_pool_->alloc_pos_ + align_object( sizeof( PriMemItem ) );
+            size = align_object( size + align_object( sizeof( PriMemItem ) ) );
 
             assert( private_pool_->alloc_pos_ + size < page_size() );
 
             private_pool_->primems_.push( 
-                new ( private_pool_ + private_pool_->alloc_pos_ ) PriMemItem( id, objptr, size ) );
+                new ( private_pool_ + private_pool_->alloc_pos_ ) PriMemItem( id, size ) );
             private_pool_->alloc_pos_ += size;
-
 
             return objptr;
         }
@@ -98,7 +97,7 @@ namespace framework
             
             for ( OrderedUnidirList< PriMemItem >::pointer p = private_pool_->primems_.first(); p; p = private_pool_->primems_.next(p)) 
             {
-                if ( p->n_ == id ) return p->ptr_;
+                if ( p->n_ == id ) return ( ( char * )p + align_object( sizeof( PriMemItem ) ) );
             }
 
             return NULL;
@@ -109,7 +108,7 @@ namespace framework
             if ( private_pool_ )
             {
                 private_pool_->primems_.clear();
-                free_block( private_pool_, page_size() );
+                free_block( private_pool_, align_page( page_size() ) );
             }
         }
 
