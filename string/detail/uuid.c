@@ -42,7 +42,7 @@ extern "C" {
 
 UUID_DEFINE(UUID_NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
-void
+static void
 uuid_generate(uuid_t out)
 {
     srand(time(NULL));

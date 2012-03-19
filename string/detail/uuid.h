@@ -73,7 +73,7 @@ int uuid_compare(const uuid_t uu1, const uuid_t uu2);
 void uuid_copy(uuid_t dst, const uuid_t src);
 
 /* gen_uuid.c */
-void uuid_generate(uuid_t out);
+static void uuid_generate(uuid_t out);
 void uuid_generate_random(uuid_t out);
 void uuid_generate_time(uuid_t out);
 
