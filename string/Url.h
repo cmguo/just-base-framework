@@ -194,7 +194,6 @@ namespace framework
                 anchor_ = v;
             }
 
-        private:
             class Parameter
             {
             public:
@@ -266,8 +265,35 @@ namespace framework
                 std::string line_;
                 std::string::size_type pos_eq_;
             };
+
             typedef std::set<Parameter> param_map;
 
+            typedef std::set<Parameter>::iterator param_iterator;
+
+            typedef std::set<Parameter>::const_iterator param_const_iterator;
+
+        public:
+            param_iterator param_begin()
+            {
+                return params_.begin();
+            }
+ 
+            param_iterator param_end()
+            {
+                return params_.end();
+            }
+ 
+            param_const_iterator param_begin() const
+            {
+                return params_.begin();
+            }
+ 
+            param_const_iterator param_end() const
+            {
+                return params_.end();
+            }
+ 
+        private:
             bool is_valid_;
             std::string protocol_;
             std::string user_;
