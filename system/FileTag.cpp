@@ -108,7 +108,7 @@ namespace framework
         }
 
         boost::system::error_code FileTag::get(
-            std::string const & module, 
+            std::string const & item, 
             std::string & value)
         {
             FileFinder fs(file_);
@@ -116,7 +116,7 @@ namespace framework
                 return framework::system::last_system_error();
             }
 
-            std::string tag = "!" + module + "_" + tag_ + "_tag";
+            std::string tag = "!" + item + "_" + tag_ + "_tag";
             std::string result;
             if (!fs.find(tag, result)) {
                 return framework::system::logic_error::item_not_exist;
@@ -130,7 +130,7 @@ namespace framework
         }
 
         boost::system::error_code FileTag::set(
-            std::string const & module, 
+            std::string const & item, 
             std::string const & value)
         {
             FileFinder fs(file_);
@@ -140,7 +140,7 @@ namespace framework
 
             time_t last_write_time = boost::filesystem::last_write_time(file_);
 
-            std::string tag = "!" + module + "_" + tag_ + "_tag";
+            std::string tag = "!" + item + "_" + tag_ + "_tag";
             std::string result;
             if (!fs.find(tag, result)) {
                 return framework::system::logic_error::item_not_exist;
@@ -168,7 +168,7 @@ namespace framework
                 value.resize(32);
                 fs.read(value);
                 value.resize(::strlen(value.c_str()));
-                valuus.push_back(std::make_pair(result.substr(1, result.size() - 13), value));
+                valuus.push_back(std::make_pair(result.substr(1, result.size() - 6 - tag_.size()), value));
             }
 
             fs.close();
