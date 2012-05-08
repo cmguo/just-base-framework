@@ -27,9 +27,9 @@ namespace framework
                 {
                     enum StatusEnum
                     {
-                        init, 
-                        weak, 
-                        global, 
+                        init, // temp status in load loop
+                        weak, // not responsible
+                        global, // from dns server
                     };
 
                     CacheData()
@@ -229,6 +229,24 @@ namespace framework
                         save_safe();
                         save_time_ = framework::timer::Time::now();
                         save_time_ += framework::timer::Duration::seconds(60);
+                    }
+                }
+
+                void update_weak( // update only if not exists
+                    NetName const & name, 
+                    std::vector<Endpoint> const & endpoints)
+                {
+                    std::map<std::string, CacheData>::iterator iter = cache_.find(name.host());
+                    if (iter == cache_.end()) {
+                        iter = cache_.insert(std::make_pair(name.host(), CacheData())).first;
+                        CacheData & data = iter->second;
+                        for (size_t i = 0; i < endpoints.size(); ++i) {
+                            if (endpoints[i].family() == Endpoint::v4) {
+                                data.v4_endpoints.push_back(endpoints[i]);
+                            } else {
+                                data.v6_endpoints.push_back(endpoints[i]);
+                            }
+                        }
                     }
                 }
 
