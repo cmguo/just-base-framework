@@ -85,7 +85,7 @@ namespace framework
 
         typedef struct _tAsyncRet
         {
-            struct _tAsyncRet()
+            _tAsyncRet()
                 :count_(0)
             {
             }
@@ -661,7 +661,7 @@ namespace framework
                         async_ret_.reset();
                         if (is_timer) { // timer callback
                             async_ret_.set_ec(boost::asio::error::timed_out);
-                            socket_.cancel();
+                            socket_.close();
                         } else { // connect callback
                             async_ret_.set_ec(ec);
                             timer_.cancel();
