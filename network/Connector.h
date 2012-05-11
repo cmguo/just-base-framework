@@ -17,6 +17,9 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/detail/socket_ops.hpp>
 
+#include <boost/asio.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 namespace framework
 {
     namespace network
@@ -80,6 +83,52 @@ namespace framework
             };
         }
 
+        typedef struct _tAsyncRet
+        {
+            struct _tAsyncRet()
+                :count_(0)
+            {
+            }
+
+            void reset()
+            {
+                ec_.clear();
+                count_ = 0;
+            }
+
+            void set_ec(
+                boost::system::error_code e)
+            {
+                ec_ = e;
+            }
+
+            void set_count(
+                size_t c)
+            {
+                count_ = c;
+            }
+
+            boost::system::error_code get_ec() const
+            {
+                return ec_;
+            }
+
+            size_t get_count() const
+            {
+                return count_;
+            }
+
+            const struct _tAsyncRet operator++()
+            {
+                count_++;
+                return *this;
+            }
+
+        private:
+            boost::system::error_code ec_;
+            size_t count_;
+        } async_ret_type;
+
         template <typename Protocol>
         class Connector
         {
@@ -113,12 +162,14 @@ namespace framework
                 boost::asio::detail::mutex & mutex)
                 : non_block_(false)
                 , time_out_(0)
+                , async_time_out_(0)
                 , started_(false)
                 , connect_started_(false)
                 , canceled_(false)
                 , canceled_forever_(false)
                 , resolver_(io_svc)
                 , mutex_(mutex)
+                , timer_(io_svc, boost::posix_time::seconds(0))
             {
             }
 
@@ -139,6 +190,12 @@ namespace framework
                 time_out_ = time_out;
             }
 
+            void set_async_time_out(
+                boost::uint32_t async_time_out)
+            {
+                async_time_out_ = async_time_out;
+            }
+
             boost::system::error_code set_non_block(
                 bool non_block, 
                 boost::system::error_code & ec)
@@ -150,6 +207,11 @@ namespace framework
             boost::uint32_t get_time_out() const
             {
                 return time_out_;
+            }
+
+            boost::uint32_t get_async_time_out() const
+            {
+                return async_time_out_;
             }
 
             bool get_non_block() const
@@ -467,7 +529,8 @@ namespace framework
 
         private:
             bool non_block_;
-            boost::uint32_t time_out_; // ms
+            boost::uint32_t time_out_; // 同步connector超时时间/ms
+            boost::uint32_t async_time_out_; // 异步connector超时时间/ms
             bool started_;
             bool connect_started_;
             bool canceled_;
@@ -476,6 +539,9 @@ namespace framework
             resolver_iterator resolver_iterator_;
             boost::asio::detail::mutex & mutex_;
             Statistics stat_;
+
+            boost::asio::deadline_timer timer_;
+            async_ret_type async_ret_;
         };
 
         namespace detail
@@ -511,6 +577,8 @@ namespace framework
                 // typedef typename InternetProtocol::resolver_iterator iterator;
                 typedef ResolverIterator iterator;
 
+                typedef void result_type;
+
                 connect_handler(
                     socket & s, 
                     bool non_block, 
@@ -518,7 +586,10 @@ namespace framework
                     resolver & rsv, 
                     bool & canceled, 
                     detail::ConnectorStatistics & stat, 
-                    ConnectHandler handler)
+                    ConnectHandler handler,
+                    boost::uint32_t async_time_out,
+                    boost::asio::deadline_timer & timer,
+                    async_ret_type & async_ret)
                     : socket_(s)
                     , non_block_(non_block)
                     , mutex_(mutex)
@@ -526,6 +597,9 @@ namespace framework
                     , resolver_(rsv)
                     , stat_(stat)
                     , handler_(handler)
+                    , async_time_out_(async_time_out)
+                    , timer_(timer)
+                    , async_ret_(async_ret)
                 {
                 }
 
@@ -549,7 +623,16 @@ namespace framework
                         socket_.get_io_service().post(
                             boost::asio::detail::bind_handler(handler_, ec));
                     } else {
-                        socket_.async_connect(e, *this);
+                        if (async_time_out_ != 0) {
+                            timer_.expires_at(timer_.expires_at() + boost::posix_time::seconds(async_time_out_));
+                            timer_.async_wait(boost::bind(*this,
+                                boost::asio::placeholders::error, true));
+
+                        socket_.async_connect(e, boost::bind(*this,
+                            boost::asio::placeholders::error, false));
+                        } else {
+                            socket_.async_connect(e, *this);
+                        }
                     }
                 }
 
@@ -571,6 +654,30 @@ namespace framework
                 }
 
             public:
+                void operator ()( // handle connect and timer
+                    boost::system::error_code const & ec, bool is_timer)
+                {
+                    if (async_ret_.get_count() == 0) { // first time
+                        async_ret_.reset();
+                        if (is_timer) { // timer callback
+                            async_ret_.set_ec(boost::asio::error::timed_out);
+                            socket_.cancel();
+                        } else { // connect callback
+                            async_ret_.set_ec(ec);
+                            timer_.cancel();
+                        }
+                        async_ret_.set_count(1);
+                    } else { // second time
+                        if (is_timer) { // timer callback
+                            // nothing todo
+                        } else { // connect callback
+                            // nothing todo
+                        }
+                        async_ret_.set_count(0);
+                        operator ()(async_ret_.get_ec());
+                    }
+                }
+
                 void operator ()( // handle_resolve
                     boost::system::error_code const & ec, 
                     iterator iter)
@@ -596,7 +703,16 @@ namespace framework
                         }
                         if (!ec1) {
                             LOG_S(framework::logger::Logger::kLevelDebug, "[async_connect] try server, ep: " << e.to_string());
-                            socket_.async_connect(e, *this);
+                            if (async_time_out_ != 0) {
+                                timer_.expires_at(timer_.expires_at() + boost::posix_time::seconds(async_time_out_));
+                                timer_.async_wait(boost::bind(*this,
+                                    boost::asio::placeholders::error, true));
+
+                                socket_.async_connect(e, boost::bind(*this,
+                                    boost::asio::placeholders::error, false));
+                            } else {
+                                socket_.async_connect(e, *this);
+                            }
                             return;
                         }
                         stat_.connect_time = stat_.elapse();
@@ -635,7 +751,16 @@ namespace framework
                             if (!ec1) {
                                 LOG_SECTION();
                                 LOG_S(framework::logger::Logger::kLevelDebug, "[async_connect] try server, ep: " << e.to_string());
-                                socket_.async_connect(e, *this);
+                                if (async_time_out_ != 0) {
+                                    timer_.expires_at(timer_.expires_at() + boost::posix_time::seconds(async_time_out_));
+                                    timer_.async_wait(boost::bind(*this,
+                                        boost::asio::placeholders::error, true));
+
+                                    socket_.async_connect(e, boost::bind(*this,
+                                        boost::asio::placeholders::error, false));
+                                } else {
+                                    socket_.async_connect(e, *this);
+                                }
                                 return;
                             }
                         }
@@ -656,6 +781,9 @@ namespace framework
                 iterator iterator_;
                 detail::ConnectorStatistics & stat_;
                 ConnectHandler handler_;
+                boost::uint32_t async_time_out_;
+                boost::asio::deadline_timer & timer_;
+                async_ret_type & async_ret_;
             };
 
             template <typename InternetProtocol, typename ConnectHandler>
@@ -704,12 +832,12 @@ namespace framework
                 }
                 e.port(netname.port());
                 detail::connect_handler<Protocol, ConnectHandler> connect_handler(
-                    peer, non_block_, mutex_, resolver_, canceled_, stat_, handler);
+                    peer, non_block_, mutex_, resolver_, canceled_, stat_, handler, async_time_out_, timer_, async_ret_);
                 connect_handler.start(e);
             } else {
                 stat_.reset();
                 detail::connect_handler<Protocol, ConnectHandler> connect_handler(
-                    peer, non_block_, mutex_, resolver_, canceled_, stat_, handler);
+                    peer, non_block_, mutex_, resolver_, canceled_, stat_, handler, async_time_out_, timer_, async_ret_);
                 connect_handler.start(netname);
             }
         }
