@@ -82,11 +82,12 @@ namespace framework
             size_t size = result.size();
             fs_.seekp(pos_);
             fs_.write(&result[0], size);
-            pos_ += size;
             if (buf_.size() < size) {
                 size = buf_.size();
             }
             buf_.consume(size);
+            pos_ += size;
+            fs_.seekg(pos_ + buf_.size());
         }
 
         bool FileFinder::fail() const
@@ -116,7 +117,7 @@ namespace framework
                 return framework::system::last_system_error();
             }
 
-            std::string tag = "!" + item + "_" + tag_ + "_tag";
+            std::string tag = "!" + item + "\\|" + tag_ + "\\|tag";
             std::string result;
             if (!fs.find(tag, result)) {
                 return framework::system::logic_error::item_not_exist;
@@ -140,7 +141,7 @@ namespace framework
 
             time_t last_write_time = boost::filesystem::last_write_time(file_);
 
-            std::string tag = "!" + item + "_" + tag_ + "_tag";
+            std::string tag = "!" + item + "\\|" + tag_ + "\\|tag";
             std::string result;
             if (!fs.find(tag, result)) {
                 return framework::system::logic_error::item_not_exist;
@@ -154,21 +155,54 @@ namespace framework
         }
 
         boost::system::error_code FileTag::get_all(
-            std::vector<std::pair<std::string, std::string> > & valuus)
+            std::map<std::string, std::string> & values)
         {
             FileFinder fs(file_);
             if (fs.fail()) {
                 return framework::system::last_system_error();
             }
 
-            std::string tag = "!\\w+" + tag_ + "_tag";
+            bool all = values.empty();
+
+            std::string tag = "!\\w+\\|" + tag_ + "\\|tag";
             std::string result;
             while (fs.find(tag, result)) {
-                std::string value;
-                value.resize(32);
-                fs.read(value);
-                value.resize(::strlen(value.c_str()));
-                valuus.push_back(std::make_pair(result.substr(1, result.size() - 6 - tag_.size()), value));
+                result = result.substr(1, result.find('|') - 1);
+                std::map<std::string, std::string>::iterator iter = values.find(result);
+                if (all && iter == values.end())
+                    iter = values.insert(std::make_pair(result, "")).first;
+                if (iter != values.end()) {
+                    std::string value;
+                    value.resize(32);
+                    fs.read(value);
+                    value.resize(::strlen(value.c_str()));
+                    iter->second = value;
+                }
+            }
+
+            fs.close();
+
+            return boost::system::error_code();
+        }
+
+        boost::system::error_code FileTag::set_all(
+            std::map<std::string, std::string> & values)
+        {
+            FileFinder fs(file_);
+            if (fs.fail()) {
+                return framework::system::last_system_error();
+            }
+
+            std::string tag = "!\\w+\\|" + tag_ + "\\|tag";
+            std::string result;
+            while (fs.find(tag, result)) {
+                result = result.substr(1, result.find('|') - 1);
+                printf("%s\n", result.c_str());
+                std::map<std::string, std::string>::iterator iter = values.find(result);
+                if (iter != values.end()) {
+                    fs.write(iter->second + '\0'); // write terminate \0
+                    iter->second.clear();
+                }
             }
 
             fs.close();
