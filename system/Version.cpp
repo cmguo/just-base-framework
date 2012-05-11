@@ -117,7 +117,7 @@ namespace framework
 
         boost::system::error_code Version::get_version(
             std::string const & file, 
-            std::vector<std::pair<std::string, std::string> > & module_versions)
+            std::map<std::string, std::string> & module_versions)
         {
             FileTag ft(file, "version");
             return ft.get_all(module_versions);
