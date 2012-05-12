@@ -139,15 +139,6 @@ namespace framework
                 return ec;
             }
 
-            boost::system::error_code set_async_time_out(
-                boost::uint32_t async_time_out,
-                boost::system::error_code & ec)
-            {
-                ec = boost::system::error_code();
-                connector_.set_async_time_out(async_time_out);
-                return ec;
-            }
-
             bool get_non_block(
                 boost::system::error_code & ec) const
             {
@@ -160,13 +151,6 @@ namespace framework
             {
                 ec.clear();
                 return connector_.get_time_out();
-            }
-
-            boost::uint32_t get_async_time_out(
-                boost::system::error_code & ec) const
-            {
-                ec.clear();
-                return connector_.get_async_time_out();
             }
 
         public:
