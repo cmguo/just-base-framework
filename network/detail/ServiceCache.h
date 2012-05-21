@@ -67,7 +67,7 @@ namespace framework
                         if (!ec) {
                             endpoint = Endpoint(Endpoint::tcp, (*iter).endpoint().port());
                         }
-                    } else if (name.family() == NetName::udp) {
+                    } else if (name.protocol() == NetName::udp) {
                         udp::resolver_iterator iter = udp_resolver_.resolve(
                             udp::resolver_query(udp::v4(), name.svc().c_str()), ec);
                         if (!ec) {
