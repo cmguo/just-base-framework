@@ -20,12 +20,12 @@ typedef struct {
     unsigned long state[5];
     unsigned long count[2];
     unsigned char buffer[64];
-} SHA1_CTX;
+} framework_string_SHA1_CTX;
 
-void SHA1Transform(unsigned long state[5], unsigned char buffer[64]);
-void SHA1Init(SHA1_CTX * context);
-void SHA1Update(SHA1_CTX * context, unsigned char * data, unsigned long len); /* JHB */
-void SHA1Final(unsigned char digest[20], SHA1_CTX * context);
+void framework_string_SHA1Transform(unsigned long state[5], unsigned char buffer[64]);
+void framework_string_SHA1Init(framework_string_SHA1_CTX * context);
+void framework_string_SHA1Update(framework_string_SHA1_CTX * context, unsigned char * data, unsigned long len); /* JHB */
+void framework_string_SHA1Final(unsigned char digest[20], framework_string_SHA1_CTX * context);
 
 #ifdef __cplusplus
 }

@@ -120,7 +120,7 @@ void SHAPrintContext(SHA1_CTX *context, char *msg){
 
 /* Hash a single 512-bit block. This is the core of the algorithm. */
 
-void SHA1Transform(unsigned long state[5], unsigned char buffer[64])
+void framework_string_SHA1Transform(unsigned long state[5], unsigned char buffer[64])
 {
 unsigned long a, b, c, d, e;
 typedef union {
@@ -175,7 +175,7 @@ static unsigned char workspace[64];
 
 /* SHA1Init - Initialize new context */
 
-void SHA1Init(SHA1_CTX* context)
+void framework_string_SHA1Init(framework_string_SHA1_CTX* context)
 {
     /* SHA1 initialization constants */
     context->state[0] = 0x67452301;
@@ -189,7 +189,7 @@ void SHA1Init(SHA1_CTX* context)
 
 /* Run your data through this. */
 
-void SHA1Update(SHA1_CTX* context, unsigned char* data, unsigned long len)	/*
+void framework_string_SHA1Update(framework_string_SHA1_CTX* context, unsigned char* data, unsigned long len)	/*
 JHB */
 {
 unsigned long i, j;	/* JHB */
@@ -202,9 +202,9 @@ unsigned long i, j;	/* JHB */
     context->count[1] += (len >> 29);
     if ((j + len) > 63) {
         memcpy(&context->buffer[j], data, (i = 64-j));
-        SHA1Transform(context->state, context->buffer);
+        framework_string_SHA1Transform(context->state, context->buffer);
         for ( ; i + 63 < len; i += 64) {
-            SHA1Transform(context->state, &data[i]);
+            framework_string_SHA1Transform(context->state, &data[i]);
         }
         j = 0;
     }
@@ -218,7 +218,7 @@ unsigned long i, j;	/* JHB */
 
 /* Add padding and return the message digest. */
 
-void SHA1Final(unsigned char digest[20], SHA1_CTX* context)
+void framework_string_SHA1Final(unsigned char digest[20], framework_string_SHA1_CTX* context)
 {
 unsigned long i;	/* JHB */
 unsigned char finalcount[8];
@@ -227,11 +227,11 @@ unsigned char finalcount[8];
         finalcount[i] = (unsigned char)((context->count[(i >= 4 ? 0 : 1)]
          >> ((3-(i & 3)) * 8) ) & 255);  /* Endian independent */
     }
-    SHA1Update(context, (unsigned char *)"\200", 1);
+    framework_string_SHA1Update(context, (unsigned char *)"\200", 1);
     while ((context->count[0] & 504) != 448) {
-        SHA1Update(context, (unsigned char *)"\0", 1);
+        framework_string_SHA1Update(context, (unsigned char *)"\0", 1);
     }
-    SHA1Update(context, finalcount, 8);  /* Should cause a SHA1Transform() */
+    framework_string_SHA1Update(context, finalcount, 8);  /* Should cause a SHA1Transform() */
     for (i = 0; i < 20; i++) {
         digest[i] = (unsigned char)
          ((context->state[i>>2] >> ((3-(i & 3)) * 8) ) & 255);
@@ -243,7 +243,7 @@ unsigned char finalcount[8];
     memset(context->count, 0, 8);
     memset(finalcount, 0, 8);	/* SWR */
 #ifdef SHA1HANDSOFF  /* make SHA1Transform overwrite it's own static vars */
-    SHA1Transform(context->state, context->buffer);
+    framework_string_SHA1Transform(context->state, context->buffer);
 #endif
 }
 

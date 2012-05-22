@@ -9,14 +9,17 @@ using namespace framework::system::logic_error;
 using namespace boost::system;
 
 #ifndef FRAMEWORK_WITH_LIB_SSL
-namespace framework { namespace string { namespace detail {
 #  ifdef BOOST_BIG_ENDIAN
 #    define WORDS_BIGENDIAN
 #  endif
 #  include "framework/string/detail/sha1.i"
-#  define SHA1_Init SHA1Init
-#  define SHA1_Update SHA1Update
-#  define SHA1_Final SHA1Final
+namespace framework { namespace string { namespace detail {
+    typedef framework_string_SHA1_CTX SHA1_CTX;
+    void SHA1_Init(SHA1_CTX * context) { framework_string_SHA1Init(context); }
+    void SHA1_Update(SHA1_CTX * context, unsigned char* data, boost::uint32_t len) 
+	{ framework_string_SHA1Update(context, data, len); }
+    void SHA1_Final(unsigned char digest[20], SHA1_CTX* context)
+	{ framework_string_SHA1Final(digest, context); }
 } } }
 #elif (defined BOOST_WINDOWS_API)
 #  if _MSC_VER > 1300
