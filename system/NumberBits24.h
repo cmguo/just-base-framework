@@ -38,21 +38,21 @@ namespace framework
             boost::uint8_t * data()
             {
 #if (defined BOOST_BIG_ENDIAN)
-                return (boost::uint8_t *)&n_;
-#else
                 return (boost::uint8_t *)&n_ + 1;
+#else
+                return (boost::uint8_t *)&n_;
 #endif
             }
  
             boost::uint8_t const * data() const
             {
 #if (defined BOOST_BIG_ENDIAN)
-                return (boost::uint8_t const *)&n_;
-#else
                 return (boost::uint8_t const *)&n_ + 1;
+#else
+                return (boost::uint8_t const *)&n_;
 #endif
             }
- 
+
         private:
             // big endian 后三个字节，第一个字节为0
             // little endian 前三个字节，最后一个字节为0
