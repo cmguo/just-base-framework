@@ -35,6 +35,7 @@ namespace framework
                 Time now = Time::now();
                 if (now > next_time_) {
                     duration = (now - time_start_);
+                    next_time_ = now;
                     next_time_ += interval_;
                     return true;
                 } else {
