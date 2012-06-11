@@ -611,7 +611,7 @@ namespace framework
                             boost::asio::detail::bind_handler(handler_, ec));
                     } else {
                         if (time_out_ != 0) {
-                            timer_.expires_at(timer_.expires_at() + boost::posix_time::milliseconds(time_out_));
+                            timer_.expires_from_now(boost::posix_time::milliseconds(time_out_));
                             timer_.async_wait(boost::bind(*this,
                                 boost::asio::placeholders::error, true));
 
@@ -691,7 +691,7 @@ namespace framework
                         if (!ec1) {
                             LOG_S(framework::logger::Logger::kLevelDebug, "[async_connect] try server, ep: " << e.to_string());
                             if (time_out_ != 0) {
-                                timer_.expires_at(timer_.expires_at() + boost::posix_time::milliseconds(time_out_));
+                                timer_.expires_from_now(boost::posix_time::milliseconds(time_out_));
                                 timer_.async_wait(boost::bind(*this,
                                     boost::asio::placeholders::error, true));
 
@@ -739,7 +739,7 @@ namespace framework
                                 LOG_SECTION();
                                 LOG_S(framework::logger::Logger::kLevelDebug, "[async_connect] try server, ep: " << e.to_string());
                                 if (time_out_ != 0) {
-                                    timer_.expires_at(timer_.expires_at() + boost::posix_time::milliseconds(time_out_));
+                                    timer_.expires_from_now(boost::posix_time::milliseconds(time_out_));
                                     timer_.async_wait(boost::bind(*this,
                                         boost::asio::placeholders::error, true));
 
