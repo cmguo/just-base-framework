@@ -402,7 +402,7 @@ namespace framework
                     } else {
                         ProcessInfo p_info;
                         p_info.bin_file = proc_path;
-                        if (p_info.bin_file.leaf() == bin_file) {
+                        if (p_info.bin_file.leaf() == bin_file || bin_file.empty()) {
                             p_info.pid =  kp.kp_proc.p_pid;
                             processes.push_back(p_info);
                         }
