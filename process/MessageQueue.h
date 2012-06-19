@@ -622,8 +622,9 @@ namespace framework
                     MessageNode * cur = NULL;
                     MessageNode * head = NULL;
                     while (true) {
+                        cur = alloc_object<MessageNode>();
+                        cur->next = NULL;
                         if ((data_size-position) <= entry_->msgnode_data_size) {
-                            cur = alloc_object<MessageNode>();
                             cur->size = data_size-position;
                             memcpy(cur->data, data.c_str()+position, cur->size);
                             position += cur->size;
@@ -634,11 +635,9 @@ namespace framework
                             }
                             break;
                         } else {
-                            cur = alloc_object<MessageNode>();
                             cur->size = entry_->msgnode_data_size;
                             memcpy(cur->data, data.c_str()+position, cur->size);
                             position += cur->size;
-                            cur->next = NULL;
                             if (!head) {
                                 head = cur;
                                 prev = cur;
