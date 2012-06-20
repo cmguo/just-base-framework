@@ -297,13 +297,18 @@ namespace framework
                     ls->log_day = false;
                     ls->log_roll = false;
                     ls->log_size = 0;
+#elif (defined BOOST_WINDOWS_API)
+                } else if (ls->log_file == "DBGVIEW") {
+                    ls->log_fp = new DebugStringStream;
+                    ls->log_day = false;
+                    ls->log_roll = false;
+                    ls->log_size = 0;
 #endif
                 } else if (ls->log_file == "STDOUT") {
                     ls->log_fp = new OStdStream;
                     ls->log_day = false;
                     ls->log_roll = false;
                     ls->log_size = 0;
-                } else if (ls->log_file == "MEMSTREAM" ) {
                 } else {
                     backup_open_file(ls);
                 }
