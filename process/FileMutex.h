@@ -7,7 +7,8 @@
 #  include <boost/interprocess/sync/interprocess_mutex.hpp>
 #else
 #  include "framework/process/detail/FileLock.h"
-
+#  include "framework/filesystem/Path.h"
+#  include <boost/filesystem/path.hpp>
 #  include <boost/thread.hpp>
 #endif
 
