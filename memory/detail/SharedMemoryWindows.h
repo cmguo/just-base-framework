@@ -102,6 +102,7 @@ namespace framework
                 ec.clear();
                 return false;
             }
+
         } // namespace detail
 
     } // namespace memory

@@ -126,7 +126,7 @@ namespace framework
 
             void * Shm_map(
                 shm_t id, 
-                error_code & ec )
+                boost::system::error_code & ec )
             {
                 void * p = MapViewOfFile(
                     id, 
@@ -154,12 +154,14 @@ namespace framework
             bool Shm_destory( 
                 int uni_id, 
                 int key, 
-                shm_t id)
+                boost::system::error_code & ec)
             {
                 BOOL b = ::DeleteFile(
                     name_key(uni_id, key).c_str());
+                ec = last_system_error();
                 return b;
             }
+
         } // namespace detail
 
     } // namespace memory

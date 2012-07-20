@@ -1,7 +1,7 @@
-// SharedMemoryWindows.h
+// SharedMemorySystemV.h
 
-#ifndef _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_SYSTEMV_H_
-#define _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_SYSTEMV_H_
+#ifndef _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_SYSTEM_V_H_
+#define _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_SYSTEM_V_H_
 
 #include "framework/string/Format.h"
 #include "framework/system/ErrorCode.h"
@@ -132,4 +132,4 @@ namespace framework
     } // namespace memory
 } // namespace framework
 
-#endif // _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_SYSTEMV_H_
+#endif // _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_SYSTEM_V_H_
