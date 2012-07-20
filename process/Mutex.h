@@ -26,15 +26,17 @@ namespace framework
         class Mutex
             : public boost::interprocess::interprocess_mutex
         {
+        public:
+            typedef boost::unique_lock<Mutex> scoped_lock;
         };
 
 #else
 
-        class Mutex : public framework::process::FileMutex
+        class Mutex 
+            : public framework::process::FileMutex
         {
         public:
             typedef boost::unique_lock<Mutex> scoped_lock;
-
         };
 #endif
     } // namespace this_process

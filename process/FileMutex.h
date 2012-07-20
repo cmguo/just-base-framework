@@ -6,29 +6,24 @@
 #ifdef BOOST_WINDOWS_API
 #  include <boost/interprocess/sync/interprocess_mutex.hpp>
 #else
-#  include "framework/process/detail/GlobalFileSemaphore.h"
+#  include "framework/process/detail/FileLock.h"
+
 #  include <boost/thread.hpp>
-#  include "framework/filesystem/Path.h"
-#  include <boost/filesystem/path.hpp>
 #endif
 
 namespace framework
 {
     namespace process
     {
+
 #ifdef BOOST_WINDOWS_API
 
         class FileMutex
             : public boost::interprocess::interprocess_mutex
         {
-        public:
-            FileMutex()
-            {
-            }
         };
 
 #else
-        extern void nullhander( int signo );
   
         class FileLocks
         {
