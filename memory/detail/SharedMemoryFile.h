@@ -1,10 +1,11 @@
-#ifndef _FRAMEWORK_MEMORY_DETAIL_SHAREMEMORYFILE_H_
-#define _FRAMEWORK_MEMORY_DETAIL_SHAREMEMORYFILE_H_
+// SharedMemoryFile.h
+
+#ifndef _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_FILE_H_
+#define _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_FILE_H_
 
 #include "framework/string/Format.h"
-#include "framework/system/ErrorCode.h"
-#include "framework/process/detail/GlobalFileSemaphore.h"
 #include "framework/filesystem/Path.h"
+#include "framework/system/ErrorCode.h"
 
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -12,7 +13,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#define INVALID_RET_VALUE -1
+#define SHM_NULL -1
 
 namespace framework
 {
@@ -21,7 +22,8 @@ namespace framework
 
         namespace detail
         {
-            typedef int SHM_ID;
+
+            typedef int shm_t;
 
             std::string name_key(
                 boost::uint32_t iid, 
@@ -36,7 +38,7 @@ namespace framework
                 return file_name;
             }
 
-            SHM_ID Shm_create( 
+            shm_t Shm_create( 
                 boost::uint32_t uni_id,
                 boost::uint32_t key, 
                 boost::uint32_t size,
@@ -44,67 +46,18 @@ namespace framework
             {
                 int id = ::open( 
                     name_key( uni_id, key ).c_str(),
-                    O_CREAT | O_RDWR | O_EXCL, 00666 );
-
+                    O_CREAT | O_RDWR | O_EXCL, 
+                    00666 );
                 if ( id == -1 ) {
                     ec = framework::system::last_system_error();
-                    return ( SHM_ID )-1;
+                    return SHM_NULL;
                 }
-
                 ::ftruncate( id, size );
                 framework::process::read_lock( id, 0, SEEK_SET, 0 );
-
-                return ( SHM_ID )id;
+                return id;
             }
 
-            void * Shm_map(
-                boost::uint32_t uni_id,
-                boost::uint32_t key,
-                SHM_ID id,
-                boost::uint32_t size,
-                bool iscreat,
-                 boost::system::error_code & ec )
-            {
-                void * p = NULL;
-
-                if ( iscreat )
-                {
-                    p = ::mmap(
-                        NULL,
-                        size,
-                        PROT_READ | PROT_WRITE,
-                        MAP_SHARED,
-                        id,
-                        0);
-
-                    if ( p == MAP_FAILED ){
-                        ec = framework::system::last_system_error();
-                        ::unlink( name_key( uni_id, key ).c_str() );
-                        return NULL;
-                    }
-                }
-                else
-                {
-                    struct stat stat_;
-                    ::fstat( id, &stat_ );
-                    p = ::mmap(
-                        NULL,
-                        stat_.st_size,
-                        PROT_READ | PROT_WRITE,
-                        MAP_SHARED,
-                        id,
-                        0);
-
-                    if ( p == MAP_FAILED ){
-                        ec = framework::system::last_system_error();
-                        return NULL;
-                    }
-                }
-
-                return p;
-            }
-
-            SHM_ID Shm_open( 
+            shm_t Shm_open( 
                 boost::uint32_t uni_id,
                 boost::uint32_t key,
                  boost::system::error_code & ec)
@@ -112,15 +65,33 @@ namespace framework
                 int id = ::open( 
                     name_key( uni_id, key ).c_str(),
                     O_RDWR );
-
                 if (id == -1) {
                     ec = framework::system::last_system_error();
-                    return ( SHM_ID )-1;
+                    return SHM_NULL;
                 }
-
                 framework::process::read_lock( id, 0, SEEK_SET, 0 );
+                return id;
+            }
 
-                return ( SHM_ID )id;
+            void * Shm_map(
+                shm_t id,
+                boost::system::error_code & ec )
+            {
+                void * p = NULL;
+                struct stat stat_;
+                ::fstat( id, &stat_ );
+                p = ::mmap(
+                    NULL,
+                    stat_.st_size,
+                    PROT_READ | PROT_WRITE,
+                    MAP_SHARED,
+                    id,
+                    0);
+                if ( p == MAP_FAILED ){
+                    ec = framework::system::last_system_error();
+                    return NULL;
+                }
+                return p;
             }
 
             void Shm_unmap( void * addr, size_t size )
@@ -128,31 +99,39 @@ namespace framework
                 ::munmap( addr, size );
             }
 
-            void Shm_close( SHM_ID id )
+            void Shm_close( shm_t id )
             {
+                ::close(id);
             }
 
             bool Shm_destory( 
                 int uni_id, 
-                int key, 
-                SHM_ID id)
+                int key,
+                boost::system::error_code & ec)
             {  
+                int id = ::open( 
+                    name_key( uni_id, key ).c_str(),
+                    O_RDWR );
+                if (id == -1) {
+                    ec = framework::system::last_system_error();
+                    return false;
+                }
                 bool ret = true;
                 /// 直接加非阻塞的写锁，成功则删除
-                if ( framework::process::write_lock( id, 0, SEEK_SET, 0 ) != -1 )
-                {
+                if ( framework::process::write_lock( id, 0, SEEK_SET, 0 ) != -1 ) {
+                    ::close(id);
                     if ( -1 == ::unlink( name_key( uni_id, key ).c_str() )  )
                         ret = false;
-                }
-                else
-                {
+                } else {
+                    ec = framework::system::last_system_error();
+                    ::close(id);
                     ret = false;
                 }
-
                 return ret;
             }
         } // namespace detail
 
     } // namespace memory
 } // namespace framework
-#endif // _FRAMEWORK_MEMORY_DETAIL_SHAREMEMORYFILE_H_
+
+#endif // _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_FILE_H_

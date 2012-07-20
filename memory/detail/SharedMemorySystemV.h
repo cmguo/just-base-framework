@@ -1,5 +1,7 @@
-#ifndef _FRAMEWORK_MEMORY_DETAIL_SHAREMEMORYSYSTEMV_H_
-#define _FRAMEWORK_MEMORY_DETAIL_SHAREMEMORYSYSTEMV_H_
+// SharedMemoryWindows.h
+
+#ifndef _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_SYSTEMV_H_
+#define _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_SYSTEMV_H_
 
 #include "framework/string/Format.h"
 #include "framework/system/ErrorCode.h"
@@ -12,7 +14,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define INVALID_RET_VALUE -1
+#define SHM_NULL -1
 
 namespace framework
 {
@@ -21,7 +23,7 @@ namespace framework
 
         namespace detail
         {
-            typedef int SHM_ID;
+            typedef int shm_t;
 
             std::string tmp_file_name(
                 boost::uint32_t iid)
@@ -31,11 +33,11 @@ namespace framework
                 file_name += "_";
                 file_name += format(iid);
                 int fd = ::open(file_name.c_str(), O_CREAT, S_IRWXG | S_IRWXO | S_IRWXU);
-		if ( -1 == fd )
-        	{
-	            const char* err_msg = "SystemV share memory create fail!";
+                if ( -1 == fd )
+                {
+                    const char* err_msg = "SystemV share memory create fail!";
                     throw std::runtime_error( err_msg );
-            	}
+                }
                 ::close(fd);
                 return file_name;
             }
@@ -48,11 +50,11 @@ namespace framework
                 return ftok(file_name.c_str(), key);
             }
 
-            SHM_ID Shm_create( 
+            shm_t Shm_create( 
                 boost::uint32_t uni_id,
                 boost::uint32_t key, 
                 boost::uint32_t size, 
-                 boost::system::error_code & ec)
+                boost::system::error_code & ec)
             {
                 int id = ::shmget(
                     name_key( uni_id, key ), 
@@ -60,64 +62,41 @@ namespace framework
                     IPC_CREAT | IPC_EXCL | 0666);
                 if (id == -1) {
                     ec = framework::system::last_system_error();
-                    return ( SHM_ID )-1;
+                    return ( shm_t )-1;
                 }
 
-                return ( SHM_ID )id;
+                return ( shm_t )id;
             }
 
-            void * Shm_map(
+            shm_t Shm_open( 
                 boost::uint32_t uni_id,
                 boost::uint32_t key,
-                SHM_ID id,
-                boost::uint32_t size,
-                bool iscreat,
-                 boost::system::error_code & ec )
-            {
-                void * p;
-                if ( iscreat )
-                {
-                    p = ::shmat(
-                        id, 
-                        NULL, 
-                        0);
-                    if (p == NULL) {
-                        ec = framework::system::last_system_error();
-                        ::shmctl(
-                            id, 
-                            IPC_RMID, 
-                            NULL);
-                        return NULL;
-                    }
-                }
-                else
-                {
-                    p = ::shmat(
-                        id, 
-                        0, 
-                        0);
-                    if (p == (void *)-1) {
-                        ec = framework::system::last_system_error();
-                        return NULL;
-                    }
-                }
-
-                return p;
-            }
-
-            SHM_ID Shm_open( 
-                boost::uint32_t uni_id,
-                boost::uint32_t key,
-                 boost::system::error_code & ec)
+                boost::system::error_code & ec)
             {
                 int id = ::shmget(
                     name_key(uni_id, key), 0, 0666);
-                if (id == -1) {
+                if (id == SHM_NULL) {
                     ec = framework::system::last_system_error();
-                    return ( SHM_ID )-1;
+                    return SHM_NULL;
                 }
 
-                return ( SHM_ID )id;
+                return ( shm_t )id;
+            }
+
+            void * Shm_map(
+                shm_t id,
+                boost::system::error_code & ec )
+            {
+                void * p;
+                p = ::shmat(
+                    id, 
+                    0, 
+                    0);
+                if (p == (void *)-1) {
+                    ec = framework::system::last_system_error();
+                    return NULL;
+                }
+                return p;
             }
 
             void Shm_unmap( void * addr, size_t size )
@@ -125,15 +104,21 @@ namespace framework
                 shmdt(addr);
             }
 
-            void Shm_close( SHM_ID id )
+            void Shm_close( shm_t id )
             {
             }
 
             bool Shm_destory( 
                 int uni_id, 
-                int key, 
-                SHM_ID id)
-            {  
+                int key,
+                boost::system::error_code & ec)
+            {
+                int id = ::shmget(
+                    name_key(uni_id, key), 0, 0666);
+                if (id == SHM_NULL) {
+                    ec = framework::system::last_system_error();
+                    return false;
+                }
                 bool ret = true;
                 shmid_ds sds;
                 if (shmctl(id, IPC_STAT, &sds) != -1 && sds.shm_nattch == 0)
@@ -146,4 +131,5 @@ namespace framework
 
     } // namespace memory
 } // namespace framework
-#endif // _FRAMEWORK_MEMORY_DETAIL_SHAREMEMORYSYSTEMV_H_
+
+#endif // _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_SYSTEMV_H_

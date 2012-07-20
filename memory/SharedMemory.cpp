@@ -2,16 +2,17 @@
 
 #include "framework/Framework.h"
 #include "framework/memory/SharedMemory.h"
+#include "framework/process/Mutex.h"
 #include "framework/string/Format.h"
 #include "framework/system/ErrorCode.h"
+#include "framework/container/List.h"
 #include "framework/logger/Logger.h"
 #include "framework/logger/LoggerFormatRecord.h"
 #include "framework/Version.h"
 using namespace framework::logger;
 using namespace framework::system;
 using namespace framework::string;
-
-#include "framework/container/List.h"
+using namespace framework::process;
 
 #include <boost/thread/thread.hpp>
 using namespace boost::system;
@@ -19,21 +20,15 @@ using namespace boost::system;
 #include <iostream>
 
 #ifdef BOOST_WINDOWS_API
-# include "framework/memory/detail/ShareMemoryWindows.h"
+# include "framework/memory/detail/SharedMemoryWinFile.h"
 #elif ( defined ( FRAMEWORK_NO_POSIX_IPC ) && defined ( FRAMEWORK_NO_SYSTEM_V_IPC ) )
-# include "framework/memory/detail/ShareMemoryFile.h"
+# include "framework/memory/detail/SharedMemoryFile.h"
 #elif ( defined ( FRAMEWORK_NO_POSIX_IPC ) )
-# include "framework/memory/detail/ShareMemorySystemV.h"
+# include "framework/memory/detail/SharedMemorySystemV.h"
 #elif ( defined ( FRAMEWORK_NO_SYSTEM_V_IPC ) )
-# include "framework/memory/detail/ShareMemoryPosix.h"
+# include "framework/memory/detail/SharedMemoryPosix.h"
 #else
-# include "framework/memory/detail/ShareMemorySystemV.h"
-#endif
-
-#ifndef BOOST_WINDOWS_API
-# include <boost/interprocess/shared_memory_object.hpp>
-# include "framework/process/FileMutex.h"
-using namespace framework::process;
+# include "framework/memory/detail/SharedMemorySystemV.h"
 #endif
 
 #define KEY_START   235562
@@ -155,11 +150,7 @@ namespace framework
             }
 
             Block const * block;
-#ifdef BOOST_WINDOWS_API
-            HANDLE map_id;
-#else
-            int map_id;
-#endif
+            detail::shm_t map_id;
             size_t size;
             void * map_addr;
         };
@@ -195,45 +186,6 @@ namespace framework
             SharedPointer end;
         };
 
-#ifdef BOOST_WINDOWS_API
-
-        struct SharedMemory::Mutex
-            : boost::interprocess::interprocess_mutex
-        {
-        public:
-            typedef boost::interprocess::scoped_lock<Mutex> scoped_lock;
-
-        public:
-            Mutex()
-            {
-            }
-
-            // make copyable
-            Mutex(
-                Mutex const & r)
-            {
-            }
-        };
-
-#else
-        struct SharedMemory::Mutex : public framework::process::FileMutex
-        {
-        public:
-            typedef boost::unique_lock<Mutex> scoped_lock;
-
-        public:
-            Mutex()
-            {
-            }
-
-            Mutex(
-                Mutex const & r)
-            {
-            }
-        };
-
-#endif
-
         struct SharedMemory::Head
         {
             Head(
@@ -250,7 +202,7 @@ namespace framework
             boost::uint32_t version;
             boost::uint32_t next_key;
             boost::uint32_t min_block_size;
-            Mutex mutex;
+            framework::process::Mutex mutex;
             BlockItem main_blocks;
             // 每个使用者申请的内存块，链表组织，本结构是头部，不代表某个块
             BlockItem user_blocks[SHARED_MEMORY_MAX_USER_ID];
@@ -666,17 +618,18 @@ namespace framework
             boost::uint32_t size, 
             error_code & ec)
         {
-            detail::SHM_ID id = detail::Shm_create( inst_id_, key, size, ec );
-            if ( INVALID_RET_VALUE == id ) 
-            {
+            detail::shm_t id = detail::Shm_create( inst_id_, key, size, ec );
+            if ( SHM_NULL == id ) {
                 LOG_F(Logger::kLevelError, "[alloc_raw_block] create failed (ec = %1%)" % ec.message());
                 return NULL;
             }
 
-            void * p = detail::Shm_map( inst_id_, key, id, size, true,  ec );
-            if ( NULL == p ) 
-            {
+            void * p = detail::Shm_map( id, ec );
+            if ( NULL == p ) {
                 LOG_F(Logger::kLevelError, "[alloc_raw_block] map failed (ec = %1%)" % ec.message());
+                detail::Shm_close(id);
+                error_code ec1;
+                detail::Shm_destory( inst_id_, key, ec1 );
                 return NULL;
             }
 
@@ -692,17 +645,16 @@ namespace framework
             boost::uint32_t size, 
             error_code & ec)
         {
-            detail::SHM_ID id = detail::Shm_open( inst_id_, key, ec );
-            if ( INVALID_RET_VALUE == id ) 
-            {
+            detail::shm_t id = detail::Shm_open( inst_id_, key, ec );
+            if ( SHM_NULL == id ) {
                 LOG_F(Logger::kLevelError, "[open_raw_block] open failed (ec = %1%)" % ec.message());
                 return NULL;
             }
 
-            void * p = detail::Shm_map( inst_id_, key, id, size, false, ec );
-            if ( NULL == p ) 
-            {
+            void * p = detail::Shm_map( id, ec );
+            if ( NULL == p ) {
                 LOG_F(Logger::kLevelError, "[open_raw_block] map failed (ec = %1%)" % ec.message());
+                detail::Shm_close(id);
                 return NULL;
             }
 
@@ -727,7 +679,7 @@ namespace framework
             }
             if ( r )
             {
-                r = detail::Shm_destory( inst_id_, key, b->map_id );
+                r = detail::Shm_destory( inst_id_, key, ec );
             }
 
             ec = last_system_error();

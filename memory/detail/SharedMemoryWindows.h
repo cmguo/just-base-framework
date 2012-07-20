@@ -1,15 +1,12 @@
-#ifndef _FRAMEWORK_MEMORY_DETAIL_SHAREMEMORYWINDOWS_H_
-#define _FRAMEWORK_MEMORY_DETAIL_SHAREMEMORYWINDOWS_H_
+// SharedMemoryWindows.h
+
+#ifndef _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_WINDOWS_H_
+#define _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_WINDOWS_H_
 
 #include "framework/string/Format.h"
 #include "framework/system/ErrorCode.h"
-using namespace framework::system;
 
-#include <windows.h>
-#include <boost/interprocess/sync/interprocess_mutex.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
-
-#define INVALID_RET_VALUE NULL
+#define SHM_NULL NULL
 
 namespace framework
 {
@@ -18,7 +15,7 @@ namespace framework
 
         namespace detail
         {
-            typedef HANDLE SHM_ID;
+            typedef HANDLE shm_t;
 
             std::string name_key(
                 boost::uint32_t iid, 
@@ -30,7 +27,7 @@ namespace framework
                     + "_" + format(key);
             }
 
-            SHM_ID Shm_create( 
+            shm_t Shm_create( 
                 boost::uint32_t uni_id,
                 boost::uint32_t key, 
                 boost::uint32_t size,
@@ -44,20 +41,16 @@ namespace framework
                     size, 
                     name_key(uni_id, key).c_str());
                 if (!id || GetLastError() == ERROR_ALREADY_EXISTS) {
+                    ec = last_system_error();
                     if (id)
                         CloseHandle(id);
-                    ec = last_system_error();
-                    return ( SHM_ID )NULL;
+                    return ( shm_t )NULL;
                 }
-                return ( SHM_ID )id;
+                return ( shm_t )id;
             }
 
             void * Shm_map(
-                boost::uint32_t uni_id,
-                boost::uint32_t key,
-                SHM_ID id,
-                boost::uint32_t size,
-                bool iscreat,
+                shm_t id,
                 error_code & ec )
             {
                 void * p = MapViewOfFile(
@@ -68,18 +61,13 @@ namespace framework
                     0);
                 if (p == NULL) {
                     ec = last_system_error();
-                    if ( iscreat ) 
-                    {           
-                        ::CloseHandle(id);
-                    }
-
                     return NULL;
                 }
 
                 return p;
             }
 
-            SHM_ID Shm_open( 
+            shm_t Shm_open( 
                 boost::uint32_t uni_id,
                 boost::uint32_t key,
                 error_code & ec)
@@ -90,10 +78,10 @@ namespace framework
                     name_key(uni_id, key).c_str());
                 if (!id) {
                     ec = last_system_error();
-                    return ( SHM_ID )NULL;
+                    return ( shm_t )NULL;
                 }
 
-                return ( SHM_ID )id;
+                return ( shm_t )id;
             }
 
             void Shm_unmap( void * addr, size_t size )
@@ -101,20 +89,22 @@ namespace framework
                 UnmapViewOfFile( addr );
             }
 
-            void Shm_close( SHM_ID id )
+            void Shm_close( shm_t id )
             {
                 CloseHandle( id );
             }
 
             bool Shm_destory( 
                 int uni_id, 
-                int key, 
-                SHM_ID id)
-            {  
+                int key,
+                boost::system::error_code & ec)
+            {
+                ec.clear();
                 return false;
             }
         } // namespace detail
 
     } // namespace memory
 } // namespace framework
-#endif // _FRAMEWORK_MEMORY_DETAIL_SHAREMEMORYWINDOWS_H_
+
+#endif // _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_WINDOWS_H_
