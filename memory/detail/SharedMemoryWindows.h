@@ -21,7 +21,7 @@ namespace framework
                 boost::uint32_t iid, 
                 boost::uint32_t key)
             {
-                return std::string("Global\\SharedMemory_") 
+                return std::string("Local\\SharedMemory_") 
                     + framework::simple_version_string() + "_" 
                     + format(iid) 
                     + "_" + format(key);
@@ -49,6 +49,23 @@ namespace framework
                 return ( shm_t )id;
             }
 
+            shm_t Shm_open( 
+                boost::uint32_t uni_id,
+                boost::uint32_t key,
+                error_code & ec)
+            {
+                HANDLE id = ::OpenFileMapping(
+                    FILE_MAP_ALL_ACCESS, 
+                    FALSE, 
+                    name_key(uni_id, key).c_str());
+                if (!id) {
+                    ec = last_system_error();
+                    return ( shm_t )NULL;
+                }
+
+                return ( shm_t )id;
+            }
+
             void * Shm_map(
                 shm_t id,
                 error_code & ec )
@@ -65,23 +82,6 @@ namespace framework
                 }
 
                 return p;
-            }
-
-            shm_t Shm_open( 
-                boost::uint32_t uni_id,
-                boost::uint32_t key,
-                error_code & ec)
-            {
-                HANDLE id = ::OpenFileMapping(
-                    FILE_MAP_ALL_ACCESS, 
-                    FALSE, 
-                    name_key(uni_id, key).c_str());
-                if (!id) {
-                    ec = last_system_error();
-                    return ( shm_t )NULL;
-                }
-
-                return ( shm_t )id;
             }
 
             void Shm_unmap( void * addr, size_t size )

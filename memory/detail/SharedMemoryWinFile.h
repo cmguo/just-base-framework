@@ -7,7 +7,7 @@
 #include "framework/filesystem/Path.h"
 #include "framework/system/ErrorCode.h"
 
-#define SHM_NULL NULL
+#define SHM_NULL INVALID_HANDLE_VALUE
 
 namespace framework
 {
@@ -71,22 +71,7 @@ namespace framework
                         name_key(uni_id, key).c_str());
                     return SHM_NULL;
                 }
-                HANDLE id = ::CreateFileMapping(
-                    hFile, 
-                    NULL, 
-                    PAGE_READWRITE, 
-                    0, 
-                    0, 
-                    NULL);
-                if (id == NULL) {
-                    ec = last_system_error();
-                    ::CloseHandle(hFile);
-                    ::DeleteFile(
-                        name_key(uni_id, key).c_str());
-                    return SHM_NULL;
-                }
-                ::CloseHandle(hFile);
-                return id;
+                return hFile;
             }
 
             shm_t Shm_open( 
@@ -106,28 +91,24 @@ namespace framework
                     ec = last_system_error();
                     return SHM_NULL;
                 }
-                HANDLE id = ::CreateFileMapping(
-                    hFile, 
-                    NULL, 
-                    PAGE_READWRITE, 
-                    0, 
-                    0, 
-                    NULL);
-                if (id == NULL) {
-                    ec = last_system_error();
-                    ::CloseHandle(
-                        hFile);
-                    return SHM_NULL;
-                }
-                ::CloseHandle(
-                    hFile);
-                return id;
+                return hFile;
             }
 
             void * Shm_map(
                 shm_t id, 
                 boost::system::error_code & ec )
             {
+                HANDLE hFileMap = ::CreateFileMapping(
+                    id, 
+                    NULL, 
+                    PAGE_READWRITE, 
+                    0, 
+                    0, 
+                    NULL);
+                if (hFileMap == NULL) {
+                    ec = last_system_error();
+                    return SHM_NULL;
+                }
                 void * p = MapViewOfFile(
                     id, 
                     FILE_MAP_ALL_ACCESS, 
@@ -136,8 +117,18 @@ namespace framework
                     0);
                 if (p == NULL) {
                     ec = last_system_error();
+                    ::CloseHandle(
+                        hFileMap);
                     return NULL;
                 }
+                // Mapped views of a file mapping object maintain internal references to the object, 
+                // and a file mapping object does not close until all references to it are released. 
+                // Therefore, to fully close a file mapping object, an application must unmap all 
+                // mapped views of the file mapping object by calling UnmapViewOfFile and close the 
+                // file mapping object handle by calling CloseHandle. These functions can be called 
+                // in any order.
+                ::CloseHandle(
+                    hFileMap);
                 return p;
             }
 
