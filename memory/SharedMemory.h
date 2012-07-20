@@ -149,7 +149,6 @@ namespace framework
             struct Head;
             struct AllocPos;
             struct LocalBlockList;
-            struct Mutex;
 
         private:
             LocalBlock * create_shm(
