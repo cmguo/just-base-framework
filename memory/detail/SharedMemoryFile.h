@@ -77,6 +77,7 @@ namespace framework
                     boost::uint32_t key,
                     boost::system::error_code & ec)
                 {
+                    ObjectWrapper ow_destroy;
                     ObjectWrapper ow;
                     ErrorCodeWrapper ecw(ec);
 
