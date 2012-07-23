@@ -11,8 +11,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#define NULL -1
-
 namespace framework
 {
     namespace memory
@@ -111,22 +109,16 @@ namespace framework
 
                 void * map(
                     void * id,
+                    boost::uint32_t size,
                     boost::system::error_code & ec )
                 {
                     ErrorCodeWrapper ecw(ec);
 
                     int fd = (int)id;
 
-                    struct stat stat_;
-                    int r = ::fstat(fd, &stat_);
-
-                    if (r == -1) {
-                        return false;
-                    }
-
                     void * p = ::mmap(
                         NULL,
-                        stat_.st_size, 
+                        size, 
                         PROT_READ | PROT_WRITE,
                         MAP_SHARED,
                         fd,
@@ -176,8 +168,8 @@ namespace framework
                 }
 
                 bool destory( 
-                    int iid, 
-                    int key,
+                    boost::uint32_t iid, 
+                    boost::uint32_t key,
                     boost::system::error_code & ec)
                 {  
                     ObjectWrapper ow;

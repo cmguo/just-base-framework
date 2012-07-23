@@ -117,6 +117,7 @@ namespace framework
 
                 virtual void * map(
                     void * id, 
+                    boost::uint32_t size,
                     boost::system::error_code & ec) = 0;
 
                 virtual bool unmap(

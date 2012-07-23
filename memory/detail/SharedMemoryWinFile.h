@@ -97,6 +97,7 @@ namespace framework
 
                 void * map(
                     void * id, 
+                    boost::uint32_t size,
                     boost::system::error_code & ec )
                 {
                     ObjectWrapper ow;

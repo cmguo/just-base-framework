@@ -32,7 +32,7 @@ using namespace boost::system;
 #    include "framework/memory/detail/SharedMemorySystemV.h"
 #  endif
 #endif
-//#  include "framework/memory/detail/SharedMemoryPrivate.h"
+#  include "framework/memory/detail/SharedMemoryPrivate.h"
 
 #define KEY_START   235562
 #define NAME_LEN    64
@@ -57,7 +57,7 @@ namespace framework
 #  endif
             &detail::shared_memory_file, 
 #endif
-            //&detail::shared_memory_private, 
+            &detail::shared_memory_private, 
         };
 
         SharedMemory * SharedMemory::instance_[SHARED_MEMORY_MAX_INST_ID] = {NULL};
@@ -665,7 +665,7 @@ namespace framework
                 return NULL;
             }
 
-            void * p = impl_->map(id, ec);
+            void * p = impl_->map(id, size, ec);
             if (NULL == p) {
                 LOG_F(Logger::kLevelError, "[alloc_raw_block] map failed (ec = %1%)" % ec.message());
                 error_code ec1;
@@ -696,7 +696,7 @@ namespace framework
                 return NULL;
             }
 
-            void * p = impl_->map(id, ec);
+            void * p = impl_->map(id, size, ec);
             if (NULL == p) {
                 LOG_F(Logger::kLevelError, "[open_raw_block] map failed (ec = %1%)" % ec.message());
                 error_code ec1;

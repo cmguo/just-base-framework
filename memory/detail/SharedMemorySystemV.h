@@ -12,8 +12,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define NULL -1
-
 namespace framework
 {
     namespace memory
@@ -102,6 +100,7 @@ namespace framework
 
                 void * map(
                     void * id,
+                    boost::uint32_t size,
                     boost::system::error_code & ec )
                 {
                     ErrorCodeWrapper ecw(ec);
@@ -110,7 +109,7 @@ namespace framework
 
                     void * p = ::shmat(
                         shmid, 
-                        0, 
+                        NULL, 
                         0);
 
                     if (p == (void *)-1) {
@@ -122,6 +121,7 @@ namespace framework
 
                 bool unmap(
                     void * addr, 
+                    boost::uint32_t size,
                     boost::system::error_code & ec)
                 {
                     ErrorCodeWrapper ecw(ec);
@@ -145,8 +145,8 @@ namespace framework
                 }
 
                 bool destory( 
-                    int iid, 
-                    int key,
+                    boost::uint32_t iid, 
+                    boost::uint32_t key,
                     boost::system::error_code & ec)
                 {
                     ErrorCodeWrapper ecw(ec);
