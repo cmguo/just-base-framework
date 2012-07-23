@@ -146,6 +146,7 @@ namespace framework
                 std::string const & v)
             {
                 protocol_ = v;
+                is_valid_ = !protocol_.empty();
             }
 
             void user(

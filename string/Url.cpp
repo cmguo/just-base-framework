@@ -32,8 +32,11 @@ namespace framework
             std::string url = protocol_ + "://";
             if (!user_.empty()) {
                 url += user_;
-                url += ":";
-                url += password_;
+                if (!password_.empty()) {
+                    url += ":";
+                    url += password_;
+                }
+                url += "@";
             }
             url += host_;
             if (!svc_.empty()) {
