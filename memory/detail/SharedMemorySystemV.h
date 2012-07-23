@@ -76,7 +76,7 @@ namespace framework
                     return true;
                 }
 
-                bool create( 
+                bool open( 
                     void ** id, 
                     boost::uint32_t iid,
                     boost::uint32_t key,
@@ -168,11 +168,11 @@ namespace framework
                         return false;
                     }
                     
-                    if (sds.nattch != 0) {
+                    if (sds.shm_nattch != 0) {
                         return false;
                     }
 
-                    int r = ::shmctl(
+                    r = ::shmctl(
                         shmid, 
                         IPC_RMID, 
                         NULL);

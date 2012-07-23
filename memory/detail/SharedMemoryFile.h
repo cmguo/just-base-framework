@@ -101,7 +101,6 @@ namespace framework
                     }
 
                     *id = ow.release();
-                    ow_destroy.release();
 
                     return true;
                 }
@@ -157,7 +156,7 @@ namespace framework
                     int fd = (int)id;
 
                     int r = ::close(
-                        id);
+                        fd);
 
                     if (r == -1) {
                         return false;
@@ -175,8 +174,8 @@ namespace framework
                     ErrorCodeWrapper ecw(ec);
 
                     int fd = ::open( 
-                        key_path( iid, key ).c_str(),
-                        O_RDWR );
+                        key_path(iid, key).c_str(),
+                        O_RDWR);
 
                     if (fd == -1) {
                         return false;

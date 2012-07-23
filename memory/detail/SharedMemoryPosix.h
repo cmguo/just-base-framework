@@ -46,7 +46,7 @@ namespace framework
                     }
 
                     ow_destroy.reset(name.c_str(), ::shm_unlink);
-                    ow.reset(fd, ::shm_close);
+                    ow.reset(fd, ::close);
 
                     int r = ::ftruncate(
                         fd, 
@@ -90,7 +90,7 @@ namespace framework
                         return false;
                     }
 
-                    ow.reset(fd, ::shm_close);
+                    ow.reset(fd, ::close);
 
                     int r = framework::process::read_lock(
                         fd, 
@@ -157,8 +157,8 @@ namespace framework
 
                     int fd = (int)id;
 
-                    int r = ::shm_close(
-                        id);
+                    int r = ::close(
+                        fd);
 
                     if (r == -1) {
                         return false;
@@ -176,14 +176,15 @@ namespace framework
                     ErrorCodeWrapper ecw(ec);
 
                     int fd = ::shm_open( 
-                        key_file( iid, key ).c_str(),
-                        O_RDWR );
+                        key_file(iid, key).c_str(),
+                        O_RDWR, 
+                        0);
 
                     if (fd == -1) {
                         return false;
                     }
 
-                    ow.reset(fd, ::shm_close);
+                    ow.reset(fd, ::close);
 
                     /// 直接加非阻塞的写锁，成功则删除
                     int r = framework::process::write_lock(
