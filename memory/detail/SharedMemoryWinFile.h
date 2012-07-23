@@ -3,11 +3,7 @@
 #ifndef _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_WIN_FILE_H_
 #define _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_WIN_FILE_H_
 
-#include "framework/string/Format.h"
-#include "framework/filesystem/Path.h"
-#include "framework/system/ErrorCode.h"
-
-#define SHM_NULL INVALID_HANDLE_VALUE
+#include "framework/memory/detail/SharedMemoryImpl.h"
 
 namespace framework
 {
@@ -17,141 +13,185 @@ namespace framework
         namespace detail
         {
 
-            typedef HANDLE shm_t;
-
-            std::string name_key(
-                boost::uint32_t iid, 
-                boost::uint32_t key)
+            class SharedMemoryWinFile
+                : public SharedMemoryImpl
             {
-                std::string file_name = framework::filesystem::framework_temp_path().string() + "/SharedMemory_";
-                file_name += framework::simple_version_string();
-                file_name += "_";
-                file_name += format(iid);
-                file_name += "_" + format( key );
+            private:
+                bool create( 
+                    void ** id, 
+                    boost::uint32_t iid,
+                    boost::uint32_t key, 
+                    boost::uint32_t size,
+                    boost::system::error_code & ec)
+                {
+                    std::string name = key_path(iid, key);
 
-                return file_name;
-            }
+                    ObjectWrapper ow_destroy;
+                    ObjectWrapper ow;
+                    ErrorCodeWrapper ecw(ec);
 
-            shm_t Shm_create( 
-                boost::uint32_t uni_id,
-                boost::uint32_t key, 
-                boost::uint32_t size,
-                error_code & ec)
-            {
-                HANDLE hFile = ::CreateFile(
-                    name_key(uni_id, key).c_str(), 
-                    GENERIC_READ | GENERIC_WRITE, 
-                    FILE_SHARE_READ | FILE_SHARE_WRITE, 
-                    NULL, 
-                    CREATE_NEW, 
-                    FILE_ATTRIBUTE_NORMAL, 
-                    NULL);
-                if (hFile == INVALID_HANDLE_VALUE) {
-                    ec = last_system_error();
-                    return SHM_NULL;
+                    HANDLE hFile = ::CreateFile(
+                        name.c_str(), 
+                        GENERIC_READ | GENERIC_WRITE, 
+                        FILE_SHARE_READ | FILE_SHARE_WRITE, 
+                        NULL, 
+                        CREATE_NEW, 
+                        FILE_ATTRIBUTE_NORMAL, 
+                        NULL);
+
+                    if (hFile == INVALID_HANDLE_VALUE) {
+                        return false;
+                    }
+
+                    ow_destroy.reset(name.c_str(), ::DeleteFile);
+                    ow.reset(hFile, ::CloseHandle);
+
+                    DWORD dw = ::SetFilePointer(
+                        hFile, 
+                        size, 
+                        NULL, 
+                        FILE_BEGIN);
+
+                    if (dw == INVALID_SET_FILE_POINTER) {
+                        return false;
+                    }
+
+                    BOOL b = ::SetEndOfFile(
+                        hFile);
+
+                    if (b == FALSE) {
+                        return NULL;
+                    }
+
+                    *id = ow.release();
+                    ow_destroy.release();
+
+                    return true;
                 }
-                DWORD dw = ::SetFilePointer(
-                    hFile, 
-                    size, 
-                    NULL, 
-                    FILE_BEGIN);
-                if (dw == INVALID_SET_FILE_POINTER) {
-                    ec = last_system_error();
-                    ::CloseHandle(hFile);
-                    ::DeleteFile(
-                        name_key(uni_id, key).c_str());
-                    return SHM_NULL;
-                }
-                BOOL b = ::SetEndOfFile(
-                    hFile);
-                if (b == FALSE) {
-                    ec = last_system_error();
-                    ::CloseHandle(hFile);
-                    ::DeleteFile(
-                        name_key(uni_id, key).c_str());
-                    return SHM_NULL;
-                }
-                return hFile;
-            }
 
-            shm_t Shm_open( 
-                boost::uint32_t uni_id,
-                boost::uint32_t key,
-                error_code & ec)
-            {
-                HANDLE hFile = ::CreateFile(
-                    name_key(uni_id, key).c_str(), 
-                    GENERIC_READ | GENERIC_WRITE, 
-                    FILE_SHARE_READ | FILE_SHARE_WRITE, 
-                    NULL, 
-                    OPEN_EXISTING, 
-                    FILE_ATTRIBUTE_NORMAL, 
-                    NULL);
-                if (hFile == INVALID_HANDLE_VALUE) {
-                    ec = last_system_error();
-                    return SHM_NULL;
+                bool open( 
+                    void ** id, 
+                    boost::uint32_t iid,
+                    boost::uint32_t key,
+                    error_code & ec)
+                {
+                    ErrorCodeWrapper ecw(ec);
+
+                    HANDLE hFile = ::CreateFile(
+                        key_path(iid, key).c_str(), 
+                        GENERIC_READ | GENERIC_WRITE, 
+                        FILE_SHARE_READ | FILE_SHARE_WRITE, 
+                        NULL, 
+                        OPEN_EXISTING, 
+                        FILE_ATTRIBUTE_NORMAL, 
+                        NULL);
+
+                    if (hFile == INVALID_HANDLE_VALUE) {
+                        return NULL;
+                    }
+
+                    *id = (void *)hFile;
+
+                    return hFile;
                 }
-                return hFile;
-            }
 
-            void * Shm_map(
-                shm_t id, 
-                boost::system::error_code & ec )
-            {
-                HANDLE hFileMap = ::CreateFileMapping(
-                    id, 
-                    NULL, 
-                    PAGE_READWRITE, 
-                    0, 
-                    0, 
-                    NULL);
-                if (hFileMap == NULL) {
-                    ec = last_system_error();
-                    return SHM_NULL;
+                void * map(
+                    void * id, 
+                    boost::system::error_code & ec )
+                {
+                    ObjectWrapper ow;
+                    ErrorCodeWrapper ecw(ec);
+
+                    HANDLE hFile = (HANDLE)id;
+
+                    HANDLE hFileMap = ::CreateFileMapping(
+                        hFile, 
+                        NULL, 
+                        PAGE_READWRITE, 
+                        0, 
+                        0, 
+                        NULL);
+
+                    if (hFileMap == NULL) {
+                        return false;
+                    }
+
+                    ow.reset(hFileMap, ::CloseHandle);
+
+                    void * p = MapViewOfFile(
+                        id, 
+                        FILE_MAP_ALL_ACCESS, 
+                        0, 
+                        0, 
+                        0);
+
+                    if (p == NULL) {
+                        return NULL;
+                    }
+                    // Mapped views of a file mapping object maintain internal references to the object, 
+                    // and a file mapping object does not close until all references to it are released. 
+                    // Therefore, to fully close a file mapping object, an application must unmap all 
+                    // mapped views of the file mapping object by calling UnmapViewOfFile and close the 
+                    // file mapping object handle by calling CloseHandle. These functions can be called 
+                    // in any order.
+
+                    // ow.release();
+
+                    return p;
                 }
-                void * p = MapViewOfFile(
-                    id, 
-                    FILE_MAP_ALL_ACCESS, 
-                    0, 
-                    0, 
-                    0);
-                if (p == NULL) {
-                    ec = last_system_error();
-                    ::CloseHandle(
-                        hFileMap);
-                    return NULL;
+
+                bool unmap(
+                    void * addr, 
+                    boost::uint32_t size,
+                    boost::system::error_code & ec)
+                {
+                    ErrorCodeWrapper ecw(ec);
+
+                    BOOL b = ::UnmapViewOfFile(
+                        addr);
+
+                    if (b == FALSE) {
+                        return false;
+                    }
+
+                    return true;
                 }
-                // Mapped views of a file mapping object maintain internal references to the object, 
-                // and a file mapping object does not close until all references to it are released. 
-                // Therefore, to fully close a file mapping object, an application must unmap all 
-                // mapped views of the file mapping object by calling UnmapViewOfFile and close the 
-                // file mapping object handle by calling CloseHandle. These functions can be called 
-                // in any order.
-                ::CloseHandle(
-                    hFileMap);
-                return p;
-            }
 
-            void Shm_unmap( void * addr, size_t size )
-            {
-                UnmapViewOfFile( addr );
-            }
+                bool close(
+                    void * id, 
+                    boost::system::error_code & ec)
+                {
+                    ErrorCodeWrapper ecw(ec);
 
-            void Shm_close( shm_t id )
-            {
-                CloseHandle( id );
-            }
+                    BOOL b = :: CloseHandle(
+                        id);
 
-            bool Shm_destory( 
-                int uni_id, 
-                int key, 
-                boost::system::error_code & ec)
-            {
-                BOOL b = ::DeleteFile(
-                    name_key(uni_id, key).c_str());
-                ec = last_system_error();
-                return b;
-            }
+                    if (b == FALSE) {
+                        return false;
+                    }
+
+                    return true;
+                }
+
+                bool destory( 
+                    boost::uint32_t iid, 
+                    boost::uint32_t key, 
+                    boost::system::error_code & ec)
+                {
+                    ErrorCodeWrapper ecw(ec);
+
+                    BOOL b = ::DeleteFile(
+                        key_path(iid, key).c_str());
+
+                    if (b == FALSE) {
+                        return false;
+                    }
+
+                    return b;
+                }
+            };
+
+            static SharedMemoryWinFile shared_memory_win_file;
 
         } // namespace detail
 

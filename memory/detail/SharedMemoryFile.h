@@ -3,17 +3,13 @@
 #ifndef _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_FILE_H_
 #define _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_FILE_H_
 
-#include "framework/string/Format.h"
-#include "framework/filesystem/Path.h"
-#include "framework/system/ErrorCode.h"
+#include "framework/process/detail/FileLock.h"
 
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-
-#define SHM_NULL -1
 
 namespace framework
 {
@@ -23,112 +19,203 @@ namespace framework
         namespace detail
         {
 
-            typedef int shm_t;
-
-            std::string name_key(
-                boost::uint32_t iid, 
-                boost::uint32_t key)
+            class SharedMemoryFile
+                : public SharedMemoryImpl
             {
-                std::string file_name = framework::filesystem::framework_temp_path().string() + "/SharedMemory_";
-                file_name += framework::simple_version_string();
-                file_name += "_";
-                file_name += format(iid);
-                file_name += "_" + format( key );
+            private:
+                bool create( 
+                    void ** id, 
+                    boost::uint32_t iid, 
+                    boost::uint32_t key, 
+                    boost::uint32_t size, 
+                    boost::system::error_code & ec)
+                {
+                    std::string name = key_path(iid, key);
 
-                return file_name;
-            }
+                    ObjectWrapper ow_destroy;
+                    ObjectWrapper ow;
+                    ErrorCodeWrapper ecw(ec);
 
-            shm_t Shm_create( 
-                boost::uint32_t uni_id,
-                boost::uint32_t key, 
-                boost::uint32_t size,
-                 boost::system::error_code & ec)
-            {
-                int id = ::open( 
-                    name_key( uni_id, key ).c_str(),
-                    O_CREAT | O_RDWR | O_EXCL, 
-                    00666 );
-                if ( id == -1 ) {
-                    ec = framework::system::last_system_error();
-                    return SHM_NULL;
+                    int fd = ::open( 
+                        name.c_str(),
+                        O_CREAT | O_RDWR | O_EXCL, 
+                        00666);
+
+                    if (fd == -1) {
+                        return false;
+                    }
+
+                    ow_destroy.reset(name.c_str(), ::unlink);
+                    ow.reset(fd, ::close);
+
+                    int r = ::ftruncate(
+                        fd, 
+                        size);
+
+                    if (r == -1) {
+                        return false;
+                    }
+
+                    r = framework::process::read_lock(
+                        fd, 
+                        0, 
+                        SEEK_SET, 
+                        0);
+
+                    if (r == -1) {
+                        return false;
+                    }
+
+                    *id = ow.release();
+
+                    return true;
                 }
-                ::ftruncate( id, size );
-                framework::process::read_lock( id, 0, SEEK_SET, 0 );
-                return id;
-            }
 
-            shm_t Shm_open( 
-                boost::uint32_t uni_id,
-                boost::uint32_t key,
-                 boost::system::error_code & ec)
-            {
-                int id = ::open( 
-                    name_key( uni_id, key ).c_str(),
-                    O_RDWR );
-                if (id == -1) {
-                    ec = framework::system::last_system_error();
-                    return SHM_NULL;
+                bool open( 
+                    void ** id, 
+                    boost::uint32_t iid,
+                    boost::uint32_t key,
+                    boost::system::error_code & ec)
+                {
+                    ObjectWrapper ow;
+                    ErrorCodeWrapper ecw(ec);
+
+                    int fd = ::open( 
+                        key_path(iid, key).c_str(),
+                        O_RDWR);
+
+                    if (fd == -1) {
+                        return false;
+                    }
+
+                    ow.reset(fd, ::close);
+
+                    int r = framework::process::read_lock(
+                        fd, 
+                        0, 
+                        SEEK_SET, 
+                        0);
+
+                    if (r == -1) {
+                        return false;
+                    }
+
+                    *id = ow.release();
+                    ow_destroy.release();
+
+                    return true;
                 }
-                framework::process::read_lock( id, 0, SEEK_SET, 0 );
-                return id;
-            }
 
-            void * Shm_map(
-                shm_t id,
-                boost::system::error_code & ec )
-            {
-                void * p = NULL;
-                struct stat stat_;
-                ::fstat( id, &stat_ );
-                p = ::mmap(
-                    NULL,
-                    stat_.st_size,
-                    PROT_READ | PROT_WRITE,
-                    MAP_SHARED,
-                    id,
-                    0);
-                if ( p == MAP_FAILED ){
-                    ec = framework::system::last_system_error();
-                    return NULL;
+                void * map(
+                    void * id,
+                    boost::system::error_code & ec )
+                {
+                    ErrorCodeWrapper ecw(ec);
+
+                    int fd = (int)id;
+
+                    struct stat stat_;
+                    int r = ::fstat(fd, &stat_);
+
+                    if (r == -1) {
+                        return false;
+                    }
+
+                    void * p = ::mmap(
+                        NULL,
+                        stat_.st_size, 
+                        PROT_READ | PROT_WRITE,
+                        MAP_SHARED,
+                        fd,
+                        0);
+
+                    if (p == MAP_FAILED) {
+                        return NULL;
+                    }
+
+                    return p;
                 }
-                return p;
-            }
 
-            void Shm_unmap( void * addr, size_t size )
-            {
-                ::munmap( addr, size );
-            }
+                bool unmap(
+                    void * addr, 
+                    boost::uint32_t size,
+                    boost::system::error_code & ec)
+                {
+                    ErrorCodeWrapper ecw(ec);
 
-            void Shm_close( shm_t id )
-            {
-                ::close(id);
-            }
+                    int r = ::munmap(
+                        addr, 
+                        size);
 
-            bool Shm_destory( 
-                int uni_id, 
-                int key,
-                boost::system::error_code & ec)
-            {  
-                int id = ::open( 
-                    name_key( uni_id, key ).c_str(),
-                    O_RDWR );
-                if (id == -1) {
-                    ec = framework::system::last_system_error();
-                    return false;
+                    if (r == -1) {
+                        return false;
+                    }
+
+                    return true;
                 }
-                bool ret = true;
-                /// 直接加非阻塞的写锁，成功则删除
-                if ( framework::process::write_lock( id, 0, SEEK_SET, 0 ) != -1 ) {
-                    ::close(id);
-                    if ( -1 == ::unlink( name_key( uni_id, key ).c_str() )  )
-                        ret = false;
-                } else {
-                    ec = framework::system::last_system_error();
-                    ::close(id);
-                    ret = false;
+
+                bool close(
+                    void * id, 
+                    boost::system::error_code & ec)
+                {
+                    ErrorCodeWrapper ecw(ec);
+
+                    int fd = (int)id;
+
+                    int r = ::close(
+                        id);
+
+                    if (r == -1) {
+                        return false;
+                    }
+
+                    return true;
                 }
-                return ret;
-            }
+
+                bool destory( 
+                    int iid, 
+                    int key,
+                    boost::system::error_code & ec)
+                {  
+                    ObjectWrapper ow;
+                    ErrorCodeWrapper ecw(ec);
+
+                    int fd = ::open( 
+                        key_path( iid, key ).c_str(),
+                        O_RDWR );
+
+                    if (fd == -1) {
+                        return false;
+                    }
+
+                    ow.reset(fd, ::close);
+
+                    /// 直接加非阻塞的写锁，成功则删除
+                    int r = framework::process::write_lock(
+                        fd, 
+                        0, 
+                        SEEK_SET, 
+                        0);
+
+                    if (r == -1) {
+                        return false;
+                    }
+
+                    ow.reset();
+
+                    r = ::unlink(
+                        key_path( iid, key ).c_str());
+
+                    if (r == -1) {
+                        return false;
+                    }
+
+                    return true;
+                }
+            };
+
+            static SharedMemoryFile shared_memory_file;
+
         } // namespace detail
 
     } // namespace memory

@@ -3,10 +3,7 @@
 #ifndef _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_WINDOWS_H_
 #define _FRAMEWORK_MEMORY_DETAIL_SHARED_MEMORY_WINDOWS_H_
 
-#include "framework/string/Format.h"
-#include "framework/system/ErrorCode.h"
-
-#define SHM_NULL NULL
+#include "framework/memory/detail/SharedMemoryImpl.h"
 
 namespace framework
 {
@@ -15,93 +12,154 @@ namespace framework
 
         namespace detail
         {
-            typedef HANDLE shm_t;
 
-            std::string name_key(
-                boost::uint32_t iid, 
-                boost::uint32_t key)
+            class SharedMemoryWindows
+                : public SharedMemoryImpl
             {
-                return std::string("Local\\SharedMemory_") 
-                    + framework::simple_version_string() + "_" 
-                    + format(iid) 
-                    + "_" + format(key);
-            }
-
-            shm_t Shm_create( 
-                boost::uint32_t uni_id,
-                boost::uint32_t key, 
-                boost::uint32_t size,
-                error_code & ec)
-            {
-                HANDLE id = ::CreateFileMapping(
-                    INVALID_HANDLE_VALUE, 
-                    NULL, 
-                    PAGE_READWRITE, 
-                    0, 
-                    size, 
-                    name_key(uni_id, key).c_str());
-                if (!id || GetLastError() == ERROR_ALREADY_EXISTS) {
-                    ec = last_system_error();
-                    if (id)
-                        CloseHandle(id);
-                    return ( shm_t )NULL;
-                }
-                return ( shm_t )id;
-            }
-
-            shm_t Shm_open( 
-                boost::uint32_t uni_id,
-                boost::uint32_t key,
-                error_code & ec)
-            {
-                HANDLE id = ::OpenFileMapping(
-                    FILE_MAP_ALL_ACCESS, 
-                    FALSE, 
-                    name_key(uni_id, key).c_str());
-                if (!id) {
-                    ec = last_system_error();
-                    return ( shm_t )NULL;
+            private:
+                static std::string name_key(
+                    boost::uint32_t iid, 
+                    boost::uint32_t key)
+                {
+                    return std::string("Local\\") + SharedMemoryImpl::key_file(iid, key);
                 }
 
-                return ( shm_t )id;
-            }
+                bool create(
+                    void ** id, 
+                    boost::uint32_t iid,
+                    boost::uint32_t key, 
+                    boost::uint32_t size,
+                    boost::system::error_code & ec)
+                {
+                    ObjectWrapper ow;
+                    ErrorCodeWrapper ecw(ec);
 
-            void * Shm_map(
-                shm_t id,
-                error_code & ec )
-            {
-                void * p = MapViewOfFile(
-                    id, 
-                    FILE_MAP_ALL_ACCESS, 
-                    0, 
-                    0, 
-                    0);
-                if (p == NULL) {
-                    ec = last_system_error();
-                    return NULL;
+                    HANDLE hFileMap = ::CreateFileMapping(
+                        INVALID_HANDLE_VALUE, 
+                        NULL, 
+                        PAGE_READWRITE, 
+                        0, 
+                        size, 
+                        name_key(iid, key).c_str());
+
+                    if (hFileMap == NULL) {
+                        return false;
+                    }
+
+                    ow.reset(hFileMap, ::CloseHandle);
+
+                    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+                        return false;
+                    }
+
+                    *id = ow.release();
+
+                    return true;
                 }
 
-                return p;
-            }
+                bool open( 
+                    void ** id, 
+                    boost::uint32_t iid,
+                    boost::uint32_t key,
+                    boost::system::error_code & ec)
+                {
+                    ErrorCodeWrapper ecw(ec);
 
-            void Shm_unmap( void * addr, size_t size )
-            {
-                UnmapViewOfFile( addr );
-            }
+                    HANDLE hFileMap = ::OpenFileMapping(
+                        FILE_MAP_ALL_ACCESS, 
+                        FALSE, 
+                        name_key(iid, key).c_str());
 
-            void Shm_close( shm_t id )
-            {
-                CloseHandle( id );
-            }
+                    if (hFileMap == NULL) {
+                        return false;
+                    }
 
-            bool Shm_destory( 
-                int uni_id, 
-                int key,
-                boost::system::error_code & ec)
-            {
-                ec.clear();
-                return false;
-            }
+                    *id = (void *)hFileMap;
+
+                    return true;
+                }
+
+                void * map(
+                    void * id, 
+                    boost::system::error_code & ec)
+                {
+                    ErrorCodeWrapper ecw(ec);
+
+                    HANDLE hFileMap = (HANDLE)id;
+
+                    void * p = MapViewOfFile(
+                        hFileMap, 
+                        FILE_MAP_ALL_ACCESS, 
+                        0, 
+                        0, 
+                        0);
+
+                    if (p == NULL) {
+                        return NULL;
+                    }
+
+                    return p;
+                }
+
+                bool unmap(
+                    void * addr, 
+                    boost::uint32_t size,
+                    boost::system::error_code & ec)
+                {
+                    ErrorCodeWrapper ecw(ec);
+
+                    BOOL b = ::UnmapViewOfFile(
+                        addr);
+
+                    if (b == FALSE) {
+                        return false;
+                    }
+
+                    return true;
+                }
+
+                bool close(
+                    void * id,
+                    boost::system::error_code & ec)
+                {
+                    ErrorCodeWrapper ecw(ec);
+
+                    HANDLE hFileMap = (HANDLE)id;
+
+                    BOOL b = ::CloseHandle(
+                        hFileMap);
+
+                    if (b == FALSE) {
+                        return false;
+                    }
+
+                    return true;
+                }
+
+                bool destory( 
+                    boost::uint32_t iid, 
+                    boost::uint32_t key,
+                    boost::system::error_code & ec)
+                {
+                    HANDLE hFileMap = ::OpenFileMapping(
+                        FILE_MAP_ALL_ACCESS, 
+                        FALSE, 
+                        name_key(iid, key).c_str());
+
+                    if (hFileMap == NULL) {
+                        return true;
+                    }
+
+                    ec.clear();
+
+                    ::CloseHandle(
+                        hFileMap);
+
+                    return false;
+                }
+            };
+
+            static SharedMemoryWindows shared_memory_windows;
 
         } // namespace detail
 
