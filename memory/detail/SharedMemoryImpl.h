@@ -68,7 +68,7 @@ namespace framework
                     void * obj, 
                     void * func)
                 {
-                    ((CloseFunc)func)((Object)obj);
+                    (*(CloseFunc *)func)(*(Object *)obj);
                 }
 
             private:
