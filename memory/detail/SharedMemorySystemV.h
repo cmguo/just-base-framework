@@ -105,7 +105,7 @@ namespace framework
                 {
                     ErrorCodeWrapper ecw(ec);
 
-                    int shmid = (int)id;
+                    int shmid = ObjectWrapper::cast_object<int>(id);
 
                     void * p = ::shmat(
                         shmid, 

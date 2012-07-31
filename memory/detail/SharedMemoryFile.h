@@ -113,7 +113,7 @@ namespace framework
                 {
                     ErrorCodeWrapper ecw(ec);
 
-                    int fd = *((int *)id);
+                    int fd = ObjectWrapper::cast_object<int>(id);
 
                     void * p = ::mmap(
                         NULL, 
@@ -154,7 +154,7 @@ namespace framework
                 {
                     ErrorCodeWrapper ecw(ec);
 
-                    int fd = *(int *)id;
+                    int fd = ObjectWrapper::cast_object<int>(id);
 
                     int r = ::close(
                         fd);

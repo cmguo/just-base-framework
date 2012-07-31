@@ -42,7 +42,7 @@ namespace framework
                     CloseFunc close_func)
                 {
                     assert(close_object_ == NULL);
-                    obj_ = (void *)obj;
+                    *(Object *)&obj_ = obj;
                     close_func_ = (void *)close_func;
                     close_object_ = &ObjectWrapper::close_object<Object, CloseFunc>;
                 }
@@ -59,6 +59,15 @@ namespace framework
                     return obj_;
                 }
 
+                template <
+                    typename Object
+                >
+                static Object cast_object(
+                    void * obj)
+                {
+                    return *(Object *)&obj;
+                }
+
             private:
                 template <
                     typename Object, 
@@ -68,7 +77,7 @@ namespace framework
                     void * obj, 
                     void * func)
                 {
-                    (*(CloseFunc *)func)(*(Object *)obj);
+                    ((CloseFunc)func)(*(Object *)&obj);
                 }
 
             private:
@@ -97,6 +106,9 @@ namespace framework
 
             class SharedMemoryImpl
             {
+            public:
+                virtual ~SharedMemoryImpl() {}
+
             public:
                 virtual bool create(
                     void ** id, 

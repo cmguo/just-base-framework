@@ -103,7 +103,7 @@ namespace framework
                     ObjectWrapper ow;
                     ErrorCodeWrapper ecw(ec);
 
-                    HANDLE hFile = (HANDLE)id;
+                    HANDLE hFile = ObjectWrapper::cast_object<HANDLE>(id);
 
                     HANDLE hFileMap = ::CreateFileMapping(
                         hFile, 
@@ -164,8 +164,10 @@ namespace framework
                 {
                     ErrorCodeWrapper ecw(ec);
 
+                    HANDLE hFile = ObjectWrapper::cast_object<HANDLE>(id);
+
                     BOOL b = :: CloseHandle(
-                        id);
+                        hFile);
 
                     if (b == FALSE) {
                         return false;

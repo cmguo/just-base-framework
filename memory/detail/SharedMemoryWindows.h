@@ -86,7 +86,7 @@ namespace framework
                 {
                     ErrorCodeWrapper ecw(ec);
 
-                    HANDLE hFileMap = (HANDLE)id;
+                    HANDLE hFileMap = ObjectWrapper::cast_object<HANDLE>(id);
 
                     void * p = MapViewOfFile(
                         hFileMap, 
@@ -125,7 +125,7 @@ namespace framework
                 {
                     ErrorCodeWrapper ecw(ec);
 
-                    HANDLE hFileMap = (HANDLE)id;
+                    HANDLE hFileMap = ObjectWrapper::cast_object<HANDLE>(id);
 
                     BOOL b = ::CloseHandle(
                         hFileMap);
