@@ -9,6 +9,7 @@
 #include "framework/logger/Logger.h"
 #include "framework/logger/LoggerStreamRecord.h"
 #include "framework/logger/LoggerSection.h"
+#include "framework/network/AsioHandlerHelper.h"
 
 #include <boost/asio/detail/handler_alloc_helpers.hpp>
 #include <boost/asio/detail/handler_invoke_helpers.hpp>
@@ -759,7 +760,9 @@ namespace framework
                     handler_(ec1);
                 }
 
-                //private:
+                PASS_DOWN_ASIO_HANDLER_FUNCTION(connect_handler, handler_)
+
+            private:
                 socket & socket_; // TCPÌ×½Ó×Ö
                 bool non_block_;
                 boost::asio::detail::mutex & mutex_;
@@ -772,30 +775,6 @@ namespace framework
                 boost::asio::deadline_timer & timer_;
                 async_ret_type & async_ret_;
             };
-
-            template <typename InternetProtocol, typename ConnectHandler>
-            inline void* asio_handler_allocate(std::size_t size,
-                connect_handler<InternetProtocol, ConnectHandler> * this_handler)
-            {
-                return boost_asio_handler_alloc_helpers::allocate(
-                    size, &this_handler->handler_);
-            }
-
-            template <typename InternetProtocol, typename ConnectHandler>
-            inline void asio_handler_deallocate(void* pointer, std::size_t size,
-                connect_handler<InternetProtocol, ConnectHandler>* this_handler)
-            {
-                boost_asio_handler_alloc_helpers::deallocate(
-                    pointer, size, &this_handler->handler_);
-            }
-
-            template <typename Function, typename InternetProtocol, typename ConnectHandler>
-            inline void asio_handler_invoke(const Function& function,
-                connect_handler<InternetProtocol, ConnectHandler>* this_handler)
-            {
-                boost_asio_handler_invoke_helpers::invoke(
-                    function, &this_handler->handler_);
-            }
 
         } // namespace detail
 
