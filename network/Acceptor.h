@@ -3,6 +3,8 @@
 #ifndef _FRAMEWORK_NETWORK_ACCEPTOR_H_
 #define _FRAMEWORK_NETWORK_ACCEPTOR_H_
 
+#include "framework/network/AsioHandlerHelper.h"
+
 #include <boost/asio/detail/throw_error.hpp>
 #include <boost/asio/detail/bind_handler.hpp>
 #include <boost/asio/error.hpp>
@@ -118,35 +120,13 @@ namespace framework
                     handler_(ec);
                 }
 
-                //private:
+                PASS_DOWN_ASIO_HANDLER_FUNCTION(accept_handler, handler_)
+
+            private:
                 acceptor & acceptor_;
                 socket & socket_; // TCPÌ×½Ó×Ö
                 AcceptHandler handler_;
             };
-
-            template <typename InternetProtocol, typename AcceptHandler>
-            inline void* asio_handler_allocate(std::size_t size,
-                accept_handler<InternetProtocol, AcceptHandler> * this_handler)
-            {
-                return boost_asio_handler_alloc_helpers::allocate(
-                    size, &this_handler->handler_);
-            }
-
-            template <typename InternetProtocol, typename AcceptHandler>
-            inline void asio_handler_deallocate(void* pointer, std::size_t size,
-                accept_handler<InternetProtocol, AcceptHandler>* this_handler)
-            {
-                boost_asio_handler_alloc_helpers::deallocate(
-                    pointer, size, &this_handler->handler_);
-            }
-
-            template <typename Function, typename InternetProtocol, typename AcceptHandler>
-            inline void asio_handler_invoke(const Function& function,
-                accept_handler<InternetProtocol, AcceptHandler>* this_handler)
-            {
-                boost_asio_handler_invoke_helpers::invoke(
-                    function, &this_handler->handler_);
-            }
 
         } // namespace detail
 
