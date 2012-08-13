@@ -11,110 +11,13 @@
 #define __FRAMEWORK_CONFIGURE_CONFIG_H_
 
 #include "framework/configure/Profile.h"
-#include "framework/string/Format.h"
-#include "framework/string/Parse.h"
-#include "framework/system/LogicError.h"
-
-//#include <boost/function.hpp>
+#include "framework/configure/ConfigItem.h"
 
 namespace framework
 {
     namespace configure
     {
         class Config;
-
-        class ConfigItem
-        {
-        public:
-            // 访问许可标志定义
-            enum Flag {
-                allow_set = 1, 
-                allow_get = 2, 
-            };
-
-            // 配置参数设置器函数类型
-            typedef boost::system::error_code (*settor_type)(
-                ConfigItem &, 
-                std::string const &);
-
-            // 配置参数读取器函数类型
-            typedef boost::system::error_code (*gettor_type)(
-                ConfigItem const &, 
-                std::string &);
-
-            // 销毁器函数类型
-            typedef void (*deletor_type)(
-                ConfigItem &);
-
-        protected:
-            ConfigItem(
-                unsigned int flag = 0)
-                : flag_(flag)
-                , settor_(NULL)
-                , gettor_(NULL)
-            {
-            }
-
-            ConfigItem(
-                unsigned int flag, 
-                settor_type settor, 
-                gettor_type gettor, 
-                deletor_type deletor)
-                : flag_(flag)
-                , settor_(settor)
-                , gettor_(gettor)
-                , deletor_(deletor)
-            {
-            }
-
-        private:
-            // non copyable
-            ConfigItem(
-                ConfigItem const & r);
-
-            ConfigItem & operator=(
-                ConfigItem const & r);
-
-        public:
-            boost::system::error_code set(
-                std::string const & str)
-            {
-                if (!(flag_ & allow_set))
-                    return framework::system::logic_error::no_permission;
-                return settor_(*this, str);
-            }
-
-            boost::system::error_code get(
-                std::string & str) const
-            {
-                if (!(flag_ & allow_get))
-                    return framework::system::logic_error::no_permission;
-                return gettor_(*this, str);
-            }
-
-            void del()
-            {
-                deletor_(*this);
-            }
-
-            unsigned int flag() const
-            {
-                return flag_;
-            }
-
-        private:
-            friend class Config;
-            boost::system::error_code init(
-                std::string const & str)
-            {
-                return settor_(*this, str);
-            }
-
-            unsigned int flag_;  // 访问许可标志
-            settor_type settor_; // 设置器
-            gettor_type gettor_; // 读取器
-            deletor_type deletor_; // 销毁器
-        };
 
         class ConfigModule
             : private std::map<std::string, ConfigItem *>
@@ -130,8 +33,9 @@ namespace framework
 
             ~ConfigModule()
             {
-                for (const_iterator ik = begin(); ik != end(); ++ik) {
+                for (iterator ik = begin(); ik != end(); ++ik) {
                     (ik->second)->del();
+                    (ik->second) = NULL;
                 }
             }
 
@@ -200,62 +104,6 @@ namespace framework
             std::string name_;
             Config const & conf_;
         };
-
-        // 默认的配置器
-        template <typename T>
-        struct ConfigItemT
-            : public ConfigItem
-        {
-        public:
-            ConfigItemT(
-                T & t, 
-                unsigned int flag)
-                : ConfigItem(
-                    flag, 
-                    ConfigItemT::set, 
-                    ConfigItemT::get, 
-                    ConfigItemT::del)
-                , t_(t)
-            {
-            }
-
-        private:
-            // 直接解析字符串并修改参数值本身
-            static boost::system::error_code set(
-                ConfigItem & item, 
-                std::string const & str)
-            {
-                ConfigItemT & this_item = static_cast<ConfigItemT &>(item);
-                return framework::string::parse2(str, this_item.t_);
-            }
-
-            // 直接从参数值本身格式化结果字符串
-            static boost::system::error_code get(
-                ConfigItem const & item, 
-                std::string & str)
-            {
-                ConfigItemT const & this_item = static_cast<ConfigItemT const &>(item);
-                return framework::string::format2(str, this_item.t_);
-            }
-
-            static void del(
-                ConfigItem & item)
-            {
-                ConfigItemT & this_item = static_cast<ConfigItemT &>(item);
-                delete &this_item;
-            }
-
-        private:
-            T & t_;
-        };
-
-        template <typename T>
-        static ConfigItemT<T> * make_item(
-            T & t, 
-            unsigned int flag)
-        {
-            return new ConfigItemT<T>(t, flag);
-        }
 
         class Config
             : private std::map<std::string, ConfigModule>
@@ -350,74 +198,17 @@ namespace framework
             std::string const & key, 
             ConfigItem * item)
         {
+            iterator it = find( key );
+            if ( it != end() )
+                (it->second)->del();
+
             (*this)[key] = item;
+
             conf_.register_param(name_, key, item);
             return *this;
         }
 
     } // namespace configure
 } // namespace framework
-
-#define CONFIG_PARAM(p, flag) \
-    std::make_pair( \
-    #p, \
-    framework::configure::make_item(p, (flag)) \
-    )
-
-#define CONFIG_PARAM_NOACC(p) \
-    std::make_pair( \
-    #p, \
-    framework::configure::make_item(p, (0)) \
-    )
-
-#define CONFIG_PARAM_RDONLY(p) \
-    std::make_pair( \
-    #p, \
-    framework::configure::make_item(p, (framework::configure::ConfigItem::allow_get)) \
-    )
-
-#define CONFIG_PARAM_WRONLY(p) \
-    std::make_pair( \
-    #p, \
-    framework::configure::make_item(p, (framework::configure::ConfigItem::allow_set)) \
-    )
-
-#define CONFIG_PARAM_RDWR(p) \
-    std::make_pair( \
-    #p, \
-    framework::configure::make_item(p, \
-    (framework::configure::ConfigItem::allow_get | framework::configure::ConfigItem::allow_set)) \
-    )
-
-#define CONFIG_PARAM_NAME(name, p, flag) \
-    std::make_pair( \
-    name, \
-    framework::configure::make_item(p, (flag)) \
-    )
-
-#define CONFIG_PARAM_NAME_NOACC(name, p) \
-    std::make_pair( \
-    name, \
-    framework::configure::make_item(p, (0)) \
-    )
-
-#define CONFIG_PARAM_NAME_RDONLY(name, p) \
-    std::make_pair( \
-    name, \
-    framework::configure::make_item(p, (framework::configure::ConfigItem::allow_get)) \
-    )
-
-#define CONFIG_PARAM_NAME_WRONLY(name, p) \
-    std::make_pair( \
-    name, \
-    framework::configure::make_item(p, (framework::configure::ConfigItem::allow_set)) \
-    )
-
-#define CONFIG_PARAM_NAME_RDWR(name, p) \
-    std::make_pair( \
-    name, \
-    framework::configure::make_item(p, \
-    (framework::configure::ConfigItem::allow_get | framework::configure::ConfigItem::allow_set)) \
-    )
 
 #endif // __FRAMEWORK_CONFIGURE_CONFIG_H_

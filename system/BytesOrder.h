@@ -47,43 +47,71 @@ namespace framework
                 }
 
                 template <
-                    size_t _Sz
+                    typename _Ty, 
+                    size_t _Sz = sizeof(_Ty)
                 >
-                struct call_rotate;
+                struct native_rotate;
 
                 template <
+                    typename _Ty
                 >
-                struct call_rotate<2>
+                struct native_rotate<_Ty, 1>
                 {
-                    static inline boost::uint16_t invoke(
-                        boost::uint16_t v)
+                    static inline _Ty invoke(
+                        _Ty v)
                     {
-                        return rotate(v);
+                        return v;
                     }
                 };
 
                 template <
+                    typename _Ty
                 >
-                struct call_rotate<4>
+                struct native_rotate<_Ty, 2>
                 {
-                    static inline boost::uint32_t invoke(
-                        boost::uint32_t v)
+                    static inline _Ty invoke(
+                        _Ty v)
                     {
-                        return rotate(v);
+                        boost::uint16_t r = rotate(*(boost::uint16_t*)&v);
+                        return *(_Ty *)&r;
                     }
                 };
 
                 template <
+                    typename _Ty
                 >
-                struct call_rotate<8>
+                struct native_rotate<_Ty, 4>
                 {
-                    static inline boost::uint64_t invoke(
-                        boost::uint64_t v)
+                    static inline _Ty invoke(
+                        _Ty v)
                     {
-                        return rotate(v);
+                        boost::uint32_t r = rotate(*(boost::uint32_t*)&v);
+                        return *(_Ty *)&r;
                     }
                 };
 
+                template <
+                    typename _Ty
+                >
+                struct native_rotate<_Ty, 8>
+                {
+                    static inline _Ty invoke(
+                        _Ty v)
+                    {
+                        boost::uint64_t r = rotate(*(boost::uint64_t*)&v);
+                        return *(_Ty *)&r;
+                    }
+                };
+
+            } // namespace detail
+
+            template <
+                typename _Ty
+            >
+            inline _Ty rotate(
+                _Ty v)
+            {
+                return detail::native_rotate<_Ty>::invoke(v);
             }
 
 #if (defined BOOST_BIG_ENDIAN)
@@ -112,7 +140,7 @@ namespace framework
             inline _Ty host_to_little_endian(
                 _Ty v)
             {
-                return detail::call_rotate<sizeof(v)>::invoke(v);
+                return rotate(v);
             }
 
             template <
@@ -121,7 +149,7 @@ namespace framework
             inline _Ty little_endian_to_host(
                 _Ty v)
             {
-                return detail::call_rotate<sizeof(v)>::invoke(v);
+                return rotate(v);
             }
 
 #elif (defined BOOST_LITTLE_ENDIAN)
@@ -132,7 +160,7 @@ namespace framework
             inline _Ty host_to_big_endian(
                 _Ty v)
             {
-                return detail::call_rotate<sizeof(v)>::invoke(v);
+                return rotate(v);
             }
 
             template <
@@ -141,7 +169,7 @@ namespace framework
             inline _Ty big_endian_to_host(
                 _Ty v)
             {
-                return detail::call_rotate<sizeof(v)>::invoke(v);
+                return rotate(v);
             }
 
             template <
@@ -164,62 +192,7 @@ namespace framework
 
 #else
 
-            template <
-                typename _Ty
-            >
-            inline _Ty host_to_big_endian(
-                _Ty v)
-            {
-                union {
-                    boost::uint8_t ch[sizeof(_Ty)];
-                    _Ty res;
-                } u;
-                for (size_t i = 0; i < sizeof(_Ty); ++i) {
-                    u.ch[i] = (boost::uint8_t)(v >> ((sizeof(_Ty) - i - 1) * 8));
-                }
-                return u.res;
-            }
-
-            template <
-                typename _Ty
-            >
-            inline _Ty big_endian_to_host(_Ty v)
-            {
-                boost::uint8_t * ch = (boost::uint8_t *)&v;
-                _Ty res = 0;
-                for (size_t i = 0; i < sizeof(_Ty); ++i) {
-                    res |= ch[i] << ((sizeof(_Ty) - i - 1) * 8);
-                }
-                return res;
-            }
-
-            template <
-                typename _Ty
-            >
-            inline _Ty host_to_little_endian(_Ty v)
-            {
-                union {
-                    boost::uint8_t ch[sizeof(_Ty)];
-                    _Ty res;
-                } u;
-                for (size_t i = 0; i < sizeof(_Ty); ++i) {
-                    u.ch[i] = (boost::uint8_t)(v >> (i * 8));
-                }
-                return u.res;
-            }
-
-            template <
-                typename _Ty
-            >
-            inline _Ty little_endian_to_host(_Ty v)
-            {
-                boost::uint8_t * ch = (boost::uint8_t *)&v;
-                _Ty res = 0;
-                for (size_t i = 0; i < sizeof(_Ty); ++i) {
-                    res |= ch[i] << (i * 8);
-                }
-                return res;
-            }
+ # error "Unknown endian type!"
 
 #endif
 

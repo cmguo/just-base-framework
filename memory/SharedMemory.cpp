@@ -2,39 +2,37 @@
 
 #include "framework/Framework.h"
 #include "framework/memory/SharedMemory.h"
+#include "framework/process/Mutex.h"
 #include "framework/string/Format.h"
 #include "framework/system/ErrorCode.h"
+#include "framework/container/List.h"
 #include "framework/logger/Logger.h"
 #include "framework/logger/LoggerFormatRecord.h"
 #include "framework/Version.h"
 using namespace framework::logger;
 using namespace framework::system;
 using namespace framework::string;
-
-#include "framework/container/List.h"
+using namespace framework::process;
 
 #include <boost/thread/thread.hpp>
 using namespace boost::system;
 
 #include <iostream>
 
+#include "framework/memory/detail/SharedMemoryImpl.h"
 #ifdef BOOST_WINDOWS_API
-# include "framework/memory/detail/ShareMemoryWindows.h"
-#elif ( defined ( FRAMEWORK_NO_POSIX_IPC ) && defined ( FRAMEWORK_NO_SYSTEM_V_IPC ) )
-# include "framework/memory/detail/ShareMemoryFile.h"
-#elif ( defined ( FRAMEWORK_NO_POSIX_IPC ) )
-# include "framework/memory/detail/ShareMemorySystemV.h"
-#elif ( defined ( FRAMEWORK_NO_SYSTEM_V_IPC ) )
-# include "framework/memory/detail/ShareMemoryPosix.h"
-#else
-# include "framework/memory/detail/ShareMemorySystemV.h"
+#  include "framework/memory/detail/SharedMemoryWindows.h"
+#  include "framework/memory/detail/SharedMemoryWinFile.h"
+#else 
+#  ifndef FRAMEWORK_NO_POSIX_IPC
+#    include "framework/memory/detail/SharedMemoryPosix.h"
+#  endif
+#  include "framework/memory/detail/SharedMemoryFile.h"
+#  ifndef FRAMEWORK_NO_SYSTEM_V_IPC
+#    include "framework/memory/detail/SharedMemorySystemV.h"
+#  endif
 #endif
-
-#ifndef BOOST_WINDOWS_API
-# include <boost/interprocess/shared_memory_object.hpp>
-# include "framework/process/FileMutex.h"
-using namespace framework::process;
-#endif
+#  include "framework/memory/detail/SharedMemoryPrivate.h"
 
 #define KEY_START   235562
 #define NAME_LEN    64
@@ -45,6 +43,22 @@ namespace framework
 {
     namespace memory
     {
+
+        static detail::SharedMemoryImpl * shared_memory_impls[] = {
+#ifdef BOOST_WINDOWS_API
+            &detail::shared_memory_windows, 
+            &detail::shared_memory_win_file, 
+#else 
+#  ifndef FRAMEWORK_NO_SYSTEM_V_IPC
+            &detail::shared_memory_systemv, 
+#  endif
+#  ifndef FRAMEWORK_NO_POSIX_IPC
+            &detail::shared_memory_posix, 
+#  endif
+            &detail::shared_memory_file, 
+#endif
+            &detail::shared_memory_private, 
+        };
 
         SharedMemory * SharedMemory::instance_[SHARED_MEMORY_MAX_INST_ID] = {NULL};
 
@@ -155,11 +169,7 @@ namespace framework
             }
 
             Block const * block;
-#ifdef BOOST_WINDOWS_API
-            HANDLE map_id;
-#else
-            int map_id;
-#endif
+            void * map_id;
             size_t size;
             void * map_addr;
         };
@@ -195,51 +205,14 @@ namespace framework
             SharedPointer end;
         };
 
-#ifdef BOOST_WINDOWS_API
-
-        struct SharedMemory::Mutex
-            : boost::interprocess::interprocess_mutex
-        {
-        public:
-            typedef boost::interprocess::scoped_lock<Mutex> scoped_lock;
-
-        public:
-            Mutex()
-            {
-            }
-
-            // make copyable
-            Mutex(
-                Mutex const & r)
-            {
-            }
-        };
-
-#else
-        struct SharedMemory::Mutex : public framework::process::FileMutex
-        {
-        public:
-            typedef boost::unique_lock<Mutex> scoped_lock;
-
-        public:
-            Mutex()
-            {
-            }
-
-            Mutex(
-                Mutex const & r)
-            {
-            }
-        };
-
-#endif
-
         struct SharedMemory::Head
         {
             Head(
-                boost::uint32_t iid)
+                boost::uint32_t iid, 
+                boost::uint32_t flag)
                 : iid(iid)
                 , version(SHARED_MEMORY_VERSION)
+                , flag(flag)
                 , next_key(KEY_START)
                 , min_block_size(SharedMemory::page_size())
             {
@@ -248,9 +221,10 @@ namespace framework
 
             boost::uint32_t iid;
             boost::uint32_t version;
+            boost::uint32_t flag;
             boost::uint32_t next_key;
             boost::uint32_t min_block_size;
-            Mutex mutex;
+            framework::process::Mutex mutex;
             BlockItem main_blocks;
             // 每个使用者申请的内存块，链表组织，本结构是头部，不代表某个块
             BlockItem user_blocks[SHARED_MEMORY_MAX_USER_ID];
@@ -275,6 +249,7 @@ namespace framework
             , inst_id_(iid)
             , user_id_(SHARED_MEMORY_MAX_USER_ID)
             , flag_(0)
+            , impl_(NULL)
             , local_main_blocks_(NULL)
             , local_blocks_(NULL)
         {
@@ -288,6 +263,7 @@ namespace framework
             : head_(NULL)
             , user_id_(SHARED_MEMORY_MAX_USER_ID)
             , flag_(0)
+            , impl_(NULL)
             , local_main_blocks_(NULL)
             , local_blocks_(NULL)
         {
@@ -332,19 +308,20 @@ namespace framework
             user_id_ = uid;
             flag_ = flag;
 
+            assert((flag_ & 0xff) < sizeof(shared_memory_impls) / sizeof(shared_memory_impls[0]));
+            impl_ = shared_memory_impls[flag_ & 0xff];
+
             LocalBlock * lb = NULL;
             if (flag_ & create) {
                 lb = create_shm(ec);
-                if (ec && !(flag_ & exclusive)) {
+                if (!lb && !(flag_ & exclusive)) {
                     lb = open_shm(ec);
                 }
             } else {
                 lb = open_shm(ec);
             }
 
-            if (ec) {
-                head_ = NULL;
-            } else {
+            if (lb) {
                 local_main_blocks_ = new LocalBlockList;
                 local_main_blocks_->push_back(lb);
                 local_main_blocks_->next_to_open = (BlockItem const *)(head_ + 1);
@@ -374,8 +351,8 @@ namespace framework
             ec = error_code();
             size_t size = page_size();
             lb = alloc_raw_block(KEY_START, size, ec);
-            if (!ec) {
-                head_ = new (lb->map_addr) Head(inst_id_);
+            if (lb) {
+                head_ = new (lb->map_addr) Head(inst_id_, flag_);
                 Mutex::scoped_lock lock(head_->mutex);
                 head_->alloc_pos.addr = SharedPointer(KEY_START, sizeof(Head));
                 head_->alloc_pos.end = head_->alloc_pos.addr + size;
@@ -408,8 +385,9 @@ namespace framework
             LocalBlock * lb = NULL;
             ec = error_code();
             lb = open_raw_block(KEY_START, page_size(), ec);
-            if (!ec) {
+            if (lb) {
                 head_ = (Head *)lb->map_addr;
+                assert(flag_ == head_->flag);
                 lb->block = (BlockItem const *)(head_ + 1);
                 Mutex::scoped_lock lock(head_->mutex);
                 while (lb->block->addr == NULL) {
@@ -473,11 +451,24 @@ namespace framework
             boost::uint32_t iid, 
             error_code & ec)
         {
+            open_for_remove(iid, 0, ec);
+        }
+
+        void SharedMemory::open_for_remove(
+            boost::uint32_t iid, 
+            boost::uint32_t flag, 
+            error_code & ec)
+        {
             assert(!is_open());
             inst_id_ = iid;
             user_id_ = SHARED_MEMORY_MAX_USER_ID;
+            flag_ = flag;
+
+            assert((flag_ & 0xff) < sizeof(shared_memory_impls) / sizeof(shared_memory_impls[0]));
+            impl_ = shared_memory_impls[flag_ & 0xff];
+
             LocalBlock * lb = open_raw_block(KEY_START, page_size(), ec);
-            if (ec) {
+            if (!lb) {
                 return;
             } else {
                 head_ = (Head *)lb->map_addr;
@@ -661,24 +652,29 @@ namespace framework
             return NULL;
         }
 
+        // don't check ec, check return value instead, if return value is not NULL, ec is undefined
         SharedMemory::LocalBlock * SharedMemory::alloc_raw_block(
             boost::uint32_t key, 
             boost::uint32_t size, 
             error_code & ec)
         {
-            detail::SHM_ID id = detail::Shm_create( inst_id_, key, size, ec );
-            if ( INVALID_RET_VALUE == id ) 
-            {
+            void * id = NULL;
+            bool b = impl_->create(&id, inst_id_, key, size, ec);
+            if (b == false) {
                 LOG_F(Logger::kLevelError, "[alloc_raw_block] create failed (ec = %1%)" % ec.message());
                 return NULL;
             }
 
-            void * p = detail::Shm_map( inst_id_, key, id, size, true,  ec );
-            if ( NULL == p ) 
-            {
+            void * p = impl_->map(id, size, ec);
+            if (NULL == p) {
                 LOG_F(Logger::kLevelError, "[alloc_raw_block] map failed (ec = %1%)" % ec.message());
+                error_code ec1;
+                impl_->close(id, ec1);
+                impl_->destory( inst_id_, key, ec1 );
                 return NULL;
             }
+
+            ec.clear();
 
             LocalBlock * lb = new LocalBlock;
             lb->map_id = id;
@@ -687,24 +683,28 @@ namespace framework
             return lb;
         }
 
+        // don't check ec, check return value instead, if return value is not NULL, ec is undefined
         SharedMemory::LocalBlock * SharedMemory::open_raw_block(
             boost::uint32_t key, 
             boost::uint32_t size, 
             error_code & ec)
         {
-            detail::SHM_ID id = detail::Shm_open( inst_id_, key, ec );
-            if ( INVALID_RET_VALUE == id ) 
-            {
+            void * id = NULL;
+            bool b = impl_->open(&id, inst_id_, key, ec);
+            if (b == false) {
                 LOG_F(Logger::kLevelError, "[open_raw_block] open failed (ec = %1%)" % ec.message());
                 return NULL;
             }
 
-            void * p = detail::Shm_map( inst_id_, key, id, size, false, ec );
-            if ( NULL == p ) 
-            {
+            void * p = impl_->map(id, size, ec);
+            if (NULL == p) {
                 LOG_F(Logger::kLevelError, "[open_raw_block] map failed (ec = %1%)" % ec.message());
+                error_code ec1;
+                impl_->close(id, ec);
                 return NULL;
             }
+
+            ec.clear();
 
             LocalBlock * lb = new LocalBlock;
             lb->map_id = id;
@@ -722,15 +722,13 @@ namespace framework
             if ( b->map_addr )
             {
                 key = b->block->key;
-                detail::Shm_unmap( b->map_addr, b->size );
-                detail::Shm_close( b->map_id );
+                impl_->unmap(b->map_addr, b->size, ec);
+                impl_->close(b->map_id, ec);
             }
             if ( r )
             {
-                r = detail::Shm_destory( inst_id_, key, b->map_id );
+                r = impl_->destory(inst_id_, key, ec);
             }
-
-            ec = last_system_error();
         }
 
         bool SharedMemory::valid_alloc(
@@ -740,7 +738,7 @@ namespace framework
             if (size + sizeof(BlockItem) > head_->alloc_pos.end - head_->alloc_pos.addr) {
                 size = align_page(size + sizeof(BlockItem));
                 LocalBlock * lb = alloc_raw_block(head_->next_key, size, ec);
-                if (ec)
+                if (!lb)
                     return false;
                 check(head_->main_blocks, *local_main_blocks_);
                 insert_block(head_->main_blocks, *lb);
@@ -779,7 +777,7 @@ namespace framework
                 if (local_list.empty() || bi->key > local_list.last()->block->key) {
                     error_code ec;
                     LocalBlock * lb = open_raw_block(bi->key, bi->size, ec);
-                    if (ec)
+                    if (!lb)
                         break;
                     lb->block = bi;
                     LOG_F(Logger::kLevelDebug1, "[check] add block (iid = %1%, key = %2%)" % inst_id_ % lb->block->key);

@@ -11,7 +11,7 @@
 #include <boost/filesystem/convenience.hpp>
 
 #ifdef BOOST_WINDOWS_API
-#  include <Windows.h>
+#  include <windows.h>
 #else
 #  include <boost/interprocess/shared_memory_object.hpp>
 #endif
@@ -38,8 +38,15 @@ namespace framework
                 return boost::filesystem::path();
             }
 #else
+
+#ifdef __FreeBSD__
+#  define PROC_EXE "file"
+#else
+#  define PROC_EXE "exe"
+#endif
             boost::system::error_code ec;
-            boost::filesystem::path ph(read_symlink("/proc/self/exe", ec));
+            boost::filesystem::path ph_h( "/proc/self" );
+            boost::filesystem::path ph(read_symlink(ph_h / PROC_EXE , ec));
             return ph;
 #endif
         }
@@ -69,10 +76,14 @@ namespace framework
         boost::filesystem::path framework_temp_path()
         {
             boost::filesystem::path framework_tmp_dir = temp_path();
-            std::string dirname = "framework_";
-            dirname += framework::version_string();
-            framework_tmp_dir /= boost::filesystem::path( dirname );
-            boost::filesystem::create_directories(framework_tmp_dir);
+            try {
+                std::string dirname = "framework_";
+                dirname += framework::version_string();
+                framework_tmp_dir /= boost::filesystem::path( dirname );
+                boost::filesystem::create_directories(framework_tmp_dir);
+            } catch ( ... ) {
+                // do nothing here
+            }
             return framework_tmp_dir;
         }
 

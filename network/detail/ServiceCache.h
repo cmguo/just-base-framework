@@ -1,5 +1,11 @@
 // HostCache.h
 
+#ifdef FRAMEWORK_NETWORK_WITH_SERVICE_CACHE
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ip/udp.hpp>
+using namespace boost::asio::ip;
+#endif
+
 namespace framework
 {
     namespace network
@@ -61,9 +67,9 @@ namespace framework
                         if (!ec) {
                             endpoint = Endpoint(Endpoint::tcp, (*iter).endpoint().port());
                         }
-                    } else if (name.family() == NetName::udp) {
+                    } else if (name.protocol() == NetName::udp) {
                         udp::resolver_iterator iter = udp_resolver_.resolve(
-                            udp::resolver_query(tcp::v4(), name.svc().c_str()), ec);
+                            udp::resolver_query(udp::v4(), name.svc().c_str()), ec);
                         if (!ec) {
                             endpoint = Endpoint(Endpoint::udp, (*iter).endpoint().port());
                         }
@@ -74,7 +80,7 @@ namespace framework
                             endpoint = Endpoint(Endpoint::tcp, (*iter).endpoint().port());
                         } else {
                             udp::resolver_iterator iter = udp_resolver_.resolve(
-                                udp::resolver_query(tcp::v4(), name.svc().c_str()), ec);
+                                udp::resolver_query(udp::v4(), name.svc().c_str()), ec);
                             if (!ec) {
                                 endpoint = Endpoint(Endpoint::udp, (*iter).endpoint().port());
                             }

@@ -3,6 +3,8 @@
 #ifndef _FRAMEWORK_NETWORK_ACCEPTOR_H_
 #define _FRAMEWORK_NETWORK_ACCEPTOR_H_
 
+#include "framework/network/AsioHandlerHelper.h"
+
 #include <boost/asio/detail/throw_error.hpp>
 #include <boost/asio/detail/bind_handler.hpp>
 #include <boost/asio/error.hpp>
@@ -13,10 +15,9 @@ namespace framework
     {
 
         template <typename InternetProtocol>
-        boost::system::error_code accept(
+        boost::system::error_code acceptor_open(
             typename InternetProtocol::acceptor & a,
             typename InternetProtocol::endpoint const & e,
-            typename InternetProtocol::socket & s, // 外部创建的套接字，不需要open
             boost::system::error_code & ec)
         {
             if (!a.is_open()) {
@@ -29,7 +30,22 @@ namespace framework
                 }
                 if (a.bind(e, ec))
                     return ec;
-                if (a.listen(1, ec))                    return ec;
+                if (a.listen(1, ec))
+                    return ec;
+            }
+            ec.clear();
+            return ec;
+        }
+
+        template <typename InternetProtocol>
+        boost::system::error_code accept(
+            typename InternetProtocol::acceptor & a,
+            typename InternetProtocol::endpoint const & e,
+            typename InternetProtocol::socket & s, // 外部创建的套接字，不需要open
+            boost::system::error_code & ec)
+        {
+            if (acceptor_open<InternetProtocol>(a, e, ec)) {
+                return ec;
             }
             while (a.accept(s, ec) == boost::asio::error::connection_aborted);
             return ec;
@@ -104,35 +120,13 @@ namespace framework
                     handler_(ec);
                 }
 
-                //private:
+                PASS_DOWN_ASIO_HANDLER_FUNCTION(accept_handler, handler_)
+
+            private:
                 acceptor & acceptor_;
                 socket & socket_; // TCP套接字
                 AcceptHandler handler_;
             };
-
-            template <typename InternetProtocol, typename AcceptHandler>
-            inline void* asio_handler_allocate(std::size_t size,
-                accept_handler<InternetProtocol, AcceptHandler> * this_handler)
-            {
-                return boost_asio_handler_alloc_helpers::allocate(
-                    size, &this_handler->handler_);
-            }
-
-            template <typename InternetProtocol, typename AcceptHandler>
-            inline void asio_handler_deallocate(void* pointer, std::size_t size,
-                accept_handler<InternetProtocol, AcceptHandler>* this_handler)
-            {
-                boost_asio_handler_alloc_helpers::deallocate(
-                    pointer, size, &this_handler->handler_);
-            }
-
-            template <typename Function, typename InternetProtocol, typename AcceptHandler>
-            inline void asio_handler_invoke(const Function& function,
-                accept_handler<InternetProtocol, AcceptHandler>* this_handler)
-            {
-                boost_asio_handler_invoke_helpers::invoke(
-                    function, &this_handler->handler_);
-            }
 
         } // namespace detail
 
@@ -145,22 +139,7 @@ namespace framework
         {
             if (!a.is_open()) {
                 boost::system::error_code ec;
-                if (a.open(e.protocol(), ec)) {
-                    a.get_io_service().post(
-                        boost::asio::detail::bind_handler(handler, ec));
-                    return;
-                }
-                {
-                    boost::system::error_code ec1;
-                    boost::asio::socket_base::reuse_address cmd(true);
-                    a.set_option(cmd, ec1);
-                }
-                if (a.bind(e, ec)) {
-                    a.get_io_service().post(
-                        boost::asio::detail::bind_handler(handler, ec));
-                    return;
-                }
-                if (a.listen(1, ec)) {
+                if (acceptor_open<InternetProtocol>(a, e, ec)) {
                     a.get_io_service().post(
                         boost::asio::detail::bind_handler(handler, ec));
                     return;

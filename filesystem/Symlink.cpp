@@ -8,7 +8,7 @@ using boost::filesystem::path;
 using boost::system::error_code;
 
 #ifdef BOOST_WINDOWS_API
-#  include <Windows.h>
+#  include <windows.h>
 #else
 #  include <unistd.h>
 #  define MAX_PATH 256

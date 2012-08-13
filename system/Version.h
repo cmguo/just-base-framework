@@ -64,6 +64,10 @@ namespace framework
                 std::string const & module, 
                 std::string & version);
 
+            static boost::system::error_code get_version(
+                std::string const & file, 
+                std::map<std::string, std::string> & module_versions);
+
             static boost::system::error_code set_version(
                 std::string const & file, 
                 std::string const & module, 

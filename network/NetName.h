@@ -178,6 +178,8 @@ namespace framework
 
             bool is_digit() const;
 
+            Endpoint endpoint() const;
+
         public:
             void ip(
                 unsigned long v);

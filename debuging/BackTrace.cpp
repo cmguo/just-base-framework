@@ -5,8 +5,10 @@
 #include "framework/debuging/detail/SymbolBuffer.h"
 
 #ifdef BOOST_WINDOWS_API
-#  include <dbghelp.h>
-#  pragma comment(lib, "dbghelp.lib")
+#  ifndef __MINGW32__
+#    include <dbghelp.h>
+#    pragma comment(lib, "dbghelp.lib")
+#  endif
 #else
 #  include <execinfo.h>
 #endif
@@ -16,20 +18,25 @@ namespace framework
     namespace debuging
     {
 
-#ifdef BOOST_WINDOWS_API
+#if (defined BOOST_WINDOWS_API)
 
         bool back_trace_init()
         {
+#ifndef __MINGW32__
             return ::SymInitialize(
                 ::GetCurrentProcess(), 
                 NULL, 
                 TRUE) == TRUE;
+#else
+            return FALSE;
+#endif
         }
 
         size_t back_trace(
             void ** addrs, 
             size_t num)
         {
+#ifndef __MINGW32__
             STACKFRAME64 StackFrame;
             ZeroMemory(&StackFrame, sizeof(StackFrame));
             StackFrame.AddrPC.Mode = AddrModeFlat;
@@ -64,6 +71,7 @@ label:
                 }
                 addrs[n] = (void *)StackFrame.AddrPC.Offset;
             }
+#endif
             return num;
         }
 
@@ -71,6 +79,7 @@ label:
             void *const * addrs, 
             size_t num)
         {
+#ifndef __MINGW32__
             detail::SymbolBuffer buffer(num);
             for (size_t i = 0; i < num; ++i) {
                 buffer.next();
@@ -114,6 +123,9 @@ label:
                 }
             }
             return buffer.detach();
+#else
+            return NULL;
+#endif
         }
 
         void release_symbols(

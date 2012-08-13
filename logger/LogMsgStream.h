@@ -24,6 +24,20 @@ namespace framework
 
         };
 
+#ifdef BOOST_WINDOWS_API
+        // 写入DebugPrint
+        class DebugStringStream : public IWriteStream
+        {
+        public:
+            virtual void write( char const * logmsg )
+            {
+                OutputDebugString(logmsg);
+            }
+
+            virtual ~DebugStringStream() {}
+        };
+#endif
+
         // 写入标准输出
         class OStdStream : public IWriteStream
         {

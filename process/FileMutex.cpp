@@ -4,7 +4,7 @@
 #include "framework/process/FileMutex.h"
 
 #ifdef BOOST_WINDOWS_API
-#  include <Windows.h>
+#  include <windows.h>
 #else
 #  include <stdlib.h>
 #  include <signal.h>
@@ -29,6 +29,11 @@ namespace framework
             std::string file_name = framework::filesystem::framework_temp_path().string();
             filename ? file_name += "/", file_name += filename : file_name += "/process.filelock";
             m_fd_ = open( file_name.c_str(), O_CREAT | O_RDWR, 0666 );
+            if ( -1 == m_fd_ )
+            {
+                const char* err_msg = "Filelocks create fail!";
+                throw std::runtime_error( err_msg );
+            }
         }
 
         FileLocks::~FileLocks()

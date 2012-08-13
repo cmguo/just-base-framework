@@ -145,9 +145,9 @@ namespace framework
 
             void insert_name( 
                 NetName const & name, 
-                std::vector< Endpoint > const & vec_endpoint )
+                std::vector<Endpoint> const & vec_endpoint)
             {
-                host_cache_.update( name, vec_endpoint );
+                host_cache_.update_weak(name, vec_endpoint);
             }
 
             void increment(

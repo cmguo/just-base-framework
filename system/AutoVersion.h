@@ -4,6 +4,7 @@
 #define _FRAMEWORK_SYSTEM_AUTO_VERSION_H_
 
 #include "framework/system/Version.h"
+#include "framework/system/FileTag.h"
 
 #include <boost/preprocessor/stringize.hpp>
 
@@ -30,12 +31,9 @@ BEGIN_NAME_SPACE
 
 char const * version_string()
 {
-    char const * tag_version = "!" \
-        BOOST_PP_STRINGIZE(NAME) "_version_tag" \
-        BOOST_PP_STRINGIZE(VERSION) "\000               ";
-    char const * str = tag_version + sizeof(BOOST_PP_STRINGIZE(NAME)) + 12;
-    framework::system::version_collection().insert(std::make_pair(BOOST_PP_STRINGIZE(NAME), str));
-    return str;
+    char const * version = FILE_TAG_VALUE(version, NAME, BOOST_PP_STRINGIZE(VERSION));
+    framework::system::version_collection().insert(std::make_pair(BOOST_PP_STRINGIZE(NAME), version));
+    return version;
 }
 
 framework::system::Version const & version()

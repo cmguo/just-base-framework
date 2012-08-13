@@ -15,17 +15,40 @@ namespace framework
     namespace memory
     {
 
+        namespace detail
+        {
+            class SharedMemoryImpl;
+        }
+
         class SharedMemory
             : public MemoryPage
         {
         public:
+            enum ImplEnum
+            {
+#ifdef BOOST_WINDOWS_API
+                windows, 
+                win_file, 
+#else 
+#  ifndef FRAMEWORK_NO_SYSTEM_V_IPC
+                systemv, 
+#  endif
+#  ifndef FRAMEWORK_NO_POSIX_IPC
+                posix, 
+#  endif
+                file, 
+#endif
+                private_, 
+                default_ = 0, 
+            };
+
             enum FlagEnum
             {
-                create = 1, 
-                exclusive = 2, 
-                alloc_get = 4, 
-                read_only = 16, 
-                read_write = 48, 
+                create = 1 << 8, 
+                exclusive = 2 << 8, 
+                alloc_get = 4 << 8, 
+                read_only = 16 << 8, 
+                read_write = 48 << 8, 
             };
 
             static boost::uint32_t const no_user_id = (boost::uint32_t)-1;
@@ -149,7 +172,6 @@ namespace framework
             struct Head;
             struct AllocPos;
             struct LocalBlockList;
-            struct Mutex;
 
         private:
             LocalBlock * create_shm(
@@ -160,6 +182,11 @@ namespace framework
 
             void open_for_remove(
                 boost::uint32_t iid, 
+                boost::system::error_code & ec);
+
+            void open_for_remove(
+                boost::uint32_t iid, 
+                boost::uint32_t flag, 
                 boost::system::error_code & ec);
 
             void check(
@@ -205,6 +232,7 @@ namespace framework
             boost::uint32_t inst_id_; // 我的User ID
             boost::uint32_t user_id_; // 我的User ID
             boost::uint32_t flag_;
+            detail::SharedMemoryImpl * impl_;
             LocalBlockList * local_main_blocks_;
             LocalBlockList * local_blocks_;
         };

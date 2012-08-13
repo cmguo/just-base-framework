@@ -21,8 +21,10 @@ using namespace boost::system;
 #include <fstream>
 
 #ifdef BOOST_WINDOWS_API
-#  include <Windows.h>
-#  include <Winternl.h>
+#  include <windows.h>
+#  ifndef __MINGW32__
+#    include <winternl.h>
+#  endif
 #  ifdef UNDER_CE
 #    ifndef STARTF_USESTDHANDLES
 #       define STARTF_USESTDHANDLES     0x00000100
@@ -36,7 +38,7 @@ using namespace boost::system;
 #  else
 #    include <fcntl.h>
 #    include <io.h>
-#    include <Psapi.h>
+#    include <psapi.h>
 #    pragma comment(lib, "Psapi.lib")
 #  endif
 #else
@@ -47,6 +49,11 @@ using namespace boost::system;
 #  include <fcntl.h>
 #  include <signal.h>
 #  include <poll.h>
+#if defined(__APPLE__)
+#  include <sys/sysctl.h>
+#  define MAX_PROCESS_RANGE             102400
+#  define MAX_PATH_LENGTH               2048
+#endif
 #endif
 
 FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("Process", 2);
@@ -99,6 +106,11 @@ namespace framework
 
 #ifndef BOOST_WINDOWS_API
 
+#ifdef __FreeBSD__
+#  define PROC_EXE "file"
+#else
+#  define PROC_EXE "exe"
+#endif
         static bool get_process_info(
             ProcessInfo & info, 
             pid_t pid, 
@@ -107,8 +119,8 @@ namespace framework
         {
             path ph(path("/proc") / format(pid));
             if (!is_symlink(ph) // 过滤/proc/self
-                && is_symlink(ph / "exe")) {
-                    info.bin_file = framework::filesystem::read_symlink(ph / "exe", ec);
+                && is_symlink(ph / PROC_EXE)) {
+                    info.bin_file = framework::filesystem::read_symlink(ph / PROC_EXE, ec);
                     if (!ec && has_process_name(bin_file, info.bin_file)) {
                         info.pid = (int)(pid);
                         return true;
@@ -359,6 +371,49 @@ namespace framework
             std::vector<ProcessInfo> & processes)
         {
 #ifndef BOOST_WINDOWS_API
+#if defined (__APPLE__)
+            int mib[4];
+            size_t i, len;
+            struct kinfo_proc kp;
+
+            len = 4;
+            if (sysctlnametomib("kern.proc.pid", mib, &len) < 0) {
+                return last_system_error();
+            }
+
+            for (i = 0; i < MAX_PROCESS_RANGE; i++) {
+                mib[3] = i;
+                len = sizeof(kp);
+                if (sysctl(mib, 4, &kp, &len, NULL, 0) == -1) {
+                    return last_system_error();
+                } else if (len > 0) {
+                    int mib1[4];
+                    char *proc_path = NULL;
+                    size_t size = MAX_PATH_LENGTH;
+
+                    mib1[0] = CTL_KERN;
+                    mib1[1] = KERN_PROCARGS;
+                    mib1[2] = kp.kp_proc.p_pid;
+                    mib1[3] = 0;
+
+                    proc_path = new char[size * sizeof(char)];
+                    if (sysctl(mib1, 3, proc_path, &size, NULL, 0) < 0) {
+                        continue;
+                    } else {
+                        ProcessInfo p_info;
+                        p_info.bin_file = proc_path;
+                        if (p_info.bin_file.leaf() == bin_file || bin_file.empty()) {
+                            p_info.pid =  kp.kp_proc.p_pid;
+                            processes.push_back(p_info);
+                        }
+             // 
+               //         printf("pid = %d, ppid = %d, name = %s, path = %s\n", kp.kp_proc.p_pid, kp.kp_eproc.e_ppid, kp.kp_proc.p_comm, proc_path);
+                    }
+                    delete[] proc_path;
+                }
+            }
+            return error_code();
+#else
             path proc_path("/proc");
             if (!exists(proc_path))
                 return framework::system::logic_error::not_supported;
@@ -372,6 +427,7 @@ namespace framework
                 }
             }
             return error_code();
+#endif
 #elif (!defined UNDER_CE)
             DWORD pids[1024], needed;
             if (!::EnumProcesses(pids, sizeof(pids), &needed)) {
@@ -515,7 +571,12 @@ namespace framework
                 }
 #define MAXFILE 65535
                 for(; i < MAXFILE; ++i)    //关闭父进程打开的文件描述符，主要是为了关闭socket
-                    ::close(i);
+				{
+#ifdef __ANDROID__
+					if ( i < 8 || i > 18 )
+#endif
+                        ::close(i);
+				}
 #undef MAXFILE
                 if (execvp(filename, &cmdArr.at(0)) < 0) {
                     framework::this_process::notify_wait(last_system_error());
