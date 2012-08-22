@@ -17,16 +17,9 @@ namespace framework
                 typedef bool result_type;
 
             protected:
-                enable_cancel()
-                    : cancel_(&my_cancel_)
-                    , my_cancel_(false)
-                {
-                }
-
                 enable_cancel(
-                    bool * cancel)
-                    : cancel_(cancel)
-                    , my_cancel_(false)
+                    bool * cancel = NULL)
+                    : cancel_(cancel ? cancel : &my_cancel_)
                 {
                     *cancel_ = false;
                 }
@@ -55,13 +48,9 @@ namespace framework
                 : public enable_cancel
             {
             public:
-                transfer_all_t()
-                {
-                }
-
-                template <typename Arg>
-                transfer_all_t(Arg arg)
-                    : enable_cancel(arg)
+                explicit transfer_all_t(
+                    bool * b = NULL)
+                    : enable_cancel(b)
                 {
                 }
 
@@ -79,16 +68,9 @@ namespace framework
             {
             public:
                 explicit transfer_at_least_t(
-                    std::size_t minimum)
-                    : minimum_(minimum)
-                {
-                }
-
-                template <typename Arg>
-                explicit transfer_at_least_t(
                     std::size_t minimum, 
-                    Arg arg)
-                    : enable_cancel(arg)
+                    bool * b = NULL)
+                    : enable_cancel(b)
                     , minimum_(minimum)
                 {
                 }
@@ -107,30 +89,17 @@ namespace framework
 
         }
 
-        inline detail::transfer_all_t transfer_all()
-        {
-            return detail::transfer_all_t();
-        }
-
-        template <typename Arg>
         inline detail::transfer_all_t transfer_all(
-            Arg arg)
+            bool * b)
         {
-            return detail::transfer_all_t(arg);
+            return detail::transfer_all_t(b);
         }
 
-        inline detail::transfer_at_least_t transfer_at_least(
-            std::size_t minimum)
-        {
-            return detail::transfer_at_least_t(minimum);
-        }
-
-        template <typename Arg>
         inline detail::transfer_at_least_t transfer_at_least(
             std::size_t minimum, 
-            Arg arg)
+            bool * b)
         {
-            return detail::transfer_at_least_t(minimum, arg);
+            return detail::transfer_at_least_t(minimum, b);
         }
 
     } // namespace network
