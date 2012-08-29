@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include <iterator>
+#include <algorithm>
 
 namespace framework
 {
@@ -337,6 +338,47 @@ namespace framework
             if (pos_dot == std::string::npos)
                 return 2;
             post_sec_key_vals[line.substr(0, pos_dot)][line.substr(pos_dot + 1, pos_eq - pos_dot - 1)] = line.substr(pos_eq + 1);
+            return 0;
+        }
+
+        // 获取匹配模式的section
+        int Profile::get_section_pattern(
+            std::string const & pattern, 
+            std::set<std::string> & sections) const
+        {
+            std::map<std::string, std::map<std::string, std::string> >::const_iterator s;
+            
+            s = pre_sec_key_vals.lower_bound(pattern);
+            while (s != pre_sec_key_vals.end() && s->first.size() >= pattern.size() && s->first.substr(0, pattern.size()) == pattern) {
+                sections.insert(s->first);
+                ++s;
+            }
+            s = sec_key_vals.lower_bound(pattern);
+            while (s != sec_key_vals.end() && s->first.size() >= pattern.size() && s->first.substr(0, pattern.size()) == pattern) {
+                sections.insert(s->first);
+                ++s;
+            }
+            s = post_sec_key_vals.lower_bound(pattern);
+            while (s != post_sec_key_vals.end() && s->first.size() >= pattern.size() && s->first.substr(0, pattern.size()) == pattern) {
+                sections.insert(s->first);
+                ++s;
+            }
+            return 0;
+        }
+
+        // 获取继承性的值
+        int Profile::get_inherit(
+            std::string const & section, 
+            std::string const & key, 
+            std::string & val) const
+        {
+            std::string section1 = section;
+            while (section1.size() && get(section1, key, val)) {
+                std::string::size_type n = section1.rfind('.');
+                if (n == std::string::npos)
+                    return 1;
+                section1 = section1.substr(0, n);
+            }
             return 0;
         }
 

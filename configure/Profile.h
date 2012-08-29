@@ -42,6 +42,14 @@ namespace framework
                 std::string const & file);
 
         public:
+            // 设置一个字符串类型配置参数的值，参数形如“模块1.配置参数1=具体值”
+            int pre_set(
+                std::string const & line);
+
+            int post_set(
+                std::string const & line);
+
+        public:
             // 获取一个字符串类型配置参数的值
             int get(
                 std::string const & section, 
@@ -55,12 +63,16 @@ namespace framework
                 std::string const & val, 
                 bool save = true);
 
-            // 设置一个字符串类型配置参数的值，参数形如“模块1.配置参数1=具体值”
-            int pre_set(
-                std::string const & line);
+            // 获取匹配模式的section
+            int get_section_pattern(
+                std::string const & pattern, 
+                std::set<std::string> & sections) const;
 
-            int post_set(
-                std::string const & line);
+            // 获取继承性的值
+            int get_inherit(
+                std::string const & section, 
+                std::string const & key, 
+                std::string & val) const;
 
             void get_all(
                 std::map<std::string, std::map<std::string, std::string> > & mkvs);
