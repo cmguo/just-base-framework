@@ -5,7 +5,7 @@
 #include "framework/string/Format.h"
 #include "framework/string/Parse.h"
 #include "framework/string/FormatStl.h"
-#include "framework/logger/LoggerFormatRecord.h"
+#include "framework/logger/FormatRecord.h"
 #include "framework/network/ResolverService.h"
 #include "framework/network/ResolverIterator.h"
 #include "framework/filesystem/Path.h"
@@ -107,7 +107,7 @@ namespace framework
                 error_code & ec)
             {
                 boost::mutex::scoped_lock lock(sync_data_->mtx);
-                LOG_F(Logger::kLevelDebug, "[resolve] (name = %1%)" 
+                LOG_DEBUG("[resolve] (name = %1%)" 
                     % name.to_string());
                 resolve_no_block(impl, name, ec);
                 if (ec == boost::asio::error::would_block) {
@@ -117,11 +117,11 @@ namespace framework
                     ec = impl->ec;
                 }
                 if (!ec) {
-                    LOG_F(Logger::kLevelDebug, "[resolve] resolved (name = %1%, endpoints = %2%)" 
+                    LOG_DEBUG("[resolve] resolved (name = %1%, endpoints = %2%)" 
                         % name.to_string() % format(impl->endpoints));
                     return ResolverIterator(svc_, impl, impl->endpoints[0]);
                 } else {
-                    LOG_F(Logger::kLevelAlarm, "[resolve] resolved (name = %1%, ec = %2%)" 
+                    LOG_WARN("[resolve] resolved (name = %1%, ec = %2%)" 
                         % name.to_string() % ec.message());
                     return ResolverIterator();
                 }
@@ -133,7 +133,7 @@ namespace framework
                 ResolveHandler * handler)
             {
                 boost::mutex::scoped_lock lock(sync_data_->mtx);
-                LOG_F(Logger::kLevelDebug, "[async_resolve] (name = %1%)" 
+                LOG_DEBUG("[async_resolve] (name = %1%)" 
                     % name.to_string());
                 impl->handler = handler;
                 error_code ec;
@@ -238,7 +238,7 @@ namespace framework
                             break;
                         if (!ec)
                             host_cache_.update(impl->name, endpoints);
-                        LOG_F(Logger::kLevelDebug1, "[work_thread] resolved (name = %1%, endpoints = %2%)" 
+                        LOG_TRACE("[work_thread] resolved (name = %1%, endpoints = %2%)" 
                             % impl->name.to_string() % format(endpoints));
                         std::vector<implementation_type> call_back_tasks;
                         update(impl->name, ec, endpoints, tasks_, call_back_tasks);
@@ -302,7 +302,7 @@ namespace framework
                         if (impl->name == name) {
                             if (impl->state == ResolveTask::waiting) {
                                 impl->state = ResolveTask::finished;
-                                LOG_F(Logger::kLevelDebug1, "[update] merge (name = %1%, endpoints = %2%)" 
+                                LOG_TRACE("[update] merge (name = %1%, endpoints = %2%)" 
                                     % impl->name.to_string() % format(impl->endpoints));
                                 merge_endpoints(impl->endpoints, endpoints);
                                 if (impl->handler) {
@@ -352,11 +352,11 @@ namespace framework
                 ResolveHandler * handler = impl->handler;
                 impl->handler = NULL;
                 if (ec) {
-                    LOG_F(Logger::kLevelEvent, "[call_back] failed (name = %1%, ec = %2%)" 
+                    LOG_INFO("[call_back] failed (name = %1%, ec = %2%)" 
                         % impl->name.to_string() % ec.message());
                     svc_.call_back(handler, ec, ResolverIterator());
                 } else {
-                    LOG_F(Logger::kLevelDebug, "[call_back] resolved (name = %1%, endpoints = %2%)" 
+                    LOG_DEBUG("[call_back] resolved (name = %1%, endpoints = %2%)" 
                         % impl->name.to_string() % format(impl->endpoints));
                     svc_.call_back(handler, ec, ResolverIterator(svc_, impl, impl->endpoints[0]));
                 }

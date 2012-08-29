@@ -7,11 +7,12 @@
 #include "framework/filesystem/Symlink.h"
 #include "framework/string/Format.h"
 #include "framework/string/Parse.h"
-#include "framework/logger/LoggerStreamRecord.h"
+#include "framework/logger/Logger.h"
+#include "framework/logger/StreamRecord.h"
 using namespace framework::system;
 using namespace framework::string;
 using namespace framework::process::error;
-using framework::logger::Logger;
+using namespace framework::logger;
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/thread.hpp>
@@ -729,7 +730,7 @@ namespace framework
                 ec = error_code();
             }
 #endif
-            LOG_S(Logger::kLevelDebug, "create " 
+            LOG_DEBUG("create " 
                 << bin_file.file_string() 
                 << " " << (data_ ? data_->pid : 0) 
                 << " " << ec.message());
@@ -762,7 +763,7 @@ namespace framework
 #endif
                 }
             }
-            LOG_S(Logger::kLevelDebug, "open " << bin_file.file_string() 
+            LOG_DEBUG("open " << bin_file.file_string() 
                 << " " << (data_ ? data_->pid : 0) 
                 << " " << ec.message());
             return ec;
@@ -783,7 +784,7 @@ namespace framework
             if (get_process_info(info, pid, "", ec)) {
                 data_->handle = new std::vector<ProcessInfo>(1, info);
             } else {
-                LOG_S(Logger::kLevelDebug, "open (no such process): " << ec.message());
+                LOG_DEBUG("open (no such process): " << ec.message());
             }
 #else
             data_->handle = ::OpenProcess(
@@ -830,13 +831,13 @@ namespace framework
                     while (!data_->handle->empty()) {
                         ProcessInfo & pi = data_->handle->front();
                         if (!get_process_info(info, pi.pid, "", ec)) {
-                            LOG_S(Logger::kLevelDebug1, "is_alive (no such process) " << pi.pid);
+                            LOG_TRACE("is_alive (no such process) " << pi.pid);
                             pi = data_->handle->back();
                             data_->handle->pop_back();
                             continue;
                         }
                         if (!has_process_name(pi.bin_file, info.bin_file)) {
-                            LOG_S(Logger::kLevelDebug1, "is_alive (not match process) " << pi.pid 
+                            LOG_TRACE("is_alive (not match process) " << pi.pid 
                                 << " " << info.bin_file);
                             pi = data_->handle->back();
                             data_->handle->pop_back();
@@ -844,7 +845,7 @@ namespace framework
                         }
                         ProcessStat stat;
                         if ((ec = get_process_stat(pi.pid, stat))) {
-                            LOG_S(Logger::kLevelDebug1, "is_alive (not process) " << pi.pid);
+                            LOG_TRACE("is_alive (not process) " << pi.pid);
                             pi = data_->handle->back();
                             data_->handle->pop_back();
                             continue;
@@ -852,12 +853,12 @@ namespace framework
                         if (stat.state != ProcessStat::zombie && stat.state != ProcessStat::dead) {
                             data_->is_alive = true;
                         } else {
-                            LOG_S(Logger::kLevelDebug1, "is_alive (process dead) " << pi.pid);
+                            LOG_TRACE("is_alive (process dead) " << pi.pid);
                         }
                         break;
                     }
                     if (!data_->is_alive) {
-                        LOG_S(Logger::kLevelDebug1, "is_alive (process not exist) " << data_->pid);
+                        LOG_TRACE("is_alive (process not exist) " << data_->pid);
                     }
                 }
 #else

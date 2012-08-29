@@ -7,8 +7,8 @@
 #include "framework/network/Resolver.h"
 #include "framework/network/Statistics.h"
 #include "framework/logger/Logger.h"
-#include "framework/logger/LoggerStreamRecord.h"
-#include "framework/logger/LoggerSection.h"
+#include "framework/logger/StreamRecord.h"
+#include "framework/logger/Section.h"
 #include "framework/network/AsioHandlerHelper.h"
 
 #include <boost/asio/detail/handler_alloc_helpers.hpp>
@@ -417,7 +417,7 @@ namespace framework
                             if (ec) {
                                 break;
                             }
-                            LOG_S(framework::logger::Logger::kLevelDebug1, "[connect] try server, ep: " << e.to_string());
+                            LOG_TRACE("[connect] try server, ep: " << e.to_string());
                             start_connect(peer, e, ec);
                         }
                         if (ec == boost::asio::error::would_block) {
@@ -429,7 +429,7 @@ namespace framework
                         if (!ec || ec == boost::asio::error::would_block || canceled_) {
                             break;
                         }
-                        LOG_S(framework::logger::Logger::kLevelDebug, "[connect] failed, ep: " << 
+                        LOG_DEBUG("[connect] failed, ep: " << 
                             resolver_iterator_->to_string() << ",ec: " << ec.message());
                     } // for
                     if ((!ec || ec == boost::asio::error::would_block) && canceled_) {
@@ -690,7 +690,7 @@ namespace framework
                             }
                         }
                         if (!ec1) {
-                            LOG_S(framework::logger::Logger::kLevelDebug, "[async_connect] try server, ep: " << e.to_string());
+                            LOG_DEBUG("[async_connect] try server, ep: " << e.to_string());
                             if (time_out_ != 0) {
                                 timer_.expires_from_now(boost::posix_time::milliseconds(time_out_));
                                 timer_.async_wait(boost::bind(*this,
@@ -705,7 +705,7 @@ namespace framework
                         }
                         stat_.connect_time = stat_.elapse();
                     }
-                    LOG_S(framework::logger::Logger::kLevelDebug, "[async_connect] finish, ep: " 
+                    LOG_DEBUG("[async_connect] finish, ep: " 
                         << iterator_->to_string() << ", ec: " << ec1.message());
                     canceled_ = false;
                     handler_(ec1);
@@ -718,7 +718,7 @@ namespace framework
 
                     boost::system::error_code ec1 = ec;
                     if (ec1) {
-                        LOG_S(framework::logger::Logger::kLevelDebug, "[async_connect] failed, ep: " 
+                        LOG_DEBUG("[async_connect] failed, ep: " 
                             << iterator_->to_string() << ", ec: " << ec1.message());
                         iterator end;
                         /* 通过ip连接，iterator_一开始就等于end */
@@ -738,7 +738,7 @@ namespace framework
                             }
                             if (!ec1) {
                                 LOG_SECTION();
-                                LOG_S(framework::logger::Logger::kLevelDebug, "[async_connect] try server, ep: " << e.to_string());
+                                LOG_DEBUG("[async_connect] try server, ep: " << e.to_string());
                                 if (time_out_ != 0) {
                                     timer_.expires_from_now(boost::posix_time::milliseconds(time_out_));
                                     timer_.async_wait(boost::bind(*this,
@@ -753,7 +753,7 @@ namespace framework
                             }
                         }
                     }
-                    LOG_S(framework::logger::Logger::kLevelDebug, "[async_connect] finish, ep: " 
+                    LOG_DEBUG("[async_connect] finish, ep: " 
                         << iterator_->to_string() << ", ec: " << ec1.message());
                     stat_.connect_time = stat_.elapse();
                     canceled_ = false;

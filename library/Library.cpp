@@ -3,7 +3,8 @@
 #include "framework/Framework.h"
 #include "framework/library/Library.h"
 #include "framework/system/ErrorCode.h"
-#include "framework/logger/LoggerFormatRecord.h"
+#include "framework/logger/Logger.h"
+#include "framework/logger/FormatRecord.h"
 using namespace framework::system;
 using namespace framework::logger;
 
@@ -69,7 +70,7 @@ namespace framework
             else
                 handle_ = ::dlopen(name.c_str(), RTLD_LAZY | RTLD_LOCAL);
             if (handle_ == NULL)
-                LOG_F(Logger::kLevelAlarm, "[open] dlopen: %1%" % ::dlerror());
+                LOG_WARN("[open] dlopen: %1%" % ::dlerror());
 #endif
             if (handle_)
                 need_close_ = true;

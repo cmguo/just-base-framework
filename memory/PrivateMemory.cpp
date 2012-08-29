@@ -3,7 +3,8 @@
 #include "framework/Framework.h"
 #include "framework/memory/PrivateMemory.h"
 #include "framework/system/ErrorCode.h"
-#include "framework/logger/LoggerFormatRecord.h"
+#include "framework/logger/Logger.h"
+#include "framework/logger/FormatRecord.h"
 
 #include <stdio.h>
 
@@ -46,8 +47,7 @@ namespace framework
             }
 #endif
             if (addr == NULL) {
-                LOG_F(framework::logger::Logger::kLevelAlarm, 
-                    ("alloc page failed"));
+                LOG_WARN("alloc page failed");
             }
             return addr;
         }

@@ -2,8 +2,8 @@
 
 #include "framework/Framework.h"
 #include "framework/timer/AsioTimerManager.h"
-#include "framework/logger/LoggerSection.h"
-using namespace framework::logger;
+#include "framework/logger/Logger.h"
+#include "framework/logger/Section.h"
 
 #include <boost/bind.hpp>
 
@@ -55,7 +55,7 @@ namespace framework
             boost::system::error_code const & ec, 
             boost::weak_ptr<void> const & cancel_token)
         {
-            LoggerSection ls;
+            LOG_SECTION()
 
             if (!cancel_token.expired()) {
                 handle_tick();

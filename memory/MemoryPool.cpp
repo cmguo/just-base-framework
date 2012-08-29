@@ -2,7 +2,8 @@
 
 #include "framework/Framework.h"
 #include "framework/memory/MemoryPool.h"
-#include "framework/logger/LoggerFormatRecord.h"
+#include "framework/logger/Logger.h"
+#include "framework/logger/FormatRecord.h"
 
 FRAMEWORK_LOGGER_DECLARE_MODULE("MemoryPool");
 
@@ -18,8 +19,7 @@ namespace framework
            //     size, consumption_, peek_, num_block_, num_object_);
             size = MemoryPage::align_page(size);
             if (consumption_ + size > capacity_) {
-                LOG_F(framework::logger::Logger::kLevelAlarm, 
-                    ("capacity limit arrived"));
+                LOG_WARN("capacity limit arrived");
                 return NULL;
             }
             void * addr = bm_->alloc_block(size);

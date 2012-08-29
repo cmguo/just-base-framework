@@ -7,7 +7,7 @@
 #include "framework/system/ErrorCode.h"
 #include "framework/container/List.h"
 #include "framework/logger/Logger.h"
-#include "framework/logger/LoggerFormatRecord.h"
+#include "framework/logger/FormatRecord.h"
 #include "framework/Version.h"
 using namespace framework::logger;
 using namespace framework::system;
@@ -661,13 +661,13 @@ namespace framework
             void * id = NULL;
             bool b = impl_->create(&id, inst_id_, key, size, ec);
             if (b == false) {
-                LOG_F(Logger::kLevelError, "[alloc_raw_block] create failed (ec = %1%)" % ec.message());
+                LOG_ERROR("[alloc_raw_block] create failed (ec = %1%)" % ec.message());
                 return NULL;
             }
 
             void * p = impl_->map(id, size, ec);
             if (NULL == p) {
-                LOG_F(Logger::kLevelError, "[alloc_raw_block] map failed (ec = %1%)" % ec.message());
+                LOG_ERROR("[alloc_raw_block] map failed (ec = %1%)" % ec.message());
                 error_code ec1;
                 impl_->close(id, ec1);
                 impl_->destory( inst_id_, key, ec1 );
@@ -692,13 +692,13 @@ namespace framework
             void * id = NULL;
             bool b = impl_->open(&id, inst_id_, key, ec);
             if (b == false) {
-                LOG_F(Logger::kLevelError, "[open_raw_block] open failed (ec = %1%)" % ec.message());
+                LOG_ERROR("[open_raw_block] open failed (ec = %1%)" % ec.message());
                 return NULL;
             }
 
             void * p = impl_->map(id, size, ec);
             if (NULL == p) {
-                LOG_F(Logger::kLevelError, "[open_raw_block] map failed (ec = %1%)" % ec.message());
+                LOG_ERROR("[open_raw_block] map failed (ec = %1%)" % ec.message());
                 error_code ec1;
                 impl_->close(id, ec);
                 return NULL;
@@ -780,7 +780,7 @@ namespace framework
                     if (!lb)
                         break;
                     lb->block = bi;
-                    LOG_F(Logger::kLevelDebug1, "[check] add block (iid = %1%, key = %2%)" % inst_id_ % lb->block->key);
+                    LOG_TRACE("[check] add block (iid = %1%, key = %2%)" % inst_id_ % lb->block->key);
                     local_list.push_back(lb);
                     local_list.next_to_open = bi;
                     bi = (BlockItem *)bi->next.addr_of(this);
@@ -819,7 +819,7 @@ namespace framework
                     return (char *)lb->block->addr + ((char *)addr - (char *)(lb->map_addr));
                 }
             }
-            LOG_F(Logger::kLevelError, "[addr_ref_to_store(1)] not found (uid = %1%, addr = %2%)" % uid % addr);
+            LOG_ERROR("[addr_ref_to_store(1)] not found (uid = %1%, addr = %2%)" % uid % addr);
             return NULL;
         }
 
@@ -844,7 +844,7 @@ namespace framework
                     return (char *)lb->map_addr + ((char *)addr - (char *)lb->block->addr);
                 }
             }
-            LOG_F(Logger::kLevelDebug, "[addr_store_to_ref(1)] need check (uid = %1%, addr = %2%)" % uid % addr);
+            LOG_DEBUG("[addr_store_to_ref(1)] need check (uid = %1%, addr = %2%)" % uid % addr);
             {
                 Mutex::scoped_lock lock(head_->mutex);
                 check(head_->user_blocks[uid], local_blocks_[uid]);
@@ -855,7 +855,7 @@ namespace framework
                     return (char *)lb->map_addr + ((char *)addr - (char *)lb->block->addr);
                 }
             }
-            LOG_F(Logger::kLevelError, "[addr_store_to_ref(1)] not found (uid = %1%, addr = %2%)" % uid % addr);
+            LOG_ERROR("[addr_store_to_ref(1)] not found (uid = %1%, addr = %2%)" % uid % addr);
             return NULL;
         }
 
@@ -878,7 +878,7 @@ namespace framework
                     return true;
                 }
             }
-            LOG_F(Logger::kLevelError, "[addr_ref_to_store(2)] not found (addr = %1%)" % addr);
+            LOG_ERROR("[addr_ref_to_store(2)] not found (addr = %1%)" % addr);
             return false;
         }
 
@@ -899,7 +899,7 @@ namespace framework
                     return true;
                 }
             }
-            LOG_F(Logger::kLevelDebug, "[addr_store_to_ref(2)] need check (key = %1%, off = %2%)" % key % off);
+            LOG_DEBUG("[addr_store_to_ref(2)] need check (key = %1%, off = %2%)" % key % off);
             {
                 Mutex::scoped_lock lock(head_->mutex);
                 check(head_->main_blocks, *local_main_blocks_);
@@ -911,7 +911,7 @@ namespace framework
                     return true;
                 }
             }
-            LOG_F(Logger::kLevelError, "[addr_store_to_ref(2)] not found (key = %1%, off = %2%)" % key % off);
+            LOG_ERROR("[addr_store_to_ref(2)] not found (key = %1%, off = %2%)" % key % off);
             return false;
         }
 
@@ -933,7 +933,7 @@ namespace framework
             if (iid < SHARED_MEMORY_MAX_INST_ID 
                 && instance_[iid] != NULL)
                 return instance_[iid]->addr_ref_to_store(uid, addr);
-            LOG_F(Logger::kLevelError, "[addr_ref_to_store(3)] inst not exist (iid = %1%)" % iid);
+            LOG_ERROR("[addr_ref_to_store(3)] inst not exist (iid = %1%)" % iid);
             return NULL;
         }
 
@@ -945,7 +945,7 @@ namespace framework
             if (iid < SHARED_MEMORY_MAX_INST_ID 
                 && instance_[iid] != NULL)
                 return instance_[iid]->addr_store_to_ref(uid, addr);
-            LOG_F(Logger::kLevelError, "[addr_store_to_ref(3)] inst not exist (iid = %1%)" % iid);
+            LOG_ERROR("[addr_store_to_ref(3)] inst not exist (iid = %1%)" % iid);
             return NULL;
         }
 
@@ -958,7 +958,7 @@ namespace framework
             if (iid < SHARED_MEMORY_MAX_INST_ID 
                 && instance_[iid] != NULL)
                 return instance_[iid]->addr_ref_to_store(addr, key, offset);
-            LOG_F(Logger::kLevelError, "[addr_ref_to_store(4)] inst not exist (iid = %1%)" % iid);
+            LOG_ERROR("[addr_ref_to_store(4)] inst not exist (iid = %1%)" % iid);
             return false;
         }
 
@@ -971,7 +971,7 @@ namespace framework
             if (iid < SHARED_MEMORY_MAX_INST_ID 
                 && instance_[iid] != NULL)
                 return instance_[iid]->addr_store_to_ref(addr, key, offset);
-            LOG_F(Logger::kLevelError, "[addr_store_to_ref(4)] inst not exist (iid = %1%)" % iid);
+            LOG_ERROR("[addr_store_to_ref(4)] inst not exist (iid = %1%)" % iid);
             return false;
         }
 

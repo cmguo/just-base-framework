@@ -2,8 +2,6 @@
 
 #include "framework/Framework.h"
 #include "framework/timer/TickTimerManager.h"
-#include "framework/logger/LoggerSection.h"
-using namespace framework::logger;
 
 namespace framework
 {

@@ -383,15 +383,8 @@ namespace framework
                 pointer v)
             {
                 assert(v->not_linked());
-                //if (v->is_linked()) {
-                //    Util::logger.Log(Util::Logger::kLevelError, 0, "[ordered::insert_] failed 1");
-                //    __asm int 3;
-                //    return pointer(0);
-                //}
                 link_info inf;
                 if (!link_point(key_(*v), inf, _Cat())) {
-                    //Util::logger.Log(Util::Logger::kLevelError, 0, "[ordered::insert_] failed 2");
-                    //__asm int 3;
                     return inf.pos;
                 }
                 node_type::link(v, inf.side, inf.pos, header());
@@ -403,15 +396,8 @@ namespace framework
                 pointer v)
             {
                 assert(v->not_linked());
-                //if (v->is_linked()) {
-                //    Util::logger.Log(Util::Logger::kLevelError, 0, "[ordered::insert_] failed 1");
-                //    __asm int 3;
-                //    return pointer(0);
-                //}
                 link_info inf;
                 if (!hinted_link_point(key_(*v), p, inf, _Cat())) {
-                    //Util::logger.Log(Util::Logger::kLevelError, 0, "[ordered::insert_] failed 2");
-                    //__asm int 3;
                     return inf.pos;
                 }
                 node_type::link(v, inf.side, inf.pos, header());
@@ -422,11 +408,6 @@ namespace framework
                 pointer x)
             {
                 assert(exist(x));
-                //if (!exist(x)) {
-                //    __asm int 3;
-                //    Util::logger.Log(Util::Logger::kLevelError, 0, "[ordered::erase_] failed");
-                //    return;
-                //}
                 node_type::rebalance_for_erase(
                     x, header()->parent(), header()->left(), header()->right());
                 x->unlink();
