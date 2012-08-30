@@ -49,33 +49,33 @@ namespace framework
             Manager & mgr, 
             Stream & s);
 
-        void load_config(
+        inline static void load_config(
             framework::configure::Config & conf)
         {
             load_config(global_logger(), conf);
         }
 
-        Module & register_module(
+        inline static Module & register_module(
             char const * name, 
             size_t level = Warn)
         {
             return register_module(global_logger(), name, level);
         }
 
-        bool add_stream(
+        inline static bool add_stream(
             Stream & s)
         {
             return add_stream(global_logger(), s);
         }
 
-        bool add_stream(
+        inline static bool add_stream(
             Stream & s, 
             std::string const & group)
         {
             return add_stream(global_logger(), s, group);
         }
 
-        bool del_stream(
+        inline static bool del_stream(
             Stream & s)
         {
             return del_stream(global_logger(), s);
