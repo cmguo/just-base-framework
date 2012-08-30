@@ -4,6 +4,7 @@
 #define _FRAMEWORK_LOGGER_STRING_RECORD_H_
 
 #include "framework/logger/Record.h"
+#include "framework/logger/Buffer.h"
 
 namespace framework
 {

@@ -4,6 +4,7 @@
 #include "framework/logger/Group.h"
 #include "framework/logger/Logger.h"
 #include "framework/logger/Stream.h"
+#include "framework/logger/Context.h"
 #include "framework/logger/Manager.h"
 
 #include <stdio.h>

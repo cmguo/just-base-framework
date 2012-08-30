@@ -13,7 +13,6 @@ namespace framework
 {
     namespace configure
     {
-        class ConfigModule;
         class Config;
     }
 
@@ -46,16 +45,16 @@ namespace framework
         public:
             ///.添加一个流
             bool add_stream(
-                Stream * ls);
+                Stream & s);
 
             ///.添加一个流到指定日志
-            bool add_stream_to(
-                Stream * ls, 
-                std::string const & logname);
+            bool add_stream(
+                Stream & ls, 
+                std::string const & group);
 
             /// 删除一个流
             bool del_stream(
-                Stream * ls);
+                Stream & s);
 
             /// 获取进程线程定义
             Context & context();

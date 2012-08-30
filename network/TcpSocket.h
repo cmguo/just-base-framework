@@ -6,6 +6,7 @@
 #include "framework/network/NetName.h"
 #include "framework/network/Connector.h"
 #include "framework/network/Acceptor.h"
+#include "framework/network/CompletionCondition.h"
 
 #include <boost/asio/ip/tcp.hpp>
 
@@ -13,76 +14,6 @@ namespace framework
 {
     namespace network
     {
-
-        namespace detail
-        {
-
-            class TcpSocketIniterBase
-            {
-            protected:
-                typedef boost::system::error_code (*init_type)(
-                    TcpSocketIniterBase & initer, 
-                    boost::asio::ip::tcp::socket & socket);
-
-                typedef void (*destroy_type)(
-                    TcpSocketIniterBase & initer);
-
-                TcpSocketIniterBase(
-                    init_type init, 
-                    destroy_type destroy)
-                {
-                }
-
-            public:
-                boost::system::error_code init(
-                    boost::asio::ip::tcp::socket & socket)
-                {
-                    return init_(*this, socket);
-                }
-
-                void destroy(
-                    boost::asio::ip::tcp::socket & socket)
-                {
-                    destroy_(*this);
-                }
-
-            private:
-                init_type init_;
-                destroy_type destroy_;
-            };
-
-            template <typename Initer>
-            class TcpSocketIniter
-                : public TcpSocketIniterBase
-            {
-            public:
-                TcpSocketIniter(
-                    Initer const & initer)
-                    : initer_(initer)
-                {
-                }
-
-            private:
-                static boost::system::error_code init(
-                    TcpSocketIniterBase & base, 
-                    boost::asio::ip::tcp::socket & socket)
-                {
-                    TcpSocketIniter & me = static_cast<TcpSocketIniter &>(base);
-                    return me.initer_(socket);
-                }
-
-                static void destroy(
-                    TcpSocketIniterBase & base)
-                {
-                    TcpSocketIniter & me = static_cast<TcpSocketIniter &>(base);
-                    delete &me;
-                }
-
-            private:
-                Initer initer_;
-            };
-
-        }
 
         class TcpSocket
             : public boost::asio::ip::tcp::socket
@@ -94,16 +25,9 @@ namespace framework
             TcpSocket(
                 boost::asio::io_service & io_svc)
                 : super(io_svc)
+                , cancel_token_(false)
                 , connector_(io_svc, mutex_)
             {
-            }
-
-        public:
-            template <typename Initer>
-            void set_initer(
-                Initer const & initer)
-            {
-                
             }
 
         public:
@@ -258,36 +182,27 @@ namespace framework
             }
 
         public:
+            // 仅取消异步操作
             void cancel()
             {
                 boost::asio::detail::mutex::scoped_lock lock(mutex_);
+                *cancel_token_ = true;
                 connector_.cancel();
-                // 取消异步操作，在某些平台仅仅close或者shutdown不能取消异步操作
                 super::cancel();
-#ifndef BOOST_WINDOWS_API
-                // linux 需要shutdown套接字才能取消同步阻塞操作
-                super::shutdown(boost::asio::socket_base::shutdown_both);
-#else           // win32 shutdown套接字会发生错误
-                super::close();
-#endif
             }
 
+            // 仅取消异步操作
             boost::system::error_code cancel(
                 boost::system::error_code & ec)
             {
                 boost::asio::detail::mutex::scoped_lock lock(mutex_);
+                *cancel_token_ = true;
                 connector_.cancel(ec);
-                // 取消异步操作，在某些平台仅仅close或者shutdown不能取消异步操作
                 super::cancel(ec);
-#ifndef BOOST_WINDOWS_API
-                // linux 需要shutdown套接字才能取消同步阻塞操作
-                super::shutdown(boost::asio::socket_base::shutdown_both, ec);
-#else           // win32 shutdown套接字会发生错误
-                super::close(ec);
-#endif
                 return ec;
             }
 
+            // 取消异步操作、同步阻塞操作，并且不能再重新连接
             void cancel_forever()
             {
                 boost::asio::detail::mutex::scoped_lock lock(mutex_);
@@ -302,6 +217,7 @@ namespace framework
 #endif
             }
 
+            // 取消异步操作、同步阻塞操作，并且不能再重新连接
             boost::system::error_code cancel_forever(
                 boost::system::error_code & ec)
             {
@@ -334,10 +250,27 @@ namespace framework
             }
 
         protected:
+            bool canceled() const
+            {
+                return *cancel_token_;
+            }
+
+            detail::transfer_all_t transfer_all()
+            {
+                return detail::transfer_all_t(cancel_token_);
+            }
+
+            detail::transfer_at_least_t transfer_at_least(
+                std::size_t minimum)
+            {
+                return detail::transfer_at_least_t(minimum, cancel_token_);
+            }
+
+        protected:
             static boost::asio::detail::mutex mutex_;
 
         private:
-            detail::TcpSocketIniterBase * initer_;
+            bool * cancel_token_;
             connector_type connector_;
         };
 

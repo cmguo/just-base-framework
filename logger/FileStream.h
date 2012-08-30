@@ -23,7 +23,7 @@ namespace framework
 
         private:
             virtual void write( 
-                buffer_t const * logmsgs, 
+                buffer_t const * bufs, 
                 size_t len);
 
             virtual void load_config(

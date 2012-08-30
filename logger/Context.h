@@ -5,6 +5,7 @@
 
 #include "framework/logger/Level.h"
 #include "framework/logger/Message.h"
+#include "framework/logger/Stream.h"
 
 namespace framework
 {
@@ -16,11 +17,7 @@ namespace framework
         class Context
         {
         public:
-            struct buffer_t 
-            {
-                char const * buf;
-                size_t len;
-            };
+            typedef Stream::buffer_t buffer_t;
 
         public:
             Context(

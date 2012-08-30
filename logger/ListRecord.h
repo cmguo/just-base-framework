@@ -3,7 +3,7 @@
 #ifndef _FRAMEWORK_LOGGER_LIST_RECORD_H_
 #define _FRAMEWORK_LOGGER_LIST_RECORD_H_
 
-#include "framework/logger/Record.h"
+#include "framework/logger/Record.hpp"
 
 #include <boost/preprocessor/seq/for_each.hpp>
 

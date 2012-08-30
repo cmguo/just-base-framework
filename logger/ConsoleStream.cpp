@@ -2,6 +2,7 @@
 
 #include "framework/Framework.h"
 #include "framework/logger/ConsoleStream.h"
+#include "framework/logger/Context.h"
 #include "framework/configure/Config.h"
 using namespace framework::configure;
 
@@ -61,25 +62,25 @@ namespace framework
         }
 
         void ConsoleStream::write( 
-            buffer_t const * logmsgs, 
+            buffer_t const * bufs, 
             size_t len )
         {
             if ( !len ) return;
 
             if (color_) {
-                LevelEnum lvl = str_to_level(logmsgs[mi_level].buf[1]);
+                LevelEnum lvl = str_to_level(bufs[mi_level].buf[1]);
 #ifdef BOOST_WINDOWS_API
                 /// 打印有颜色的串
                 ::SetConsoleTextAttribute(handle_, clr[lvl]);
 #else
-                logmsgs[mi_color].buf[4] = clr[lvl];
+                bufs[mi_color].buf[4] = clr[lvl];
 #endif
             }
             else 
             {
 #ifdef BOOST_WINDOWS_API
 #else
-                ++logmsgs;
+                ++bufs;
                 len -= 2;
 #endif
             }
@@ -89,15 +90,15 @@ namespace framework
             for (size_t iLoop = 0; iLoop < len; ++iLoop) {
                 ::WriteFile(
                     handle_, 
-                    logmsgs[iLoop].buf, 
-                    logmsgs[iLoop].len, 
+                    bufs[iLoop].buf, 
+                    bufs[iLoop].len, 
                     &dw, 
                     NULL);
             }
 #  else 
             ::writev(
                 fd_, 
-                (iovec *)logmsgs, 
+                (iovec *)bufs, 
                 len);
 #endif
 
@@ -105,7 +106,7 @@ namespace framework
 #ifdef BOOST_WINDOWS_API
                 ::SetConsoleTextAttribute(handle_, clr[0]);
 #else
-                logmsgs[mi_color].buf[4] = clr[0];
+                bufs[mi_color].buf[4] = clr[0];
 #endif
             }
         }

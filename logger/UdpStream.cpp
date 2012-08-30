@@ -29,12 +29,12 @@ namespace framework
         }
 
         void UdpStream::write( 
-            buffer_t const * logmsgs, 
+            buffer_t const * bufs, 
             size_t len )
         {
             std::vector<boost::asio::const_buffer> vec;
             for (size_t i = 0; i < len; ++i) {
-                vec.push_back(boost::asio::buffer(logmsgs[i].buf, logmsgs[i].len));
+                vec.push_back(boost::asio::buffer(bufs[i].buf, bufs[i].len));
             }
             boost::system::error_code ec;
             socket_.send(vec, 0, ec);

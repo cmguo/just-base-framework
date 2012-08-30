@@ -9,10 +9,16 @@
 
 namespace framework
 {
+    namespace configure
+    {
+        class Config;
+    }
+
     namespace logger
     {
 
         class Manager;
+        class Stream;
 
         Manager & global_logger();
 
@@ -21,10 +27,59 @@ namespace framework
             return global_logger();
         }
 
+        void load_config(
+            Manager & mgr, 
+            framework::configure::Config & conf);
+
         Module & register_module(
             Manager & mgr, 
             char const * name, 
             size_t level = Warn);
+
+        bool add_stream(
+            Manager & mgr, 
+            Stream & s);
+
+        bool add_stream(
+            Manager & mgr, 
+            Stream & s, 
+            std::string const & group);
+
+        bool del_stream(
+            Manager & mgr, 
+            Stream & s);
+
+        void load_config(
+            framework::configure::Config & conf)
+        {
+            load_config(global_logger(), conf);
+        }
+
+        Module & register_module(
+            char const * name, 
+            size_t level = Warn)
+        {
+            return register_module(global_logger(), name, level);
+        }
+
+        bool add_stream(
+            Stream & s)
+        {
+            return add_stream(global_logger(), s);
+        }
+
+        bool add_stream(
+            Stream & s, 
+            std::string const & group)
+        {
+            return add_stream(global_logger(), s, group);
+        }
+
+        bool del_stream(
+            Stream & s)
+        {
+            return del_stream(global_logger(), s);
+        }
 
         static inline void log(
             Module const & module, 

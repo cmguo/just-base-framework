@@ -2,6 +2,7 @@
 
 #include "framework/Framework.h"
 #include "framework/logger/DataRecord.h"
+#include "framework/logger/Buffer.h"
 
 namespace framework
 {

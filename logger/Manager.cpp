@@ -109,24 +109,40 @@ namespace framework
 
         ///.添加一个流到指定日志
         bool Manager::add_stream(
-            Stream * s)
+            Stream & s)
         {
             boost::mutex::scoped_lock lk(mutex_);
 
             for (Group * g = groups_; g; g = g->next_) {
-                g->add_stream(s);
+                g->add_stream(&s);
             }
             return true;
         }
 
-        /// 删除一个流
-        bool Manager::del_stream(
-            Stream * s)
+        ///.添加一个流到指定组
+        bool Manager::add_stream(
+            Stream & s, 
+            std::string const & group)
         {
             boost::mutex::scoped_lock lk(mutex_);
 
             for (Group * g = groups_; g; g = g->next_) {
-                g->del_stream(s);
+                if (g->name_ == group) {
+                    g->add_stream(&s);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// 删除一个流
+        bool Manager::del_stream(
+            Stream & s)
+        {
+            boost::mutex::scoped_lock lk(mutex_);
+
+            for (Group * g = groups_; g; g = g->next_) {
+                g->del_stream(&s);
             }
             return true;
         }

@@ -61,7 +61,7 @@ namespace framework
         }
 
         void FileStream::write( 
-            buffer_t const * logmsgs, 
+            buffer_t const * bufs, 
             size_t len )
         {
             if (check_file()) {
@@ -77,8 +77,8 @@ namespace framework
             for ( size_t iLoop = 0; iLoop < len; ++iLoop ) {
                 ::WriteFile(
                     handle_, 
-                    logmsgs[iLoop].buf, 
-                    logmsgs[iLoop].len, 
+                    bufs[iLoop].buf, 
+                    bufs[iLoop].len, 
                     &dw, 
                     NULL);
             }
@@ -86,7 +86,7 @@ namespace framework
 #else
             ::writev(
                 fd_, 
-                (iovec *)logmsgs, 
+                (iovec *)bufs, 
                 len);
 #endif
         }
