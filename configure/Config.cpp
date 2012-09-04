@@ -44,7 +44,7 @@ namespace framework
             ConfigItem * item) const
         {
             std::string value;
-            if (pf_.get(module, key, value) == 0) {
+            if (pf_.get_inherit(module, key, value) == 0) {
                 item->init(value);
             }
         }
