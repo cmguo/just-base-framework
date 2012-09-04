@@ -104,6 +104,8 @@ static inline char const * name_string()
 #else
 #  undef linux
 #  undef win32
+#  undef mips
+#  undef arm
     return BOOST_PP_STRINGIZE(PREFIX) \
         BOOST_PP_STRINGIZE(NAME) "-" \
         BOOST_PP_STRINGIZE(PLATFORM_NAME) "-" \

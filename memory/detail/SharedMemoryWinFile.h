@@ -87,12 +87,12 @@ namespace framework
                         NULL);
 
                     if (hFile == INVALID_HANDLE_VALUE) {
-                        return NULL;
+                        return false;
                     }
 
                     *id = (void *)hFile;
 
-                    return hFile;
+                    return true;
                 }
 
                 void * map(
@@ -190,7 +190,7 @@ namespace framework
                         return false;
                     }
 
-                    return b;
+                    return true;
                 }
             };
 
