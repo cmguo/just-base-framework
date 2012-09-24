@@ -54,6 +54,8 @@ namespace framework
                     iter2.first->second.second = 1;
                     *id = iter2.first->second.first;
 
+                    blocks2_.insert(std::make_pair(*id, std::make_pair(iid, key)));
+
                     return true;
                 }
 
@@ -124,7 +126,7 @@ namespace framework
                     }
 
                     BlockSet::iterator iter2 = 
-                        iter->second.find(iter3->second.first);
+                        iter->second.find(iter3->second.second);
 
                     assert(iter2 != iter->second.end());
                     if (iter2 == iter->second.end()) {
@@ -186,11 +188,11 @@ namespace framework
 
             private:
                 PrivateMemory memory_;
-                typedef std::pair<void *, size_t> Block;
-                typedef std::map<boost::uint32_t, Block> BlockSet;
-                typedef std::map<boost::uint32_t, BlockSet> BlockSetSet;
-                typedef std::pair<boost::uint32_t, boost::uint32_t> Block2;
-                typedef std::map<void *, Block2> BlockSet2;
+                typedef std::pair<void *, size_t> Block; // id, nref
+                typedef std::map<boost::uint32_t, Block> BlockSet; // key -> Block
+                typedef std::map<boost::uint32_t, BlockSet> BlockSetSet; // iid -> BlockSet
+                typedef std::pair<boost::uint32_t, boost::uint32_t> Block2; // iid, key
+                typedef std::map<void *, Block2> BlockSet2; // id - > Block2
                 BlockSetSet blocks_;
                 BlockSet2 blocks2_;
             };
