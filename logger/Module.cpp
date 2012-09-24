@@ -20,7 +20,13 @@ namespace framework
         {
             short_name_ = strrchr(name, '.');
             short_name_ = short_name_ ? short_name_ + 1 : name;
-            name_size_ = strlen(short_name_);
+            name_size_ = strlen(short_name_) + 2;
+            char * str = (char *)new char[name_size_ + 1];
+            str[0] = '[';
+            strcpy(str + 1, short_name_);
+            str[name_size_ - 1] = ']';
+            str[name_size_] = 0;
+            short_name_ = str;
         }
 
         void Module::log_it(
