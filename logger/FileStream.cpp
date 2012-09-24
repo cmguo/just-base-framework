@@ -42,6 +42,8 @@ namespace framework
         void FileStream::load_config(
             ConfigModule & cm)
         {
+            Stream::load_config(cm);
+
             cm << CONFIG_PARAM_NAME_RDWR("file", file_);
             cm << CONFIG_PARAM_NAME_RDWR("append", app_);
             cm << CONFIG_PARAM_NAME_RDWR("daily", daily_);

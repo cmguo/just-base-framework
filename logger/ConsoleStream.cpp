@@ -58,6 +58,8 @@ namespace framework
         void ConsoleStream::load_config(
             ConfigModule & cm)
         {
+            Stream::load_config(cm);
+
             cm << CONFIG_PARAM_NAME_RDWR("color", color_);
         }
 

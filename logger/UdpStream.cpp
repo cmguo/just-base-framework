@@ -24,6 +24,8 @@ namespace framework
         void UdpStream::load_config(
             ConfigModule & cm)
         {
+            Stream::load_config(cm);
+
             cm << CONFIG_PARAM_NAME_RDWR("addr", addr_);
             open();
         }
