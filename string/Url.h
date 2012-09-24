@@ -179,9 +179,6 @@ namespace framework
                 path_ = v;
             }
 
-            bool param_clear(
-                std::string const & key);
-
             void param(
                 std::string const & k, 
                 std::string const & v)
