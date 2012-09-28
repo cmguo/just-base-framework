@@ -38,7 +38,7 @@ namespace framework
                 if (now > next_time_) {
                     duration = (now - time_start_);
                     if (is_from_now_) {
-                        boost::int64_t times = (now - next_time_) / interval_;
+                        size_t times = size_t((now - next_time_) / interval_);
                         next_time_ += (interval_ * times);
                     }
                     next_time_ += interval_;
