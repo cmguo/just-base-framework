@@ -35,7 +35,17 @@ int clr[] = {
 #else
 #include <sys/uio.h>
 #include <unistd.h>
-char const clr[8] = {'0', '1', '3', '2', '4', '6', '6', '6'};
+static char const * const color_str[] = {
+    "\033[0m",      // Off
+    "\033[5;31m",   // Fatal
+    "\033[1;31m",   // Error
+    "\033[1;33m",   // Warn
+    "\033[1;32m",   // Info
+    "\033[1;37m",   // Debug
+    "\033[0m",      // Trace
+    "\033[0m",      // All
+};
+static const size_t color_str_len[] = {4, , 6, 6, 6, 6, 4, 4};
 #endif
 
 namespace framework
@@ -77,15 +87,10 @@ namespace framework
                 /// 打印有颜色的串
                 ::SetConsoleTextAttribute(handle_, clr[lvl]);
 #else
-                bufs[mi_color].buf[4] = clr[lvl];
-#endif
-            }
-            else 
-            {
-#ifdef BOOST_WINDOWS_API
-#else
-                ++bufs;
-                len -= 2;
+                --bufs;
+                len += 1;
+                bufs->buf = color_str[lvl];
+                bufs->len = color_str_len[lvl];
 #endif
             }
 
@@ -109,8 +114,6 @@ namespace framework
             if (color_) {
 #ifdef BOOST_WINDOWS_API
                 ::SetConsoleTextAttribute(handle_, clr[0]);
-#else
-                bufs[mi_color].buf[4] = clr[0];
 #endif
             }
         }

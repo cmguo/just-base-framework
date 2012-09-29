@@ -58,10 +58,6 @@ namespace framework
         {
             init_pid_buffer(id_fmt, pid_buffer_, sizeof(pid_buffer_));
 
-#ifndef BOOST_WINDOWS_API
-            buffers_[mi_color].buf = color_str[0];
-            buffers_[mi_color].len = color_str_len[0];
-#endif
             buffers_[mi_time].buf = time_str;
             buffers_[mi_time].len = strlen(time_str);
             buffers_[mi_pid].buf = pid_buffer_;
@@ -72,10 +68,6 @@ namespace framework
             buffers_[mi_module].len = 0;
             buffers_[mi_msg].buf = msg_buffer_;
             buffers_[mi_msg].len = sizeof(msg_buffer_);
-#ifndef BOOST_WINDOWS_API
-            buffers_[mi_color2].buf = color_str[0];
-            buffers_[mi_color2].len = color_str_len[0];
-#endif
             buffers_[mi_other].buf = NULL;
             buffers_[mi_other].len = 0;
         }

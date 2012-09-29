@@ -12,17 +12,11 @@ namespace framework
 
         enum MessageItemEnum
         {
-#ifndef BOOST_WINDOWS_API
-            mi_color, 
-#endif
             mi_time, 
             mi_pid, 
             mi_level, 
             mi_module, 
             mi_msg, 
-#ifndef BOOST_WINDOWS_API
-            mi_color2, 
-#endif
             mi_other, 
             mi_max, 
         };
@@ -39,11 +33,6 @@ namespace framework
             "[All..] "
         };
 
-        static char const * const color_str[] = {
-            "\033[1;0m", 
-            "\033[0m", 
-        };
-
         static LevelEnum str_to_level(
             char c)
         {
@@ -57,10 +46,8 @@ namespace framework
         }
 
         static const size_t level_str_len = 8;
-        static const size_t color_str_len[] = {6, 4};
 
         static char const * const time_format_str = "<%Y-%m-%d %H:%M:%S> ";
-
         static const size_t time_str_len = 24;
 
     } // namespace logger

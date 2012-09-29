@@ -65,7 +65,9 @@ namespace framework
             size_t pid_size_;
             char pid_buffer_[32];
             char msg_buffer_[1024];
+            buffer_t buffers_reserved1_[2];
             buffer_t buffers_[mi_max];
+            buffer_t buffers_reserved2_[2];
         };
 
     } // namespace logger
