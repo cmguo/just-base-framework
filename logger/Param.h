@@ -69,7 +69,7 @@ namespace framework
             void format(
                 Formator & fmt) const
             {
-                fmt(value());
+                fmt(this->value());
             }
         };
 
