@@ -3,6 +3,7 @@
 #include "framework/Framework.h"
 #include "framework/logger/Context.h"
 #include "framework/logger/Module.h"
+#include "framework/logger/Buffer.h"
 
 #ifdef BOOST_WINDOWS_API
 #else
@@ -12,30 +13,50 @@
 #define gettid() pthread_self()
 #endif
 
+#include <sstream>
+
 namespace framework
 {
     namespace logger
     {
 
         void init_pid_buffer(
+            char const * fmt, 
             char * buf, 
             size_t len)
         {
+            Buffer b(buf, len); // 里面会少用一个字节，我们用来填'\0'
+            std::ostream os(&b);
 #ifdef BOOST_WINDOWS_API
             unsigned long pid = ::GetCurrentProcessId();
             unsigned long tid = ::GetCurrentThreadId();
-            sprintf_s(buf, len, "[%ld] [%ld] ", pid, tid);
 #else
             pid_t pid = getpid();
             unsigned long tid = gettid();
-            snprintf(buf, len, "[%d] [%lu] ", pid, tid);
 #endif
+            for (char const * p = fmt; *p; ++p) {
+                if (*p == '%') {
+                    ++p;
+                    if (*p == 'p') {
+                        os << pid;
+                    } else if (*p == 't') {
+                        os << tid;
+                    } else {
+                        os << *p;
+                    }
+                } else {
+                    os << *p;
+                }
+            }
+            os << ' ';
+            buf[b.size()] = '\0';
         }
 
         Context::Context(
+            char const * id_fmt, 
             char const * time_str)
         {
-            init_pid_buffer(pid_buffer_, sizeof(pid_buffer_));
+            init_pid_buffer(id_fmt, pid_buffer_, sizeof(pid_buffer_));
 
 #ifndef BOOST_WINDOWS_API
             buffers_[mi_color].buf = color_str[0];

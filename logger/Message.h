@@ -29,14 +29,14 @@ namespace framework
 
         /// ´íÎóµÈ¼¶×Ö·û´®
         static char const * const level_str[] = {
-            "[Off..]"
+            "[Off..] ", 
             "[FATAL] ", 
             "[ERROR] ", 
             "[WARN.] ", 
             "[INFO.] ", 
             "[DEBUG] ", 
             "[TRACE] ", 
-            "[All..]"
+            "[All..] "
         };
 
         static char const * const color_str[] = {
@@ -59,9 +59,9 @@ namespace framework
         static const size_t level_str_len = 8;
         static const size_t color_str_len[] = {6, 4};
 
-        static char const * const time_format_str = "<%Y-%m-%d %H:%M:%S>";
+        static char const * const time_format_str = "<%Y-%m-%d %H:%M:%S> ";
 
-        static const size_t time_str_len = 23;
+        static const size_t time_str_len = 24;
 
     } // namespace logger
 } // namespace framework

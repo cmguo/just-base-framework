@@ -29,6 +29,7 @@ namespace framework
             : streams_( NULL )
             , groups_( NULL )
             , modules_( NULL )
+            , id_format_("[%t]")
             , defalut_level_(Info)
         {
             group_null_ = new Group(*this);
@@ -60,7 +61,7 @@ namespace framework
                 conf.register_module( "framework.logger.Manager" );
 
             /// 进程ID、线程ID打印标识
-            logger_mgr_config << CONFIG_PARAM_NAME_RDWR("log_pid", log_pid_);
+            logger_mgr_config << CONFIG_PARAM_NAME_RDWR("id_format", id_format_);
             logger_mgr_config << CONFIG_PARAM_NAME_RDWR("defalut_group", defalut_group_);
             logger_mgr_config << CONFIG_PARAM_NAME_RDWR("defalut_level", defalut_level_);
 
@@ -227,7 +228,7 @@ namespace framework
         {
             Context * ctx = thread_ctx_.get();
             if (ctx == NULL) {
-                ctx = new Context(time_.time_str());
+                ctx = new Context(id_format_.c_str(), time_.time_str());
                 thread_ctx_.reset(ctx);
             }
             time_.update(mutex_);

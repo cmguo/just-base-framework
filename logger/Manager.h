@@ -81,7 +81,7 @@ namespace framework
             boost::thread_specific_ptr<Context> thread_ctx_;
 
             // config
-            bool log_pid_;
+            std::string id_format_;
             std::string defalut_group_;
             size_t defalut_level_;
 

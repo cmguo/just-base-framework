@@ -21,6 +21,7 @@ namespace framework
 
         public:
             Context(
+                char const * id_fmt, 
                 char const * time_str);
 
         public:
