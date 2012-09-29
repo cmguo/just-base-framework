@@ -89,7 +89,7 @@ namespace framework
 #else
                 --bufs;
                 len += 1;
-                bufs->buf = color_str[lvl];
+                ((buffer_t *)bufs)->buf = color_str[lvl];
                 bufs->len = color_str_len[lvl];
 #endif
             }
