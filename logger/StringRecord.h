@@ -54,7 +54,7 @@ namespace framework
 
                 Buffer sbuf(buf, len);
                 std::ostream os(&sbuf);
-                os << title << " [string: s" << size << " bytes]\n";
+                os << title << " [string: " << size << " bytes]\n";
                 sbuf.finish();
 
                 me.set_other_buffer(str, size);
