@@ -51,18 +51,11 @@ namespace framework
             void format(
                 _Ty const & t)
             {
-                assert(fmt_);
-                for (char const * p = fmt_; *p; ++p) {
-                    if (*p == '%') {
-                        os_.write(fmt_, p - fmt_);
-                        fmt_ = p + 2;
-                        if (*p == '%') // 适应 %1% 这样的形式
-                            ++p;
-                        break;
-                    }
-                }
+                next_format();
                 os_ << t;
             }
+
+            void next_format();
 
         private:
             std::ostream os_;
