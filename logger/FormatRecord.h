@@ -56,6 +56,8 @@ namespace framework
                     if (*p == '%') {
                         os_.write(fmt_, p - fmt_);
                         fmt_ = p + 2;
+                        if (*p == '%') // 适应 %1% 这样的形式
+                            ++p;
                         break;
                     }
                 }
