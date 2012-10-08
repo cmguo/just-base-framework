@@ -142,6 +142,22 @@ namespace framework
                 return anchor_;
             }
 
+        public:
+            friend bool operator==(
+                Url const & l, 
+                Url const & r)
+            {
+                return l.protocol_ == r.protocol_
+                    && l.user_ == r.user_
+                    && l.password_ == r.password_
+                    && l.host_ == r.host_
+                    && l.svc_ == r.svc_
+                    && l.path_ == r.path_
+                    && l.params_ == r.params_
+                    && l.anchor_ == r.anchor_;
+            }
+
+        public:
             void protocol(
                 std::string const & v)
             {
@@ -231,6 +247,14 @@ namespace framework
                     Parameter const & r)
                 {
                     return l.line_.compare(0, l.pos_eq_, r.line_, 0, r.pos_eq_) < 0;
+                }
+
+                friend bool operator==(
+                    Parameter const & l, 
+                    Parameter const & r)
+                {
+                    // 与operator<有冲突，但是set访问应该不依赖operator==
+                    return l.line_.compare(r.line_) == 0;
                 }
 
                 std::string key() const
