@@ -57,7 +57,7 @@ using namespace boost::system;
 #endif
 #endif
 
-FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("Process", 2);
+FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("framework.process.Process", Warn);
 
 namespace framework
 {

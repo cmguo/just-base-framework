@@ -18,7 +18,7 @@ using namespace boost::system;
 #include <dlfcn.h>
 #endif
 
-FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("Library", 2)
+FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("framework.library.Library", Warn)
 
 namespace framework
 {

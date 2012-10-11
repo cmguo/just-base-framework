@@ -37,7 +37,7 @@ using namespace boost::system;
 #define KEY_START   235562
 #define NAME_LEN    64
 
-FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("SharedMemory", 2)
+FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("framework.memory.SharedMemory", Warn)
 
 namespace framework
 {

@@ -22,7 +22,7 @@ using namespace framework::timer;
 #include <boost/thread/condition_variable.hpp>
 using namespace boost::system;
 
-FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("ResolverService", 2);
+FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("framework.network.ResolverService", Warn);
 
 namespace framework
 {
