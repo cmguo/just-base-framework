@@ -133,7 +133,7 @@ namespace framework
         template <typename Protocol>
         class Connector
         {
-            FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("Connector", 2)
+            FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("framework.network.Connector", framework::logger::Warn)
 
         public:
             /// The protocol type.
@@ -538,7 +538,7 @@ namespace framework
             template <typename InternetProtocol, typename ConnectHandler>
             class connect_handler
             {
-                FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("Connector", 2)
+                FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("framework.network.Connector", framework::logger::Warn)
             public:
                 /// The protocol type.
                 typedef InternetProtocol protocol_type;
