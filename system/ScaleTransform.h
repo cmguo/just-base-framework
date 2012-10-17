@@ -159,7 +159,7 @@ namespace framework
                 last_in_ -= n;
                 if (scale_in_ == 1) {
                     if (scale_out_ == 1) {
-                        return last_out_ += n;
+                        return last_out_ -= n;
                     } else {
                         last_out_ -= n * scale_out_;
                         return last_out_;
