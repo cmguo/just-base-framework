@@ -34,7 +34,7 @@ namespace framework
         Module & register_module(
             Manager & mgr, 
             char const * name, 
-            size_t level = Warn);
+            size_t level = None);
 
         bool add_stream(
             Manager & mgr, 
@@ -57,7 +57,7 @@ namespace framework
 
         inline static Module & register_module(
             char const * name, 
-            size_t level = Warn)
+            size_t level = None)
         {
             return register_module(global_logger(), name, level);
         }

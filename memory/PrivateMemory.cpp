@@ -18,7 +18,7 @@
 #  endif
 #endif
 
-FRAMEWORK_LOGGER_DECLARE_MODULE("PrivateMemory");
+FRAMEWORK_LOGGER_DECLARE_MODULE("framework.memory.PrivateMemory");
 
 namespace framework
 {

@@ -5,7 +5,7 @@
 #include "framework/logger/Logger.h"
 #include "framework/logger/FormatRecord.h"
 
-FRAMEWORK_LOGGER_DECLARE_MODULE("MemoryPool");
+FRAMEWORK_LOGGER_DECLARE_MODULE("framework.memory.MemoryPool");
 
 namespace framework
 {

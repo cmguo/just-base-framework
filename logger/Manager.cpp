@@ -84,8 +84,18 @@ namespace framework
                     return *m;
             }
 
+            /* 模块的 log_level 的配置顺序是：
+                1、直接配置
+                    a、覆盖参数指定 --<name.log_level>=xx
+                    b、配置文件     [name]log_level=xx
+                    c、默认参数指定 ++<name.log_level>=xx
+                2、继承配置（每级继承又包括上面的a、b、c）
+                3、程序注册等级，使用 FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL
+                4、全局默认 defalut_level
+             */
+
             std::string log_group = defalut_group_;
-            size_t log_level = defalut_level_;
+            size_t log_level = level == None ? defalut_level_ : level;
             if (config_) {
                 config_->register_module(name) 
                     << CONFIG_PARAM_NOACC(log_group)
