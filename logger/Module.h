@@ -34,7 +34,7 @@ namespace framework
                     return;
                 /// 进行流最大等级过滤
                 if (level > level_ 
-                    && level > group_->level())
+                    || level > group_->level())
                     return;
                 log_it(level, record);
 
@@ -48,7 +48,7 @@ namespace framework
                     return false;
                 /// 进行流最大等级过滤
                 if (level > level_ 
-                    && level > group_->level())
+                    || level > group_->level())
                     return false;
                 return true;
             }
