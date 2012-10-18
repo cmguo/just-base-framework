@@ -72,6 +72,7 @@ namespace framework
 } // namespace framework
 
 #define LOG_STR(level, param) \
-    framework::logger::log(_slogm(), level, framework::logger::StringRecord param)
+    if (framework::logger::log_accept(_slogm(), level)) \
+        framework::logger::log(_slogm(), level, framework::logger::StringRecord param)
 
 #endif // _FRAMEWORK_LOGGER_STRING_RECORD_H_

@@ -56,6 +56,7 @@ namespace framework
 } // namespace framework
 
 #define LOG_DATA(level, param) \
-    framework::logger::log(_slogm(), level, framework::logger::DataRecord param)
+    if (framework::logger::log_accept(_slogm(), level)) \
+        framework::logger::log(_slogm(), level, framework::logger::DataRecord param)
 
 #endif // _FRAMEWORK_LOGGER_DATA_RECORD_H_

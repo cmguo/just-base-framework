@@ -61,7 +61,8 @@ namespace framework
 } // namespace framework
 
 #define LOG_(level, formator, operator, params) \
-    framework::logger::log(_slogm(), level, framework::logger::logger_record<formator>( \
-        framework::logger::ParamsBegin() operator params))
+    if (framework::logger::log_accept(_slogm(), level)) \
+        framework::logger::log(_slogm(), level, framework::logger::logger_record<formator>( \
+            framework::logger::ParamsBegin() operator params))
 
 #endif // _FRAMEWORK_LOGGER_RECORD_HPP_

@@ -40,6 +40,19 @@ namespace framework
 
             }
 
+            bool log_accept(
+                size_t level) const
+            {
+                // 多线程函数静态变量初始化有冲突，可能为空指针
+                if (this == NULL)
+                    return false;
+                /// 进行流最大等级过滤
+                if (level > level_ 
+                    && level > group_->level())
+                    return false;
+                return true;
+            }
+
         private:
             void log_it(
                 size_t level, 

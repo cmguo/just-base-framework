@@ -89,6 +89,13 @@ namespace framework
             module.log(level, record);
         }
 
+        static inline bool log_accept(
+            Module const & module, 
+            size_t level)
+        {
+            return module.log_accept(level);
+        }
+
     } // namespace logger
 } // namespace framework
 
