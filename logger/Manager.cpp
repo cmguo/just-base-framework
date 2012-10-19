@@ -57,6 +57,8 @@ namespace framework
         void Manager::load_config( 
             framework::configure::Config & conf )
         {
+            config_ = &conf;
+
             ConfigModule & logger_mgr_config = 
                 conf.register_module( "framework.logger.Manager" );
 
