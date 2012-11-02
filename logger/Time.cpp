@@ -66,17 +66,6 @@ namespace framework
                 mid_night_ += 24 * 60 * 60;
                 t_diff -= 24 * 60 * 60;
             }
-
-            int hour = t_diff / 3600;
-            int minute = t_diff % 3600;
-            int second = minute % 60;
-            minute /= 60;
-            time_str_[TIME_START] = hour / 10 + '0';
-            time_str_[TIME_START + 1] = hour % 10 + '0';
-            time_str_[TIME_START + 3] = minute / 10 + '0';
-            time_str_[TIME_START + 4] = minute % 10 + '0';
-            time_str_[TIME_START + 6] = second / 10 + '0';
-            time_str_[TIME_START + 7] = second % 10 + '0';
         }
 
         void Time::update(
@@ -88,6 +77,17 @@ namespace framework
                 boost::mutex::scoped_lock locker(lock);
                 update();
             }
+
+            int hour = t_diff / 3600;
+            int minute = t_diff % 3600;
+            int second = minute % 60;
+            minute /= 60;
+            time_str_[TIME_START] = hour / 10 + '0';
+            time_str_[TIME_START + 1] = hour % 10 + '0';
+            time_str_[TIME_START + 3] = minute / 10 + '0';
+            time_str_[TIME_START + 4] = minute % 10 + '0';
+            time_str_[TIME_START + 6] = second / 10 + '0';
+            time_str_[TIME_START + 7] = second % 10 + '0';
         }
 
     } // namespace logger
