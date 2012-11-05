@@ -57,7 +57,7 @@ namespace framework
 #ifdef BOOST_WINDOWS_API
             : handle_(GetStdHandle(STD_OUTPUT_HANDLE))
 #else
-            : fd_(stdout)
+            : fd_(fileno(stdout))
 #endif
             , color_(false) 
         {
