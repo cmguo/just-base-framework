@@ -321,7 +321,7 @@ namespace framework
             std::string::size_type pos_eq = line.find('=');
             if (pos_eq == std::string::npos)
                 return 1;
-            std::string::size_type pos_dot = line.substr(0, pos_eq).find('.');
+            std::string::size_type pos_dot = line.substr(0, pos_eq).rfind('.', pos_eq);
             if (pos_dot == std::string::npos)
                 return 2;
             pre_sec_key_vals[line.substr(0, pos_dot)][line.substr(pos_dot + 1, pos_eq - pos_dot - 1)] = line.substr(pos_eq + 1);
@@ -334,7 +334,7 @@ namespace framework
             std::string::size_type pos_eq = line.find('=');
             if (pos_eq == std::string::npos)
                 return 1;
-            std::string::size_type pos_dot = line.substr(0, pos_eq).find('.');
+            std::string::size_type pos_dot = line.substr(0, pos_eq).rfind('.', pos_eq);
             if (pos_dot == std::string::npos)
                 return 2;
             post_sec_key_vals[line.substr(0, pos_dot)][line.substr(pos_dot + 1, pos_eq - pos_dot - 1)] = line.substr(pos_eq + 1);
