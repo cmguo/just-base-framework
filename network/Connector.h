@@ -795,11 +795,12 @@ namespace framework
                 if (ec) {
                     stat_.connect_time = stat_.elapse();
                     peer.get_io_service().post(boost::asio::detail::bind_handler(handler, ec));
+                } else {
+                    e.port(netname.port());
+                    detail::connect_handler<Protocol, ConnectHandler> connect_handler(
+                        peer, non_block_, mutex_, resolver_, canceled_, stat_, handler, time_out_, timer_, async_ret_);
+                    connect_handler.start(e);
                 }
-                e.port(netname.port());
-                detail::connect_handler<Protocol, ConnectHandler> connect_handler(
-                    peer, non_block_, mutex_, resolver_, canceled_, stat_, handler, time_out_, timer_, async_ret_);
-                connect_handler.start(e);
             } else {
                 stat_.reset();
                 detail::connect_handler<Protocol, ConnectHandler> connect_handler(
