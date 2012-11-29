@@ -116,9 +116,9 @@ namespace framework
         bool FileStream::is_open() const
         {
 #ifdef BOOST_WINDOWS_API
-            return handle_ == INVALID_HANDLE_VALUE;
+            return handle_ != INVALID_HANDLE_VALUE;
 #else
-            return fd_ == -1;
+            return fd_ != -1;
 #endif
         }
 
@@ -199,12 +199,12 @@ namespace framework
 
         bool FileStream::backup_file()
         {
-            if (roll_) {
-                seek(true);
-                return true;
-            }
             bool app = app_;
             if (is_open()) {
+                if (roll_) {
+                    seek(true);
+                    return true;
+                }
 #ifdef BOOST_WINDOWS_API
                 close();
 #endif
