@@ -16,18 +16,18 @@
 namespace framework
 {
 
-	namespace memory
-	{
-		size_t MemoryPage::page_size()
-		{
+    namespace memory
+    {
+        size_t MemoryPage::page_size()
+        {
 #ifdef _WIN32
-			SYSTEM_INFO sSysInfo;
-			GetSystemInfo(&sSysInfo);
-			return sSysInfo.dwPageSize;
+            SYSTEM_INFO sSysInfo;
+            GetSystemInfo(&sSysInfo);
+            return sSysInfo.dwPageSize;
 #else
-			return getpagesize();
+            return getpagesize();
 #endif
-		}
+        }
 
-	}
+    }
 }

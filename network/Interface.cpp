@@ -54,6 +54,8 @@ namespace framework
 
 #ifdef BOOST_WINDOWS_API
 
+#ifndef WINRT
+
         boost::system::error_code enum_interface(
             std::vector<Interface> & interfaces)
         {
@@ -119,10 +121,33 @@ namespace framework
             }
             if (pAdapterInfo)
                 free(pAdapterInfo);
+
+            boost::system::error_code ec;
             return ec;
         }
 
-#else
+#else // WINRT
+
+        boost::system::error_code enum_interface(
+            std::vector<Interface> & interfaces)
+        {
+            boost::asio::io_service io_svc;
+            boost::asio::ip::tcp::resolver resolver(io_svc);
+            boost::asio::ip::tcp::resolver_query query("localhost", "80");
+            boost::system::error_code ec;
+            boost::asio::ip::tcp::resolver_iterator iter = resolver.resolve(query, ec);
+            boost::asio::ip::tcp::resolver_iterator end;
+            for (; iter != end; ++iter) {
+                boost::asio::ip::tcp::endpoint const & ep = *iter;
+                Interface inf;
+                inf.addr = ep.address();
+                inf.netmask = boost::asio::ip::address_v4::netmask(ep.address().to_v4());
+            }
+        }
+
+#endif
+
+#else // BOOST_WINDOWS_API
 
         boost::system::error_code enum_interface(
             std::vector<Interface> & interfaces)
@@ -136,7 +161,7 @@ namespace framework
                 size_t len = 0;
                 while (true) {
                     if (ptr == buf) {
-                    	len += ::read(fd, ptr + len, sizeof(buf) - len);
+                        len += ::read(fd, ptr + len, sizeof(buf) - len);
                         if (buf + len <= ptr)
                             break;
                     }
@@ -264,7 +289,7 @@ namespace framework
                 ::memcpy(ifrcopy.ifr_name, inf.name, sizeof(ifrcopy.ifr_name));
                 ifrcopy.ifr_name[sizeof(ifrcopy.ifr_name) - 1] = '\0';
 #ifndef SIOCGIFINDEX
-		inf.index = 0;
+        inf.index = 0;
 #else
                 if (!(::ioctl(fd, SIOCGIFINDEX, (char *)&ifrcopy))) {
                     inf.index = ifrcopy.ifr_ifindex;

@@ -31,13 +31,13 @@ namespace framework
         void trim(
             std::string & str)
         {
-			std::string::size_type l = str.size();
-			if (l == 0) return;
-			std::string::size_type s = 0;
-			while (s < l && white_char[(size_t)(unsigned char)str[s]]) s++;
-			std::string::size_type e = l - 1;
-			while (e >= s && white_char[(size_t)(unsigned char)str[e]]) e--;
-			str = str.substr(s, e - s + 1);
+            std::string::size_type l = str.size();
+            if (l == 0) return;
+            std::string::size_type s = 0;
+            while (s < l && white_char[(size_t)(unsigned char)str[s]]) s++;
+            std::string::size_type e = l - 1;
+            while (e >= s && white_char[(size_t)(unsigned char)str[e]]) e--;
+            str = str.substr(s, e - s + 1);
         }
 
         void trim(
@@ -50,7 +50,18 @@ namespace framework
                 limit.second--;
         }
 
-        bool strncasecmp(std::string const & l, std::string const & r)        {            if ( l.size() != r.size() ) return false;            std::string left(l);            std::string right(r);            transform(left.begin(), left.end(), left.begin(), tolower);            transform(right.begin(), right.end(), right.begin(), tolower);            return (left == right);        }
+        bool strncasecmp(std::string const & l, std::string const & r)
+        {
+            if ( l.size() != r.size() ) return false;
+
+            std::string left(l);
+            std::string right(r);
+
+            transform(left.begin(), left.end(), left.begin(), tolower);
+            transform(right.begin(), right.end(), right.begin(), tolower);
+
+            return (left == right);
+        }
 
     } // namespace string
 } // namespace framework

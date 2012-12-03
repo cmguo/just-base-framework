@@ -247,7 +247,7 @@ namespace framework
             return error_code();
         }
 
-#elif (!defined UNDER_CE)
+#elif (!defined UNDER_CE) && (!defined WINRT)
 
         static bool get_process_info(
             ProcessInfo & info, 
@@ -365,14 +365,65 @@ namespace framework
             return get_process_statm(hProcess, statm);
         }
 
+#else
+
+        static bool get_process_info(
+            ProcessInfo & info, 
+            DWORD pid, 
+            path const & bin_file, 
+            error_code & ec)
+        {
+            SetLastError(ERROR_NOT_SUPPORTED);
+            ec = last_system_error();
+            return false;
+        }
+
+        error_code get_system_stat(
+            SystemStat & stat)
+        {
+            SetLastError(ERROR_NOT_SUPPORTED);
+            return last_system_error();
+        }
+
+        boost::system::error_code get_process_stat(
+            HANDLE hp, 
+            ProcessStat & stat)
+        {
+            SetLastError(ERROR_NOT_SUPPORTED);
+            return last_system_error();
+        }
+
+        boost::system::error_code get_process_statm(
+            HANDLE hp, 
+            ProcessStatM & statm)
+        {
+            SetLastError(ERROR_NOT_SUPPORTED);
+            return last_system_error();
+        }
+
+        boost::system::error_code get_process_stat(
+            int pid, 
+            ProcessStat & stat)
+        {
+            return get_process_stat((HANDLE)NULL, stat);
+        }
+
+        boost::system::error_code get_process_statm(
+            int pid, 
+            ProcessStatM & statm)
+        {
+            return get_process_statm((HANDLE)NULL, statm);
+        }
+
+
 #endif
+
+#if defined (__APPLE__)
 
         boost::system::error_code enum_process(
             path const & bin_file, 
             std::vector<ProcessInfo> & processes)
         {
-#ifndef BOOST_WINDOWS_API
-#if defined (__APPLE__)
             int mib[4];
             size_t i, len;
             struct kinfo_proc kp;
@@ -414,7 +465,14 @@ namespace framework
                 }
             }
             return error_code();
-#else
+        }
+
+#elif (!defined BOOST_WINDOWS_API)
+
+        boost::system::error_code enum_process(
+            path const & bin_file, 
+            std::vector<ProcessInfo> & processes)
+        {
             path proc_path("/proc");
             if (!exists(proc_path))
                 return framework::system::logic_error::not_supported;
@@ -428,8 +486,14 @@ namespace framework
                 }
             }
             return error_code();
-#endif
-#elif (!defined UNDER_CE)
+        }
+
+#elif (!defined UNDER_CE) && (!defined WINRT)
+
+        boost::system::error_code enum_process(
+            path const & bin_file, 
+            std::vector<ProcessInfo> & processes)
+        {
             DWORD pids[1024], needed;
             if (!::EnumProcesses(pids, sizeof(pids), &needed)) {
                 return last_system_error();
@@ -443,11 +507,18 @@ namespace framework
                 }
             }
             return error_code();
+        }
+
 #else
+        boost::system::error_code enum_process(
+            path const & bin_file, 
+            std::vector<ProcessInfo> & processes)
+        {
             SetLastError(ERROR_NOT_SUPPORTED);
             return last_system_error();
-#endif
         }
+
+#endif
 
         namespace detail
         {
@@ -492,7 +563,7 @@ namespace framework
 #ifdef BOOST_WINDOWS_API
         static HANDLE get_pipe_handle(int fd)
         {
-#ifdef UNDER_CE
+#if (defined UNDER_CE) || (defined WINRT)
             return INVALID_HANDLE_VALUE;
 #else
             if (-1 == fd)
@@ -572,12 +643,12 @@ namespace framework
                 }
 #define MAXFILE 65535
                 for(; i < MAXFILE; ++i)    //关闭父进程打开的文件描述符，主要是为了关闭socket
-				{
+                {
 #ifdef __ANDROID__
-					if ( i < 8 || i > 18 )
+                    if ( i < 8 || i > 18 )
 #endif
                         ::close(i);
-				}
+                }
 #undef MAXFILE
                 if (execvp(filename, &cmdArr.at(0)) < 0) {
                     framework::this_process::notify_wait(last_system_error());
@@ -608,7 +679,9 @@ namespace framework
                     ::close(pipefd[0]);
                 }
             }
-#else
+
+#elif (!defined WINRT)
+
             std::string cmdlinestr;
             if (bin_file_path.find(' ') == std::string::npos) {
                 cmdlinestr = bin_file_path;
@@ -729,6 +802,10 @@ namespace framework
                     pi.hThread);
                 ec = error_code();
             }
+
+#else
+            SetLastError(ERROR_NOT_SUPPORTED);
+            ec = last_system_error();
 #endif
             LOG_DEBUG("create " 
                 << bin_file.file_string() 
@@ -758,8 +835,11 @@ namespace framework
                     for (size_t i = 0; i < pis.size(); ++i) {
                         data_->handle->push_back(pis[i]);
                     }
-#else
+#elif (!defined WINRT)
                     open(pis[0].pid, ec);
+#else
+                    SetLastError(ERROR_NOT_SUPPORTED);
+                    ec = last_system_error();
 #endif
                 }
             }
@@ -786,7 +866,7 @@ namespace framework
             } else {
                 LOG_DEBUG("open (no such process): " << ec.message());
             }
-#else
+#elif (!defined WINRT)
             data_->handle = ::OpenProcess(
                 PROCESS_ALL_ACCESS, 
                 FALSE, 
@@ -796,6 +876,9 @@ namespace framework
                 delete data_;
                 data_ = NULL;
             }
+#else
+            SetLastError(ERROR_NOT_SUPPORTED);
+            ec = last_system_error();
 #endif
             return ec;
         }
@@ -861,7 +944,7 @@ namespace framework
                         LOG_TRACE("is_alive (process not exist) " << data_->pid);
                     }
                 }
-#else
+#elif (!defined WINRT)
                 BOOL success = ::GetExitCodeProcess(data_->handle, &data_->status);
                 assert(success);
                 if (!success) {
@@ -873,6 +956,9 @@ namespace framework
                     ::CloseHandle(data_->handle);
                     data_->handle = NULL;
                 }
+#else
+            SetLastError(ERROR_NOT_SUPPORTED);
+            ec = last_system_error();
 #endif
                 return data_->is_alive;
             } else {
@@ -890,12 +976,15 @@ namespace framework
                 } else {
                     ec = last_system_error();
                 }
-#else
+#elif (!defined WINRT)
                 if (WAIT_OBJECT_0 == ::WaitForSingleObject(data_->handle, INFINITE)) {
                     is_alive(ec);
                 } else {
                     ec = last_system_error();
                 }
+#else
+            SetLastError(ERROR_NOT_SUPPORTED);
+            ec = last_system_error();
 #endif
             }
             return ec;
@@ -965,13 +1054,16 @@ namespace framework
                         ec = error_code(ETIMEDOUT, boost::system::get_system_category());
                     }
                 }
-#else
+#elif (!defined WINRT)
                 DWORD waitResult = ::WaitForSingleObject(data_->handle, milliseconds);
                 if (WAIT_OBJECT_0 == waitResult) {
                     is_alive(ec);
                 } else {
                     ec = last_system_error();
                 }
+#else
+            SetLastError(ERROR_NOT_SUPPORTED);
+            ec = last_system_error();
 #endif
             }
             return ec;
@@ -1002,8 +1094,11 @@ namespace framework
             if (data_->handle) {
                 delete data_->handle;
             }
-#else
+#elif (!defined WINRT)
             ::CloseHandle(data_->handle);
+#else
+            SetLastError(ERROR_NOT_SUPPORTED);
+            ec = last_system_error();
 #endif
             delete data_;
             data_ = NULL;
@@ -1026,9 +1121,12 @@ namespace framework
                 } else {
                     ec = last_system_error();
                 }
-#else
+#elif (!defined WINRT)
                 ::TerminateProcess(data_->handle, 99);
                 ::CloseHandle(data_->handle);
+#else
+                SetLastError(ERROR_NOT_SUPPORTED);
+                ec = last_system_error();
 #endif
                 data_->handle = NULL;
                 data_->status = 99;
@@ -1104,14 +1202,14 @@ namespace framework
             return ec;
         }
 
-        int parent_id(
-            int id)
+        int Process::id() const
         {
-#ifndef BOOST_WINDOWS_API
-            return (int)::getppid();
-#else
-            return 0;
-#endif
+            return data_ ? data_->pid : 0;
+        }
+
+        int Process::parent_id() const
+        {
+            return data_ ? data_->ppid : 0;
         }
 
     } // namespace process
@@ -1133,7 +1231,7 @@ namespace framework
 #ifndef BOOST_WINDOWS_API
             return (int)::getppid();
 #else
-            return process::parent_id(id());
+            return 0;
 #endif
         }
 
@@ -1154,7 +1252,7 @@ namespace framework
                 ::close(fd);
                 return true;
             }
-#else
+#elif (!defined WINRT)
             char Buffer[64];
             HANDLE hParent = INVALID_HANDLE_VALUE;
             if (::GetEnvironmentVariable(
@@ -1197,6 +1295,7 @@ namespace framework
                     ::CloseHandle(hFileWrite);
                     return true;
             }
+#else
 #endif
             return false;
         }

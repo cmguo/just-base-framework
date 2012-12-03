@@ -21,7 +21,7 @@ namespace framework
     namespace timer
     {
 #ifdef __MACH__
-	static struct mach_timebase_info get_mach_timebase_info()
+        static struct mach_timebase_info get_mach_timebase_info()
         {
             struct mach_timebase_info info;
             ::mach_timebase_info(&info);
@@ -35,11 +35,11 @@ namespace framework
             static framework::system::LimitNumber< 32 > limitNum;
             return Time( limitNum.transfer( ::GetTickCount() ) );
 #elif (defined __MACH__)
-	static struct mach_timebase_info info = get_mach_timebase_info();
-        boost::uint64_t t = mach_absolute_time() / 1000 / 1000;
-        if (info.numer != info.denom)
-             t = t * info.numer / info.denom;
-        return Time(t);
+            static struct mach_timebase_info info = get_mach_timebase_info();
+            boost::uint64_t t = mach_absolute_time() / 1000 / 1000;
+            if (info.numer != info.denom)
+                 t = t * info.numer / info.denom;
+            return Time(t);
 #else
             struct timespec t = { 0 };
             int res = clock_gettime(CLOCK_MONOTONIC, &t);

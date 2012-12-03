@@ -17,9 +17,9 @@ namespace framework { namespace string { namespace detail {
     typedef framework_string_SHA1_CTX SHA1_CTX;
     void SHA1_Init(SHA1_CTX * context) { framework_string_SHA1Init(context); }
     void SHA1_Update(SHA1_CTX * context, unsigned char* data, boost::uint32_t len) 
-	{ framework_string_SHA1Update(context, data, len); }
+    { framework_string_SHA1Update(context, data, len); }
     void SHA1_Final(unsigned char digest[20], SHA1_CTX* context)
-	{ framework_string_SHA1Final(digest, context); }
+    { framework_string_SHA1Final(digest, context); }
 } } }
 #elif (defined BOOST_WINDOWS_API)
 #  if _MSC_VER > 1300
