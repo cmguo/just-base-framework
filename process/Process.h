@@ -232,9 +232,6 @@ namespace framework
             detail::process_data_base * data_;
         };
 
-        int parent_id(
-            int id);
-
     } // namespace process
 
     namespace this_process
