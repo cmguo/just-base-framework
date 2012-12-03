@@ -12,6 +12,7 @@ namespace framework
 {
     namespace logger
     {
+
         /// Ð´ÈëÎÄ¼þ
         class FileStream
             : public Stream
@@ -67,4 +68,4 @@ namespace framework
     }// namespace logger
 }// namespace framework
 
-#endif // _FRAMEWORK_LOGGER_LOGGERFILESTREAM_H_
+#endif // _FRAMEWORK_LOGGER_FILE_STREAM_H_

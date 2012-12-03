@@ -30,7 +30,7 @@ namespace framework
                     ObjectWrapper ow;
                     ErrorCodeWrapper ecw(ec);
 
-                    HANDLE hFile = ::CreateFile(
+                    HANDLE hFile = ::CreateFileA(
                         name.c_str(), 
                         GENERIC_READ | GENERIC_WRITE, 
                         FILE_SHARE_READ | FILE_SHARE_WRITE, 
@@ -43,7 +43,7 @@ namespace framework
                         return false;
                     }
 
-                    ow_destroy.reset(name.c_str(), ::DeleteFile);
+                    ow_destroy.reset(name.c_str(), ::DeleteFileA);
                     ow.reset(hFile, ::CloseHandle);
 
                     DWORD dw = ::SetFilePointer(
@@ -77,7 +77,7 @@ namespace framework
                 {
                     ErrorCodeWrapper ecw(ec);
 
-                    HANDLE hFile = ::CreateFile(
+                    HANDLE hFile = ::CreateFileA(
                         key_path(iid, key).c_str(), 
                         GENERIC_READ | GENERIC_WRITE, 
                         FILE_SHARE_READ | FILE_SHARE_WRITE, 
@@ -105,7 +105,7 @@ namespace framework
 
                     HANDLE hFile = ObjectWrapper::cast_object<HANDLE>(id);
 
-                    HANDLE hFileMap = ::CreateFileMapping(
+                    HANDLE hFileMap = ::CreateFileMappingA(
                         hFile, 
                         NULL, 
                         PAGE_READWRITE, 
@@ -183,7 +183,7 @@ namespace framework
                 {
                     ErrorCodeWrapper ecw(ec);
 
-                    BOOL b = ::DeleteFile(
+                    BOOL b = ::DeleteFileA(
                         key_path(iid, key).c_str());
 
                     if (b == FALSE) {

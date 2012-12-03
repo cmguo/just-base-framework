@@ -96,7 +96,7 @@ namespace framework
         bool FileStream::open()
         {
 #ifdef BOOST_WINDOWS_API
-            handle_ = ::CreateFile(
+            handle_ = ::CreateFileA(
                 file_.c_str(), 
                 GENERIC_READ | GENERIC_WRITE, 
                 FILE_SHARE_READ | FILE_SHARE_WRITE, 

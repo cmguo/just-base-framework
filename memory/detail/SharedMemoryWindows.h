@@ -34,7 +34,7 @@ namespace framework
                     ObjectWrapper ow;
                     ErrorCodeWrapper ecw(ec);
 
-                    HANDLE hFileMap = ::CreateFileMapping(
+                    HANDLE hFileMap = ::CreateFileMappingA(
                         INVALID_HANDLE_VALUE, 
                         NULL, 
                         PAGE_READWRITE, 
@@ -65,7 +65,7 @@ namespace framework
                 {
                     ErrorCodeWrapper ecw(ec);
 
-                    HANDLE hFileMap = ::OpenFileMapping(
+                    HANDLE hFileMap = ::OpenFileMappingA(
                         FILE_MAP_ALL_ACCESS, 
                         FALSE, 
                         name_key(iid, key).c_str());
@@ -142,7 +142,7 @@ namespace framework
                     boost::uint32_t key,
                     boost::system::error_code & ec)
                 {
-                    HANDLE hFileMap = ::OpenFileMapping(
+                    HANDLE hFileMap = ::OpenFileMappingA(
                         FILE_MAP_ALL_ACCESS, 
                         FALSE, 
                         name_key(iid, key).c_str());

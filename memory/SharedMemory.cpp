@@ -21,6 +21,7 @@ using namespace boost::system;
 
 #include "framework/memory/detail/SharedMemoryImpl.h"
 #ifdef BOOST_WINDOWS_API
+#  include <windows.h>
 #  include "framework/memory/detail/SharedMemoryWindows.h"
 #  include "framework/memory/detail/SharedMemoryWinFile.h"
 #else 

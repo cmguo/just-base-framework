@@ -30,7 +30,7 @@ namespace framework
         {
 #ifdef BOOST_WINDOWS_API
             char path[MAX_PATH_SIZE] = { 0 };
-            DWORD len = ::GetModuleFileName(NULL, path, MAX_PATH_SIZE);
+            DWORD len = ::GetModuleFileNameA(NULL, path, MAX_PATH_SIZE);
             if (0 != len) {
                 return path;
             } else {
@@ -58,7 +58,7 @@ namespace framework
         {
 #ifdef BOOST_WINDOWS_API
             char path[MAX_PATH_SIZE] = { 0 };
-            DWORD len = ::GetTempPath(MAX_PATH_SIZE, path);
+            DWORD len = ::GetTempPathA(MAX_PATH_SIZE, path);
             if (0 != len) {
                 return path;
             } else {

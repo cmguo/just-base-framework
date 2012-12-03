@@ -330,7 +330,7 @@ namespace framework
             char const * msg)
         {
 #ifdef BOOST_WINDOWS_API
-            OutputDebugString(msg);
+            OutputDebugStringA(msg);
 #else
             write(0, msg, strlen(msg));
             write(0, "\n", 1);

@@ -63,7 +63,7 @@ namespace framework
             std::string const & name)
         {
 #ifdef BOOST_WINDOWS_API
-            handle_ = ::LoadLibrary(name.c_str());
+            handle_ = ::LoadLibraryA(name.c_str());
 #else
             if (name.find('.') == std::string::npos)
                 handle_ = ::dlopen((std::string("lib") + name + ".so").c_str(), RTLD_LAZY | RTLD_LOCAL);
@@ -104,7 +104,7 @@ namespace framework
         {
 #ifdef BOOST_WINDOWS_API
             char path[MAX_PATH_SIZE] = {0};
-            DWORD len = ::GetModuleFileName((HMODULE)handle_, path, MAX_PATH_SIZE);
+            DWORD len = ::GetModuleFileNameA((HMODULE)handle_, path, MAX_PATH_SIZE);
             if (0 != len) {
                 return path;
             }
