@@ -7,6 +7,7 @@
 #include "framework/logger/Logger.h"
 #include "framework/logger/Context.h"
 #include "framework/logger/ConsoleStream.h"
+#include "framework/logger/DebugStream.h"
 #include "framework/logger/FileStream.h"
 #include "framework/logger/UdpStream.h"
 #include "framework/configure/Config.h"
