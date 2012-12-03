@@ -28,7 +28,7 @@ namespace framework
 #else
             char Buffer[64];
             if (::GetEnvironmentVariable(
-                "FRAMEWORK_PROCESS_PARENT_ID", 
+                key.c_str(), 
                 Buffer, 
                 sizeof(Buffer)) > 0) {
                     return Buffer;
