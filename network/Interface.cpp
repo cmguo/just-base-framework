@@ -121,8 +121,6 @@ namespace framework
             }
             if (pAdapterInfo)
                 free(pAdapterInfo);
-
-            boost::system::error_code ec;
             return ec;
         }
 
