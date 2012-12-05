@@ -5,6 +5,7 @@
 #include "framework/system/ErrorCode.h"
 #include "framework/system/LogicError.h"
 #include "framework/string/Base16.h"
+#include "framework/string/Uuid.h"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/io_service.hpp>
@@ -129,18 +130,26 @@ namespace framework
         boost::system::error_code enum_interface(
             std::vector<Interface> & interfaces)
         {
-            boost::asio::io_service io_svc;
-            boost::asio::ip::tcp::resolver resolver(io_svc);
-            boost::asio::ip::tcp::resolver_query query("localhost", "80");
-            boost::system::error_code ec;
-            boost::asio::ip::tcp::resolver_iterator iter = resolver.resolve(query, ec);
-            boost::asio::ip::tcp::resolver_iterator end;
-            for (; iter != end; ++iter) {
-                boost::asio::ip::tcp::endpoint const & ep = *iter;
+			char buf[1024];
+			int len = ::getadapters(buf, sizeof(buf));
+			if (len < 0) {
+				return framework::system::last_system_error();
+			}
+			char const * p = buf;
+            while (len) {
+				adapter const * a = (adapter const *)p;
+				p += a->len;
+				len -= a->len;
                 Interface inf;
-                inf.addr = ep.address();
-                inf.netmask = boost::asio::ip::address_v4::netmask(ep.address().to_v4());
+				std::string name = framework::string::Uuid((framework::string::UUID const &)a->id).to_string();
+				strncpy(inf.name, name.c_str(), sizeof(inf.name));
+				boost::system::error_code ec;
+                inf.addr.from_string((char *)(a + 1), ec);
+				if (!ec) {
+					interfaces.push_back(inf);
+				}
             }
+            return  boost::system::error_code();
         }
 
 #endif
