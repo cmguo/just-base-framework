@@ -6,7 +6,6 @@
 #include "framework/logger/Logger.h"
 #include "framework/logger/FormatRecord.h"
 using namespace framework::system;
-using namespace framework::logger;
 
 using namespace boost::system;
 
@@ -18,7 +17,7 @@ using namespace boost::system;
 #include <dlfcn.h>
 #endif
 
-FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("framework.library.Library", Warn)
+FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("framework.library.Library", framework::logger::Warn)
 
 namespace framework
 {

@@ -9,7 +9,6 @@
 #include "framework/logger/Logger.h"
 #include "framework/logger/FormatRecord.h"
 #include "framework/Version.h"
-using namespace framework::logger;
 using namespace framework::system;
 using namespace framework::string;
 using namespace framework::process;
@@ -38,7 +37,7 @@ using namespace boost::system;
 #define KEY_START   235562
 #define NAME_LEN    64
 
-FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("framework.memory.SharedMemory", Warn)
+FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("framework.memory.SharedMemory", framework::logger::Warn)
 
 namespace framework
 {

@@ -12,7 +12,6 @@
 #include "framework/timer/ClockTime.h"
 #include "framework/network/detail/HostCache.h"
 #include "framework/network/detail/ServiceCache.h"
-using namespace framework::logger;
 using namespace framework::string;
 using namespace framework::timer;
 
@@ -22,7 +21,7 @@ using namespace framework::timer;
 #include <boost/thread/condition_variable.hpp>
 using namespace boost::system;
 
-FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("framework.network.ResolverService", Warn);
+FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("framework.network.ResolverService", framework::logger::Warn);
 
 namespace framework
 {

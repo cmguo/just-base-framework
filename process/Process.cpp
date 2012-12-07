@@ -12,7 +12,6 @@
 using namespace framework::system;
 using namespace framework::string;
 using namespace framework::process::error;
-using namespace framework::logger;
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/thread.hpp>
@@ -57,7 +56,7 @@ using namespace boost::system;
 #endif
 #endif
 
-FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("framework.process.Process", Warn);
+FRAMEWORK_LOGGER_DECLARE_MODULE_LEVEL("framework.process.Process", framework::logger::Warn);
 
 namespace framework
 {
