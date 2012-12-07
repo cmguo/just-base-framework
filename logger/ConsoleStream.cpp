@@ -45,7 +45,7 @@ static char const * const color_str[] = {
     "\033[0m",      // Trace
     "\033[0m",      // All
 };
-static const size_t color_str_len[] = {4, 6, 6, 6, 6, 6, 4, 4};
+static const size_t color_str_len[] = {4, 7, 7, 7, 7, 7, 4, 4};
 #endif
 
 namespace framework
