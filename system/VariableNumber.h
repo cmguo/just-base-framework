@@ -162,14 +162,28 @@ namespace framework
                 VariableNumber const & l, 
                 VariableNumber const & r)
             {
-                return l.n_ == r. n_;
+                return l.n_ == r.n_;
+            }
+
+            friend bool operator==(
+                VariableNumber const & l, 
+                _Ty r)
+            {
+                return l.n_ == r;
             }
 
             friend bool operator<(
                 VariableNumber const & l, 
                 VariableNumber const & r)
             {
-                return l.n_ < r. n_;
+                return l.n_ < r.n_;
+            }
+
+            friend bool operator<(
+                VariableNumber const & l, 
+                _Ty r)
+            {
+                return l.n_ < r;
             }
 
         public:
@@ -316,7 +330,7 @@ namespace framework
             friend VariableNumber rotate(
                 VariableNumber const & v)
             {
-                return VariableNumber(v.v_, BytesOrder::detail::rotate(v.n_));
+                return VariableNumber(v.v_, BytesOrder::rotate(v.n_));
             }
 
         private:
