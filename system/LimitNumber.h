@@ -38,7 +38,12 @@ namespace framework
                 low_bits_ = n;
                 return low_bits_ | high_bits_;
             }
- 
+
+            Ty current() const
+            {
+                return low_bits_ | high_bits_;
+            }
+
         private:
             Ty test_bit_;
             Ty carry_bit_;
