@@ -140,7 +140,8 @@ namespace framework
         std::string Url::param(
             std::string const & key) const
         {
-            param_map::const_iterator i = params_.find(key);
+            param_map::const_iterator i = 
+                std::find(params_.begin(), params_.end(), key);
             if (i == params_.end())
                 return "";
             else
@@ -151,11 +152,31 @@ namespace framework
             std::string const & key, 
             std::string const & def) const
         {
-            param_map::const_iterator i = params_.find(key);
+            param_map::const_iterator i = 
+                std::find(params_.begin(), params_.end(), key);
             if (i == params_.end())
                 return def;
             else
                 return i->value();
+        }
+
+        void Url::param(
+            std::string const & key, 
+            std::string const & value)
+        {
+            param_map::iterator i = 
+                std::find(params_.begin(), params_.end(), key);
+            if (i == params_.end()) {
+                if (!value.empty()) {
+                    params_.push_back(Parameter(key, value));
+                }
+            } else {
+                if (value.empty()) {
+                    params_.erase(i);
+                } else {
+                    *i = value;
+                }
+            }
         }
 
         void Url::encode()
