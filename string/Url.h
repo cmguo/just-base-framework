@@ -197,13 +197,7 @@ namespace framework
 
             void param(
                 std::string const & k, 
-                std::string const & v)
-            {
-                params_.erase(k);
-                if (!v.empty()) {
-                    params_.insert(Parameter(k, v));
-                }
-            }
+                std::string const & v);
 
             void anchor(
                 std::string const & v)
@@ -242,19 +236,19 @@ namespace framework
                     return *this;
                 }
 
-                friend bool operator<(
-                    Parameter const & l, 
-                    Parameter const & r)
-                {
-                    return l.line_.compare(0, l.pos_eq_, r.line_, 0, r.pos_eq_) < 0;
-                }
-
                 friend bool operator==(
                     Parameter const & l, 
                     Parameter const & r)
                 {
-                    // 与operator<有冲突，但是set访问应该不依赖operator==
-                    return l.line_.compare(r.line_) == 0;
+                    return l.line_ == r.line_;
+                }
+
+                friend bool operator==(
+                    Parameter const & l, 
+                    std::string const & key)
+                {
+                    return l.pos_eq_ == key.size() 
+                        && l.line_.compare(0, l.pos_eq_, key) == 0;
                 }
 
                 std::string key() const
@@ -291,11 +285,11 @@ namespace framework
                 std::string::size_type pos_eq_;
             };
 
-            typedef std::set<Parameter> param_map;
+            typedef std::vector<Parameter> param_map;
 
-            typedef std::set<Parameter>::iterator param_iterator;
+            typedef std::vector<Parameter>::iterator param_iterator;
 
-            typedef std::set<Parameter>::const_iterator param_const_iterator;
+            typedef std::vector<Parameter>::const_iterator param_const_iterator;
 
         public:
             param_iterator param_begin()
