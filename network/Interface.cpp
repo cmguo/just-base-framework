@@ -141,10 +141,11 @@ namespace framework
 				p += a->len;
 				len -= a->len;
                 Interface inf;
+				inf.flags = Interface::up;
 				std::string name = framework::string::Uuid((framework::string::UUID const &)a->id).to_string();
 				strncpy(inf.name, name.c_str(), sizeof(inf.name));
 				boost::system::error_code ec;
-                inf.addr.from_string((char *)(a + 1), ec);
+                inf.addr = boost::asio::ip::address::from_string((char *)(a + 1), ec);
 				if (!ec) {
 					interfaces.push_back(inf);
 				}
