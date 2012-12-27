@@ -419,12 +419,19 @@ namespace framework
                             }
                             LOG_TRACE("[connect] try server, ep: " << e.to_string());
                             start_connect(peer, e, ec);
+                        } else {
+                            ec = boost::asio::error::would_block;
                         }
                         if (ec == boost::asio::error::would_block) {
                             pool_connect(peer, ec);
                         }
                         if (ec != boost::asio::error::would_block) {
-                            post_connect(peer, ec);
+                            if (!ec) {
+                                post_connect(peer, ec);
+                            } else {
+                                boost::system::error_code ec1;
+                                post_connect(peer, ec1);
+                            }
                         }
                         if (!ec || ec == boost::asio::error::would_block || canceled_) {
                             break;
