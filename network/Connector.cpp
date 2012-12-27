@@ -2,7 +2,6 @@
 
 #include "framework/Framework.h"
 #include "framework/network/Connector.h"
-#include "framework/network/Connector.hpp"
 
 #include "framework/logger/Logger.h"
 #include "framework/logger/StreamRecord.h"
@@ -23,6 +22,7 @@ namespace framework
             , canceled_forever_(false)
             , resolver_(io_svc)
             , mutex_(mutex)
+            , timed_handler_(io_svc)
         {
         }
 

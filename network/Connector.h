@@ -6,6 +6,7 @@
 #include "framework/network/NetName.h"
 #include "framework/network/Resolver.h"
 #include "framework/network/Statistics.h"
+#include "framework/network/TimedHandler.h"
 
 #include "framework/logger/Logger.h"
 
@@ -149,6 +150,7 @@ namespace framework
             ResolverIterator resolver_iterator_;
             boost::asio::detail::mutex & mutex_;
             Statistics stat_;
+            TimedHandler timed_handler_;
         };
 
     } // namespace network
