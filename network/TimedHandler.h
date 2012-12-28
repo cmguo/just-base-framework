@@ -3,7 +3,10 @@
 #ifndef _FRAMEWORK_NETWORK_TIMED_HANDLER_H_
 #define _FRAMEWORK_NETWORK_TIMED_HANDLER_H_
 
+#include "framework/network/RefHandler.h"
+
 #include <boost/asio/deadline_timer.hpp>
+#include <boost/asio/detail/wrapped_handler.hpp>
 
 namespace framework
 {
@@ -14,10 +17,19 @@ namespace framework
         {
 
             template <
+                typename Canceler
+            >
+            struct timed_dispatcher_ref;
+
+            template <
                 typename Handler, 
                 typename Canceler
             >
-            struct timed_wrap_t;
+            struct timed_wrapped_type
+            {
+                typedef detail::timed_dispatcher_ref<Canceler> dispatcher;
+                typedef boost::asio::detail::wrapped_handler<dispatcher, Handler> wrapped_handler;
+            };
 
         } // namespace detail
 
@@ -48,7 +60,7 @@ namespace framework
                 typename Handler, 
                 typename Canceler
             >
-            detail::timed_wrap_t<Handler, Canceler> wrap(
+            typename detail::timed_wrapped_type<Handler, Canceler>::wrapped_handler wrap(
                 boost::uint32_t delay, 
                 Handler const & handler, 
                 Canceler const & canceler);
@@ -57,14 +69,14 @@ namespace framework
                 typename Handler, 
                 typename Canceler
             >
-            detail::timed_wrap_t<Handler, Canceler> wrap(
+            typename detail::timed_wrapped_type<Handler, Canceler>::wrapped_handler wrap(
                 Handler const & handler, 
                 Canceler const & canceler);
 
             template <
                 typename Handler
             >
-            detail::timed_wrap_t<Handler, BindHandler> wrap(
+            typename detail::timed_wrapped_type<Handler, RefHandler<BindHandler const> >::wrapped_handler wrap(
                 Handler const & handler);
 
         private:

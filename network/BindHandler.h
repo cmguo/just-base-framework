@@ -18,102 +18,67 @@ namespace framework
             {
             }
 
-            BindHandler(
-                BindHandler & r)
-                : handler_(r.handler_)
-                , invoke_handler_(r.invoke_handler_)
-                , delete_handler_(r.delete_handler_)
-            {
-                r.delete_handler_ = NULL;
-            }
-
-            BindHandler(
-                BindHandler const & r)
-                : handler_(r.handler_)
-                , invoke_handler_(r.invoke_handler_)
-                , delete_handler_(NULL)
-            {
-            }
-
             template <
                 typename Handler
             >
             BindHandler(
                 Handler const & handler)
             {
-                handler_ = new Handler(handler);
-                invoke_handler_ = invoke_handler<Handler>;
-                delete_handler_ = delete_handler<Handler>;
-            }
-
-            template <
-                typename Handler, 
-                typename Arg1
-            >
-            BindHandler(
-                Handler const & handler, 
-                Arg1 const & arg1)
-            {
-                typedef boost::asio::detail::binder1<Handler, Arg1> bind_handler;
-                handler_ = new bind_handler(handler, arg1);
-                invoke_handler_ = invoke_handler<bind_handler>;
-                delete_handler_ = delete_handler<bind_handler>;
-            }
-
-            template <
-                typename Handler, 
-                typename Arg1, 
-                typename Arg2
-            >
-            BindHandler(
-                Arg1 const & arg1, 
-                Arg2 const & arg2)
-            {
-                typedef boost::asio::detail::binder2<Handler, Arg1, Arg2> bind_handler;
-                handler_ = new bind_handler(handler, arg1, arg2);
-                invoke_handler_ = invoke_handler<bind_handler>;
-                delete_handler_ = delete_handler<bind_handler>;
-            }
-
-            template <
-                typename Handler, 
-                typename Arg1, 
-                typename Arg2, 
-                typename Arg3
-            >
-            BindHandler(
-                Arg1 const & arg1, 
-                Arg2 const & arg2, 
-                Arg3 const & arg3)
-            {
-                typedef boost::asio::detail::binder3<Handler, Arg1, Arg2, Arg3> bind_handler;
-                handler_ = new bind_handler(handler, arg1, arg2, arg3);
-                invoke_handler_ = invoke_handler<bind_handler>;
-                delete_handler_ = delete_handler<bind_handler>;
+                bind(handler);
             }
 
             ~BindHandler()
             {
-                if (delete_handler_)
+                clear();
+            }
+
+        public:
+            template <
+                typename Handler
+            >
+            void bind(
+                Handler const & handler)
+            {
+                assert(handler_ == NULL);
+                handler_ = create_handler(handler);
+                invoke_handler_ = invoke_handler<Handler>;
+                delete_handler_ = delete_handler<Handler>;
+            }
+
+            void clear()
+            {
+                if (handler_) {
                     delete_handler_(handler_);
+                    handler_ = NULL;
+                }
             }
 
         public:
-            BindHandler & operator=(
-                BindHandler & r)
+            void operator()()
             {
-                BindHandler(r).swap(*this);
-                return *this;
+                invoke_handler_(handler_);
             }
 
+        private:
+            // non copyable
+            BindHandler(
+                BindHandler const & r);
+
             BindHandler & operator=(
-                BindHandler const & r)
+                    BindHandler const & r);
+
+        private:
+            template <
+                typename Handler
+            >
+            static void * create_handler(
+                Handler const & handler)
             {
-                BindHandler(r).swap(*this);
-                return *this;
+                void * ptr = boost_asio_handler_alloc_helpers::allocate(sizeof(Handler), &handler);
+                new (ptr) Handler(handler);
+                return ptr;
             }
 
-        public:
             template <
                 typename Handler
             >
@@ -121,7 +86,7 @@ namespace framework
                 void * handler)
             {
                 Handler * handler2 = (Handler *)handler;
-                (*handler2)();
+                boost_asio_handler_invoke_helpers::invoke(*handler2, handler2);
             }
 
             template <
@@ -131,21 +96,8 @@ namespace framework
                 void * handler)
             {
                 Handler * handler2 = (Handler *)handler;
-                delete handler2;
-            }
-
-            void operator()()
-            {
-                invoke_handler_(handler_);
-            }
-
-        private:
-            void swap(
-                BindHandler & r)
-            {
-                std::swap(handler_, r.handler_);
-                std::swap(invoke_handler_, r.invoke_handler_);
-                std::swap(delete_handler_, r.delete_handler_);
+                handler2->~Handler();
+                boost_asio_handler_alloc_helpers::deallocate(handler, sizeof(Handler), handler2);
             }
 
         private:
