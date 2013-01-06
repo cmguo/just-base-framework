@@ -39,7 +39,11 @@
 
 #ifdef LIB
 #  ifdef BOOST_WINDOWS_API
-#    define PREFIX lib
+#    ifdef WINRT
+#      define PREFIX
+#    else
+#      define PREFIX lib
+#    endif
 #    ifdef FRAMEWORK_LIB_STATIC
 #      define SUFFIX .lib
 #    else
