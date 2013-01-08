@@ -26,12 +26,22 @@ namespace framework
                 return def;
             }
 #else
-            char Buffer[64];
-            if (::GetEnvironmentVariable(
+            std::string value(64, 0);
+            DWORD len = ::GetEnvironmentVariable(
                 key.c_str(), 
-                Buffer, 
-                sizeof(Buffer)) > 0) {
-                    return Buffer;
+                &value.at(0), 
+                value.size());
+            if (len > 0 && len < value.size()) {
+                value.resize(len);
+                return value;
+            } else if (len > 0) {
+                value.resize(len);
+                len = ::GetEnvironmentVariable(
+                    key.c_str(), 
+                    &value.at(0), 
+                    value.size());
+                assert(len == value.size() - 1);
+                return value;
             } else {
                 return def;
             }
