@@ -38,7 +38,7 @@ namespace framework
             , streams_(NULL)
 
         {
-            level_ = All;
+            level_ = None;
         }
 
         Group::~Group()
