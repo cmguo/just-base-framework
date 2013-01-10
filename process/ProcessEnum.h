@@ -39,9 +39,6 @@ namespace framework
 
         int parent_id();
 
-        bool notify_wait(
-            boost::system::error_code const & ec);
-
     } // namespace this_process
 } // namespace framework
 

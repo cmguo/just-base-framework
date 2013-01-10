@@ -39,8 +39,8 @@ namespace framework
                 sleep1,     // D    Uninterruptible sleep (usually IO)
                 sleep2,     // S    Interruptible sleep (waiting for an event to complete)
                 stopped,    // T    Stopped, either by a job control signal or because it is being traced.
-                zombie,     // Z    Defunct ("zombie") process, terminated but not reaped by its parent.
 #endif
+                zombie,     // Z    Defunct ("zombie") process, terminated but not reaped by its parent.
                 dead,       // X    dead (should never be seen)
             };
 

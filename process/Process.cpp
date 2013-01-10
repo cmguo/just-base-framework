@@ -765,5 +765,70 @@ namespace framework
             return data_ ? data_->ppid : 0;
         }
 
+        bool notify_wait(
+            error_code const & ec)
+        {
+#ifndef BOOST_WINDOWS_API
+            char * value;
+            if ((value = ::getenv("FRAMEWORK_PROCESS_WAIT_FILE"))) {
+                int fd = parse<int>(value);
+                ::unsetenv("FRAMEWORK_PROCESS_WAIT_FILE");
+                char buffer[64];
+                size_t len = strlen(ec.category().name());
+                memcpy(buffer, ec.category().name(), len);
+                buffer[len++] = ':';
+                len += framework::process::detail::format(buffer + len, ec.value());
+                ::write(fd, buffer, len);
+                ::close(fd);
+                return true;
+            }
+#elif (!defined WINRT)
+            char Buffer[64];
+            HANDLE hParent = INVALID_HANDLE_VALUE;
+            if (::GetEnvironmentVariable(
+                "FRAMEWORK_PROCESS_PARENT_ID", 
+                Buffer, 
+                sizeof(Buffer)) > 0) {
+                    DWORD dwPId = (DWORD)framework::process::detail::parse(Buffer, strlen(Buffer));
+                    hParent = ::OpenProcess(
+                        PROCESS_ALL_ACCESS, 
+                        FALSE, 
+                        dwPId);
+            }
+            if (::GetEnvironmentVariable(
+                "FRAMEWORK_PROCESS_WAIT_FILE", 
+                Buffer, 
+                sizeof(Buffer)) > 0) {
+                    ::SetEnvironmentVariable(
+                        "FRAMEWORK_PROCESS_WAIT_FILE", 
+                        NULL);
+                    HANDLE hFileWrite = (HANDLE)framework::process::detail::parse(Buffer, strlen(Buffer));
+                    ::DuplicateHandle(
+                        hParent, 
+                        hFileWrite, 
+                        GetCurrentProcess(), 
+                        &hFileWrite, 
+                        0, 
+                        FALSE, 
+                        DUPLICATE_SAME_ACCESS);
+                    size_t len = strlen(ec.category().name());
+                    memcpy(Buffer, ec.category().name(), len);
+                    Buffer[len++] = ':';
+                    len += framework::process::detail::format(Buffer + len, ec.value());
+                    DWORD NumberOfBytesWrite = 0;
+                    ::WriteFile(
+                        hFileWrite, 
+                        Buffer, 
+                        len, 
+                        &NumberOfBytesWrite, 
+                        NULL);
+                    ::CloseHandle(hFileWrite);
+                    return true;
+            }
+#else
+#endif
+            return false;
+        }
+
     } // namespace process
 } // namespace framework

@@ -3,6 +3,8 @@
 #ifndef _FRAMEWORK_PROCESS_PROCESS_H_
 #define _FRAMEWORK_PROCESS_PROCESS_H_
 
+#include "framework/process/ProcessStat.h"
+#include "framework/process/ProcessEnum.h"
 #include "framework/process/SignalHandler.h"
 
 #include <boost/noncopyable.hpp>
@@ -121,6 +123,9 @@ namespace framework
         private:
             detail::process_data_base * data_;
         };
+
+        bool notify_wait(
+            boost::system::error_code const & ec);
 
     } // namespace process
 } // namespace framework
