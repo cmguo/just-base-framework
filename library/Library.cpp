@@ -63,6 +63,9 @@ namespace framework
         {
 #ifdef BOOST_WINDOWS_API
             handle_ = ::LoadLibraryA(name.c_str());
+			if (GetLastError() == ERROR_MOD_NOT_FOUND) {
+				SetLastError(ERROR_PATH_NOT_FOUND);
+			}
 #else
             if (name.find('.') == std::string::npos)
                 handle_ = ::dlopen((std::string("lib") + name + ".so").c_str(), RTLD_LAZY | RTLD_LOCAL);
