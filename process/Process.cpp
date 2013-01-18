@@ -61,6 +61,33 @@ namespace framework
     namespace process
     {
 
+        namespace detail
+        {
+            size_t format(
+                char * buf, 
+                boost::uint64_t t)
+            {
+                char * p = buf;
+                while (t > 0) {
+                    *p++ = '0' + (t & 0x0000000f);
+                    t >>= 4;
+                }
+                return p - buf;
+            }
+
+            boost::uint64_t parse(
+                char * buf, 
+                size_t size)
+            {
+                boost::uint64_t t = 0;
+                for (size_t i = size - 1; i != (size_t)-1; --i) {
+                    t <<= 4;
+                    t |= (boost::uint64_t)(buf[i] - '0');
+                }
+                return t;
+            }
+        }
+
 #ifdef BOOST_WINDOWS_API
 
 		extern boost::system::error_code get_process_stat(
