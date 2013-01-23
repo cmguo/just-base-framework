@@ -8,13 +8,18 @@ namespace framework
     namespace string
     {
 
-        typedef unsigned char byte;
+		// The Lempel Ziv Algorithm
+		// http://tuxtina.de/files/seminar/LempelZiv.pdf
 
-        static unsigned _do_compress (byte *in, unsigned in_len, byte *out, unsigned *out_len);
+        typedef boost::uint8_t byte;
+        typedef boost::uint16_t uint16;
+        typedef boost::uint32_t uint32;
 
-        static unsigned _do_compress (byte *in, unsigned in_len, byte *out, unsigned *out_len)
+        static uint32 _do_compress (byte *in, uint32 in_len, byte *out, uint32 *out_len);
+
+        static uint32 _do_compress (byte *in, uint32 in_len, byte *out, uint32 *out_len)
         {
-            static long wrkmem [16384L];
+            static uintptr_t wrkmem [16384L];
             register byte *ip;
             byte *op;
             byte *in_end = in + in_len;
@@ -28,21 +33,21 @@ namespace framework
             for(;;)
             {
                 register byte *m_pos;
-                unsigned m_off;
-                unsigned m_len;
-                unsigned dindex;
-                dindex = ((0x21*(((((((unsigned)(ip[3])<<6)^ip[2])<<5)^ip[1])<<5)^ip[0]))>>5) & 0x3fff;
+                uint32 m_off;
+                uint32 m_len;
+                uint32 dindex;
+                dindex = ((0x21*(((((((uint32)(ip[3])<<6)^ip[2])<<5)^ip[1])<<5)^ip[0]))>>5) & 0x3fff;
                 m_pos = dict [dindex];
-                if(((unsigned long)m_pos < (unsigned long)in) ||
-                    (m_off = (unsigned)((unsigned long)ip-(unsigned long)m_pos) ) <= 0 ||
+                if(((uintptr_t)m_pos < (uintptr_t)in) ||
+                    (m_off = (uint32)((uintptr_t)ip-(uintptr_t)m_pos) ) <= 0 ||
                     m_off > 0xbfff)
                     goto literal;
                 if(m_off <= 0x0800 || m_pos[3] == ip[3])
                     goto try_match;
                 dindex = (dindex & 0x7ff ) ^ 0x201f;
                 m_pos = dict[dindex];
-                if((unsigned long)(m_pos) < (unsigned long)(in) ||
-                    (m_off = (unsigned)( (int)((unsigned long)ip-(unsigned long)m_pos))) <= 0 ||
+                if((uintptr_t)(m_pos) < (uintptr_t)(in) ||
+                    (m_off = (uint32)( (int)((uintptr_t)ip-(uintptr_t)m_pos))) <= 0 ||
                     m_off > 0xbfff)
                     goto literal;
                 if (m_off <= 0x0800 || m_pos[3] == ip[3])
@@ -61,7 +66,7 @@ match:
                 dict[dindex] = ip;
                 if(ip - ii > 0)
                 {
-                    register unsigned t = ip - ii;
+                    register uint32 t = ip - ii;
 
                     if (t <= 3)
                         op[-2] |= (byte)t;
@@ -69,7 +74,7 @@ match:
                         *op++ = (byte)(t - 3);
                     else
                     {
-                        register unsigned tt = t - 18;
+                        register uint32 tt = t - 18;
                         *op++ = 0;
                         while(tt > 255)
                         {
@@ -156,13 +161,13 @@ m3_m4_offset:
                     break;
             }
             *out_len = op - out;
-            return (unsigned) (in_end - ii);
+            return (uint32) (in_end - ii);
         }
 
-        int compress(void *in, unsigned in_len, void *out)
+        uint32 compress(void *in, uint32 in_len, void *out)
         {
             byte *op = (byte*)out;
-            unsigned t,out_len;
+            uint32 t,out_len;
             if (in_len <= 13)
                 t = in_len;
             else 
@@ -183,7 +188,7 @@ m3_m4_offset:
                             *op++ = (byte)(t-3);
                         else
                         {
-                            unsigned tt = t - 18;
+                            uint32 tt = t - 18;
                             *op++ = 0;
                             while (tt > 255) 
                             {
@@ -200,11 +205,11 @@ m3_m4_offset:
             return (op - (byte*)out);
         }
 
-        int decompress (void *in, unsigned in_len, void *out)
+        uint32 decompress (void *in, uint32 in_len, void *out)
         {
             register byte *op;
             register byte *ip;
-            register unsigned t;
+            register uint32 t;
             register byte *m_pos;
             byte *ip_end = (byte*)in + in_len;
             op = (byte*)out;
@@ -230,7 +235,7 @@ m3_m4_offset:
                     }
                     t += 15 + *ip++;
                 }
-                * (unsigned *) op = * ( unsigned *) ip;
+                * (uint32 *) op = * ( uint32 *) ip;
                 op += 4; ip += 4;
                 if (--t > 0)
                 {
@@ -238,7 +243,7 @@ m3_m4_offset:
                     {
                         do
                         {
-                            * (unsigned * ) op = * ( unsigned * ) ip;
+                            * (uint32 * ) op = * ( uint32 * ) ip;
                             op += 4; ip += 4; t -= 4;
                         } while (t >= 4);
                         if (t > 0) do *op++ = *ip++; while (--t > 0);
@@ -280,7 +285,7 @@ match:
                                 t += 31 + *ip++;
                             }
                             m_pos = op - 1;
-                            m_pos -= (* ( unsigned short * ) ip) >> 2;
+                            m_pos -= (* ( uint16 * ) ip) >> 2;
                             ip += 2;
                         }
                         else
@@ -298,7 +303,7 @@ match:
                                     }
                                     t += 7 + *ip++;
                                 }
-                                m_pos -= (* ( unsigned short *) ip) >> 2;
+                                m_pos -= (* ( uint16 *) ip) >> 2;
                                 ip += 2;
                                 if (m_pos == op)
                                     goto eof_found;
@@ -314,11 +319,11 @@ match:
                             }
                             if (t >= 6 && (op - m_pos) >= 4) 
                             {
-                                * (unsigned *) op = * ( unsigned *) m_pos;
+                                * (uint32 *) op = * ( uint32 *) m_pos;
                                 op += 4; m_pos += 4; t -= 2;
                                 do
                                 {
-                                    * (unsigned *) op = * ( unsigned *) m_pos;
+                                    * (uint32 *) op = * ( uint32 *) m_pos;
                                     op += 4; m_pos += 4; t -= 4;
                                 }while (t >= 4);
                                 if (t > 0)
