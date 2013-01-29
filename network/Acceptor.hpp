@@ -190,7 +190,7 @@ namespace framework
         template <
             typename AcceptorType
         >
-        typename AcceptorType & Acceptor::as()
+        AcceptorType & Acceptor::as()
         {
             assert(closer_ == (closer_t)&Acceptor::closer<AcceptorType>);
             return *(AcceptorType *)buf_;

@@ -7,6 +7,7 @@
 #include "framework/network/BindHandler.h"
 #include "framework/network/AsioHandlerHelper.h"
 
+#include <boost/intrusive_ptr.hpp>
 #include <boost/asio/error.hpp>
 #include <boost/asio/detail/bind_handler.hpp>
 
@@ -77,25 +78,27 @@ namespace framework
                 }
 
             private:
-                friend void intrusive_ptr_add_ref(timed_dispatcher* p)
-                {
-                    ++p->nref_;
-                }
-
-                friend void intrusive_ptr_release(timed_dispatcher* p)
-                {
-                    if (--p->nref_ == 0)
-                        delete p;
-                }
-
-            private:
                 Canceler canceler_;
                 boost::asio::deadline_timer * timer_;
                 bool time_out_or_callback_;
                 BindHandler delay_handler_;
                 boost::system::error_code ec_;
+            public:
                 size_t nref_;
             };
+
+            template <typename Canceler>
+            void intrusive_ptr_add_ref(timed_dispatcher<Canceler>* p)
+            {
+                ++p->nref_;
+            }
+
+            template <typename Canceler>
+            void intrusive_ptr_release(timed_dispatcher<Canceler>* p)
+            {
+                if (--p->nref_ == 0)
+                    delete p;
+            }
 
             template <
                 typename Canceler
@@ -148,7 +151,8 @@ namespace framework
         {
             typedef typename detail::timed_wrapped_type<Handler, Canceler>::dispatcher dispatcher;
             typedef typename detail::timed_wrapped_type<Handler, Canceler>::wrapped_handler wrapped_handler;
-            return wrapped_handler(dispatcher(timer_, delay, canceler), handler);
+            dispatcher d(timer_, delay, canceler);
+            return wrapped_handler(d, handler);
         }
 
         template <
@@ -161,7 +165,8 @@ namespace framework
         {
             typedef typename detail::timed_wrapped_type<Handler, Canceler>::dispatcher dispatcher;
             typedef typename detail::timed_wrapped_type<Handler, Canceler>::wrapped_handler wrapped_handler;
-            return wrapped_handler(dispatcher(timer_, delay_, canceler), handler);
+            dispatcher d(timer_, delay_, canceler);
+            return wrapped_handler(d, handler);
         }
 
         template <
@@ -173,7 +178,8 @@ namespace framework
             assert(canceler_);
             typedef typename detail::timed_wrapped_type<Handler, RefHandler<BindHandler const> >::dispatcher dispatcher;
             typedef typename detail::timed_wrapped_type<Handler, RefHandler<BindHandler const> >::wrapped_handler wrapped_handler;
-            return wrapped_handler(dispatcher(timer_, delay_, RefHandler<BindHandler>(*canceler_)), handler);
+            dispatcher d(timer_, delay_, RefHandler<BindHandler>(*canceler_));
+            return wrapped_handler(d, handler);
         }
 
     } // namespace network

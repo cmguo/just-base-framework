@@ -80,7 +80,7 @@ namespace framework
             template <
                 typename AcceptorType
             >
-            typename AcceptorType & as();
+            AcceptorType & as();
 
         private:
             typedef void (Acceptor::*closer_t)(
