@@ -87,14 +87,14 @@ namespace framework
         void TcpSocket::accept(
             Acceptor & acceptor)
         {
-            acceptor.accept<boost::asio::ip::tcp>(*this);
+            acceptor.accept(*this);
         }
 
         boost::system::error_code TcpSocket::accept(
             Acceptor & acceptor, 
             boost::system::error_code & ec)
         {
-            acceptor.accept<boost::asio::ip::tcp>(*this, ec);
+            acceptor.accept(*this, ec);
             return ec;
         }
 

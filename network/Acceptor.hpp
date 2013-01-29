@@ -15,27 +15,31 @@ namespace framework
     namespace network
     {
 
-        template <typename InternetProtocol>
+        template <
+            typename InternetProtocol
+        >
         boost::system::error_code Acceptor::open(
             NetName const & n,
             boost::system::error_code & ec)
         {
             using namespace boost::asio::ip;
             typename InternetProtocol::endpoint ep(address::from_string(n.host()), n.port());
-            open<InternetProtocol>((ep, ec));
+            open<InternetProtocol>(ep, ec);
             if (n.svc().find('+') ) {
                 size_t ntry = 20;
                 while (ec == boost::asio::error::address_in_use && ntry) {
                     (this->*closer_)(ec);
                     ep.port(ep.port() + 1);
                     --ntry;
-                    open<InternetProtocol>((ep, ec));
+                    open<InternetProtocol>(ep, ec);
                 }
             }
             return ec;
         }
 
-        template <typename InternetProtocol>
+        template <
+            typename InternetProtocol
+        >
         void Acceptor::open(
             NetName const & n)
         {
@@ -44,7 +48,9 @@ namespace framework
             boost::asio::detail::throw_error(ec);
         }
 
-        template <typename InternetProtocol>
+        template <
+            typename InternetProtocol
+        >
         boost::system::error_code Acceptor::open(
             typename InternetProtocol::endpoint const & e,
             boost::system::error_code & ec)
@@ -66,11 +72,13 @@ namespace framework
             if (a.listen(1, ec))
                 return ec;
             ec.clear();
-            closer_ = &closer<InternetProtocol>;
+            closer_ = &Acceptor::closer<acceptor>;
             return ec;
         }
 
-        template <typename InternetProtocol>
+        template <
+            typename InternetProtocol
+        >
         void Acceptor::open(
             typename InternetProtocol::endpoint const & e)
         {
@@ -79,40 +87,48 @@ namespace framework
             boost::asio::detail::throw_error(ec);
         }
 
-        template <typename InternetProtocol>
+        template <
+            typename SocketType
+        >
         boost::system::error_code Acceptor::accept(
-            typename InternetProtocol::socket & s, // 外部创建的套接字，不需要open
+            SocketType & s, // 外部创建的套接字，不需要open
             boost::system::error_code & ec)
         {
-            typename InternetProtocol::acceptor & a(as<InternetProtocol>());
+            typedef typename SocketType::protocol_type::acceptor acceptor;
+            acceptor & a(as<acceptor>());
             while (a.accept(s, ec) == boost::asio::error::connection_aborted);
             return ec;
         }
 
-        template <typename InternetProtocol>
+        template <
+            typename SocketType
+        >
         void Acceptor::accept(
-            typename InternetProtocol::socket & s) // 外部创建的套接字，不需要open
+            SocketType & s) // 外部创建的套接字，不需要open
         {
             boost::system::error_code ec;
-            accept<InternetProtocol>(s, ec);
+            accept(s, ec);
             boost::asio::detail::throw_error(ec);
         }
 
         namespace detail
         {
 
-            template <typename InternetProtocol, typename AcceptHandler>
+            template <
+                typename SocketType, 
+                typename AcceptHandler
+            >
             class accept_handler
             {
             public:
                 /// The network type.
-                typedef InternetProtocol protocol_type;
+                typedef typename SocketType::protocol_type protocol_type;
 
                 /// The acceptor type.
-                typedef typename InternetProtocol::acceptor acceptor;
+                typedef typename protocol_type::acceptor acceptor;
 
                 /// The socket type.
-                typedef typename InternetProtocol::socket socket;
+                typedef typename protocol_type::socket socket;
 
                 accept_handler(
                     acceptor & a, 
@@ -145,32 +161,39 @@ namespace framework
 
         } // namespace detail
 
-        template <typename InternetProtocol, typename AcceptHandler>
+        template <
+            typename SocketType, 
+            typename AcceptHandler
+        >
         void Acceptor::async_accept(
-            typename InternetProtocol::socket & s, // 外部创建的套接字，不需要open
+            SocketType & s, // 外部创建的套接字，不需要open
             AcceptHandler const & handler)
         {
-            typename InternetProtocol::acceptor & a(as<InternetProtocol>());
+            typedef typename SocketType::protocol_type::acceptor acceptor;
+            acceptor & a(as<acceptor>());
             a.async_accept(s, 
-                detail::accept_handler<InternetProtocol, AcceptHandler>(a, s, handler));
+                detail::accept_handler<SocketType, AcceptHandler>(a, s, handler));
         }
 
-        template <typename InternetProtocol>
+        template <
+            typename AcceptorType
+        >
         void Acceptor::closer(
             boost::system::error_code & ec)
         {
-            typedef typename InternetProtocol::acceptor acceptor;
-            acceptor & a(as<InternetProtocol>());
+            AcceptorType & a(as<AcceptorType>());
             a.close(ec);
-            (&a)->~acceptor();
+            (&a)->~AcceptorType();
             closer_ = NULL;
         }
 
-        template <typename InternetProtocol>
-        typename InternetProtocol::acceptor & Acceptor::as()
+        template <
+            typename AcceptorType
+        >
+        typename AcceptorType & Acceptor::as()
         {
-            assert(closer_ == (closer_t)&Acceptor::closer<InternetProtocol>);
-            return *(typename InternetProtocol::acceptor *)buf_;
+            assert(closer_ == (closer_t)&Acceptor::closer<AcceptorType>);
+            return *(AcceptorType *)buf_;
         }
 
     } // namespace network

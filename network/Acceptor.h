@@ -49,27 +49,38 @@ namespace framework
             }
 
         public:
-            template <typename InternetProtocol>
+            template <
+                typename SocketType
+            >
             boost::system::error_code accept(
-                typename InternetProtocol::socket & s, // 外部创建的套接字，不需要open
+                SocketType & s, // 外部创建的套接字，不需要open
                 boost::system::error_code & ec);
 
-            template <typename InternetProtocol>
+            template <
+                typename SocketType
+            >
             void accept(
-                typename InternetProtocol::socket & s);
+                SocketType & s);
 
-            template <typename InternetProtocol, typename AcceptHandler>
+            template <
+                typename SocketType, 
+                typename AcceptHandler
+            >
             void async_accept(
-                typename InternetProtocol::socket & s, // 外部创建的套接字，不需要open
+                SocketType & s, // 外部创建的套接字，不需要open
                 AcceptHandler const & handler);
 
         private:
-            template <typename InternetProtocol>
+            template <
+                typename AcceptorType
+            >
             void closer(
                 boost::system::error_code & ec);
 
-            template <typename InternetProtocol>
-            typename InternetProtocol::acceptor & as();
+            template <
+                typename AcceptorType
+            >
+            typename AcceptorType & as();
 
         private:
             typedef void (Acceptor::*closer_t)(
