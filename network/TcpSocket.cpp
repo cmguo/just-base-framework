@@ -85,41 +85,17 @@ namespace framework
         }
 
         void TcpSocket::accept(
-            framework::network::NetName const & addr, 
-            boost::asio::ip::tcp::acceptor & acceptor)
+            Acceptor & acceptor)
         {
-            boost::asio::ip::address address = boost::asio::ip::address::from_string(addr.host());
-            boost::asio::ip::tcp::endpoint ep(address, addr.port());
-            framework::network::accept<boost::asio::ip::tcp>(acceptor, ep, *this);
+            acceptor.accept<boost::asio::ip::tcp>(*this);
         }
 
         boost::system::error_code TcpSocket::accept(
-            framework::network::NetName const & addr, 
-            boost::asio::ip::tcp::acceptor & acceptor, 
+            Acceptor & acceptor, 
             boost::system::error_code & ec)
         {
-            boost::asio::ip::address address = 
-                boost::asio::ip::address::from_string(addr.host(), ec);
-            if (ec)
-                return ec;
-            boost::asio::ip::tcp::endpoint ep(address, addr.port());
-            framework::network::accept<boost::asio::ip::tcp>(acceptor, ep, *this, ec);
+            acceptor.accept<boost::asio::ip::tcp>(*this, ec);
             return ec;
-        }
-
-        void TcpSocket::accept(
-            boost::asio::ip::tcp::endpoint const & ep, 
-            boost::asio::ip::tcp::acceptor & acceptor)
-        {
-            framework::network::accept<boost::asio::ip::tcp>(acceptor, ep, *this);
-        }
-
-        boost::system::error_code TcpSocket::accept(
-            boost::asio::ip::tcp::endpoint const & ep, 
-            boost::asio::ip::tcp::acceptor & acceptor, 
-            boost::system::error_code & ec)
-        {
-            return framework::network::accept<boost::asio::ip::tcp>(acceptor, ep, *this, ec);
         }
 
         void TcpSocket::cancel()

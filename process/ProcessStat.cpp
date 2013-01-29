@@ -3,7 +3,10 @@
 #include "framework/Framework.h"
 #include "framework/system/ErrorCode.h"
 #include "framework/process/ProcessStat.h"
+#include "framework/string/Format.h"
+#include "framework/string/Parse.h"
 using namespace framework::system;
+using namespace framework::string;
 
 #include <fstream>
 
@@ -31,6 +34,8 @@ using namespace boost::system;
 #    pragma comment(lib, "Psapi.lib")
 #  endif
 #else
+#  include <boost/filesystem/path.hpp>
+using namespace boost::filesystem;
 #  include <sys/types.h>
 #  include <sys/stat.h>
 #  include <sys/wait.h>
@@ -58,7 +63,7 @@ namespace framework
 #  define PROC_EXE "exe"
 #endif
 
-		std::istream & operator>>(
+        std::istream & operator>>(
             std::istream & is, 
             CpuStat & stat)
         {

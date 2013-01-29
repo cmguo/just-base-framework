@@ -3,6 +3,8 @@
 #ifndef _FRAMEWORK_NETWORK_REF_HANDLER_H_
 #define _FRAMEWORK_NETWORK_REF_HANDLER_H_
 
+#include <boost/asio/detail/handler_invoke_helpers.hpp>
+
 namespace framework
 {
     namespace network

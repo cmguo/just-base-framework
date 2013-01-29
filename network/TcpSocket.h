@@ -46,10 +46,10 @@ namespace framework
             using super::connect;
 
             void connect(
-                framework::network::NetName const & addr);
+                NetName const & addr);
 
             boost::system::error_code connect(
-                framework::network::NetName const & addr, 
+                NetName const & addr, 
                 boost::system::error_code & ec);
 
             Statistics const & stat() const;
@@ -58,40 +58,22 @@ namespace framework
 
             template <typename Handler>
             void async_connect(
-                framework::network::NetName const & addr, 
+                NetName const & addr, 
                 Handler const & handler);
 
         public:
             // accept
 
             void accept(
-                framework::network::NetName const & addr, 
-                boost::asio::ip::tcp::acceptor & acceptor);
+                Acceptor & acceptor);
 
             boost::system::error_code accept(
-                framework::network::NetName const & addr, 
-                boost::asio::ip::tcp::acceptor & acceptor, 
-                boost::system::error_code & ec);
-
-            void accept(
-                boost::asio::ip::tcp::endpoint const & ep, 
-                boost::asio::ip::tcp::acceptor & acceptor);
-
-            boost::system::error_code accept(
-                boost::asio::ip::tcp::endpoint const & ep, 
-                boost::asio::ip::tcp::acceptor & acceptor, 
+                Acceptor & acceptor, 
                 boost::system::error_code & ec);
 
             template <typename Handler>
             void async_accept(
-                framework::network::NetName const & addr, 
-                boost::asio::ip::tcp::acceptor & acceptor, 
-                Handler const & handler);
-
-            template <typename Handler>
-            void async_accept(
-                boost::asio::ip::tcp::endpoint const & ep, 
-                boost::asio::ip::tcp::acceptor & acceptor, 
+                Acceptor & acceptor, 
                 Handler const & handler);
 
         public:

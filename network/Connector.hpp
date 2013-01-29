@@ -211,7 +211,7 @@ namespace framework
 #ifndef UNDER_CE
                             boost::asio::socket_base::receive_time_out cmd2(time_out_);
 #endif
-                            ec || peer.open(SocketType::endpoint_type(e).protocol(), ec) 
+                            ec || peer.open(typename SocketType::endpoint_type(e).protocol(), ec) 
                                 || peer.io_control(cmd1, ec) 
 #ifndef UNDER_CE
                                 || peer.set_option(cmd2, ec)

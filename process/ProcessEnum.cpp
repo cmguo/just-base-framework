@@ -1,9 +1,10 @@
-// Process.cpp
+// ProcessEnum.cpp
 
 #include "framework/Framework.h"
 #include "framework/system/ErrorCode.h"
 #include "framework/process/ProcessEnum.h"
 #include "framework/process/Process.h"
+#include "framework/process/Error.h"
 #include "framework/filesystem/Symlink.h"
 #include "framework/string/Format.h"
 #include "framework/string/Parse.h"
@@ -57,7 +58,7 @@ namespace framework
     namespace process
     {
 
-        static bool has_process_name(
+        bool has_process_name(
             path const & bin_file, 
             path const & bin_path)
         {
@@ -78,9 +79,9 @@ namespace framework
 #else
 #  define PROC_EXE "exe"
 #endif
-        static bool get_process_info(
+        bool get_process_info(
             ProcessInfo & info, 
-            pid_t pid, 
+            int pid, 
             path const & bin_file, 
             error_code & ec)
         {
@@ -93,16 +94,16 @@ namespace framework
                         return true;
                     }
             } else {
-                ec = not_open;
+                ec = error::not_open;
             }
             return false;
         }
 
 #elif (!defined UNDER_CE) && (!defined WINRT)
 
-        static bool get_process_info(
+        bool get_process_info(
             ProcessInfo & info, 
-            DWORD pid, 
+            int pid, 
             path const & bin_file, 
             error_code & ec)
         {
@@ -132,9 +133,9 @@ namespace framework
 
 #else
 
-        static bool get_process_info(
+        bool get_process_info(
             ProcessInfo & info, 
-            DWORD pid, 
+            int pid, 
             path const & bin_file, 
             error_code & ec)
         {

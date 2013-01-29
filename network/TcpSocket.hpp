@@ -23,29 +23,13 @@ namespace framework
 
         template <typename Handler>
         void TcpSocket::async_accept(
-            framework::network::NetName const & addr, 
-            boost::asio::ip::tcp::acceptor & acceptor, 
+            Acceptor & acceptor, 
             Handler const & handler)
         {
-            try {
-                boost::asio::ip::address address = boost::asio::ip::address::from_string(addr.host());
-                boost::asio::ip::tcp::endpoint ep(address, addr.port());
-                framework::network::async_accept<boost::asio::ip::tcp>(acceptor, ep, *this, handler);
-            } catch (boost::system::system_error const & err) {
-                get_io_service().post(boost::asio::detail::bind_handler(handler, err.code()));
-            }
+            acceptor.async_accept(*this, handler);
         }
 
-        template <typename Handler>
-        void TcpSocket::async_accept(
-            boost::asio::ip::tcp::endpoint const & ep, 
-            boost::asio::ip::tcp::acceptor & acceptor, 
-            Handler const & handler)
-        {
-            framework::network::async_accept<boost::asio::ip::tcp>(acceptor, ep, *this, handler);
-        }
-
-} // namespace network
+    } // namespace network
 } // namespace framework
 
 #endif // _FRAMEWORK_NETWORK_TCP_SOCKET_HPP_

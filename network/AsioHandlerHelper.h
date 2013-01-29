@@ -3,6 +3,9 @@
 #ifndef _FRAMEWORK_NETWORK_ASIO_HANDLER_HELPER_H_
 #define _FRAMEWORK_NETWORK_ASIO_HANDLER_HELPER_H_
 
+#include <boost/asio/detail/handler_alloc_helpers.hpp>
+#include <boost/asio/detail/handler_invoke_helpers.hpp>
+
 #define PASS_DOWN_ASIO_HANDLER_FUNCTION(type, member) \
  \
 inline friend void* asio_handler_allocate( \

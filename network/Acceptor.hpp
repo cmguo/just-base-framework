@@ -1,8 +1,9 @@
-// Acceptor.h
+// Acceptor.hpp
 
 #ifndef _FRAMEWORK_NETWORK_ACCEPTOR_HPP_
 #define _FRAMEWORK_NETWORK_ACCEPTOR_HPP_
 
+#include "framework/network/Acceptor.h"
 #include "framework/network/AsioHandlerHelper.h"
 
 #include <boost/asio/detail/throw_error.hpp>
@@ -15,50 +16,85 @@ namespace framework
     {
 
         template <typename InternetProtocol>
-        boost::system::error_code acceptor_open(
-            typename InternetProtocol::acceptor & a,
-            typename InternetProtocol::endpoint const & e,
+        boost::system::error_code Acceptor::open(
+            NetName const & n,
             boost::system::error_code & ec)
         {
-            if (!a.is_open()) {
-                if (a.open(e.protocol(), ec))
-                    return ec;
-                {
-                    boost::system::error_code ec1;
-                    boost::asio::socket_base::reuse_address cmd(true);
-                    a.set_option(cmd, ec1);
+            using namespace boost::asio::ip;
+            typename InternetProtocol::endpoint ep(address::from_string(n.host()), n.port());
+            open<InternetProtocol>((ep, ec));
+            if (n.svc().find('+') ) {
+                size_t ntry = 20;
+                while (ec == boost::asio::error::address_in_use && ntry) {
+                    (this->*closer_)(ec);
+                    ep.port(ep.port() + 1);
+                    --ntry;
+                    open<InternetProtocol>((ep, ec));
                 }
-                if (a.bind(e, ec))
-                    return ec;
-                if (a.listen(1, ec))
-                    return ec;
             }
-            ec.clear();
             return ec;
         }
 
         template <typename InternetProtocol>
-        boost::system::error_code accept(
-            typename InternetProtocol::acceptor & a,
+        void Acceptor::open(
+            NetName const & n)
+        {
+            boost::system::error_code ec;
+            open<InternetProtocol>(n, ec);
+            boost::asio::detail::throw_error(ec);
+        }
+
+        template <typename InternetProtocol>
+        boost::system::error_code Acceptor::open(
             typename InternetProtocol::endpoint const & e,
+            boost::system::error_code & ec)
+        {
+            assert(closer_ == NULL);
+            assert(sizeof(typename InternetProtocol::acceptor) <= sizeof(buf_));
+            typedef typename InternetProtocol::acceptor acceptor;
+            acceptor & a(* new (buf_) acceptor(io_svc_));
+            if (a.open(e.protocol(), ec)) {
+                return ec;
+            }
+            {
+                boost::system::error_code ec1;
+                boost::asio::socket_base::reuse_address cmd(true);
+                a.set_option(cmd, ec1);
+            }
+            if (a.bind(e, ec))
+                return ec;
+            if (a.listen(1, ec))
+                return ec;
+            ec.clear();
+            closer_ = &closer<InternetProtocol>;
+            return ec;
+        }
+
+        template <typename InternetProtocol>
+        void Acceptor::open(
+            typename InternetProtocol::endpoint const & e)
+        {
+            boost::system::error_code ec;
+            open<InternetProtocol>(e, ec);
+            boost::asio::detail::throw_error(ec);
+        }
+
+        template <typename InternetProtocol>
+        boost::system::error_code Acceptor::accept(
             typename InternetProtocol::socket & s, // 外部创建的套接字，不需要open
             boost::system::error_code & ec)
         {
-            if (acceptor_open<InternetProtocol>(a, e, ec)) {
-                return ec;
-            }
+            typename InternetProtocol::acceptor & a(as<InternetProtocol>());
             while (a.accept(s, ec) == boost::asio::error::connection_aborted);
             return ec;
         }
 
         template <typename InternetProtocol>
-        void accept(
-            typename InternetProtocol::acceptor & a, 
-            typename InternetProtocol::endpoint const & e,
+        void Acceptor::accept(
             typename InternetProtocol::socket & s) // 外部创建的套接字，不需要open
         {
             boost::system::error_code ec;
-            accept<InternetProtocol>(a, e, s, ec);
+            accept<InternetProtocol>(s, ec);
             boost::asio::detail::throw_error(ec);
         }
 
@@ -110,22 +146,31 @@ namespace framework
         } // namespace detail
 
         template <typename InternetProtocol, typename AcceptHandler>
-        void async_accept(
-            typename InternetProtocol::acceptor & a,
-            typename InternetProtocol::endpoint const & e,
+        void Acceptor::async_accept(
             typename InternetProtocol::socket & s, // 外部创建的套接字，不需要open
             AcceptHandler const & handler)
         {
-            if (!a.is_open()) {
-                boost::system::error_code ec;
-                if (acceptor_open<InternetProtocol>(a, e, ec)) {
-                    a.get_io_service().post(
-                        boost::asio::detail::bind_handler(handler, ec));
-                    return;
-                }
-            }
+            typename InternetProtocol::acceptor & a(as<InternetProtocol>());
             a.async_accept(s, 
                 detail::accept_handler<InternetProtocol, AcceptHandler>(a, s, handler));
+        }
+
+        template <typename InternetProtocol>
+        void Acceptor::closer(
+            boost::system::error_code & ec)
+        {
+            typedef typename InternetProtocol::acceptor acceptor;
+            acceptor & a(as<InternetProtocol>());
+            a.close(ec);
+            (&a)->~acceptor();
+            closer_ = NULL;
+        }
+
+        template <typename InternetProtocol>
+        typename InternetProtocol::acceptor & Acceptor::as()
+        {
+            assert(closer_ == (closer_t)&Acceptor::closer<InternetProtocol>);
+            return *(typename InternetProtocol::acceptor *)buf_;
         }
 
     } // namespace network

@@ -9,6 +9,8 @@
 #include "framework/filesystem/Symlink.h"
 #include "framework/logger/Logger.h"
 #include "framework/logger/StreamRecord.h"
+#include "framework/string/Format.h"
+#include "framework/string/Parse.h"
 using namespace framework::system;
 using namespace framework::process::error;
 
@@ -231,7 +233,7 @@ namespace framework
                 }
 #undef MAXFILE
                 if (execvp(filename, &cmdArr.at(0)) < 0) {
-                    framework::this_process::notify_wait(last_system_error());
+                    notify_wait(last_system_error());
                     _exit(errno);
                 }
                 return error_code();
@@ -626,8 +628,7 @@ namespace framework
                     }
                 } else {
                     while (is_alive(ec) && milliseconds) {
-                        boost::this_thread::sleep(
-                            boost::posix_time::milliseconds(100));
+                        usleep(100 * 1000);
                         milliseconds = milliseconds > 100 ? milliseconds - 100 : 0;
                     }
                     if (!ec && milliseconds == 0) {
@@ -798,13 +799,13 @@ namespace framework
 #ifndef BOOST_WINDOWS_API
             char * value;
             if ((value = ::getenv("FRAMEWORK_PROCESS_WAIT_FILE"))) {
-                int fd = parse<int>(value);
+                int fd = detail::parse(value, strlen(value));
                 ::unsetenv("FRAMEWORK_PROCESS_WAIT_FILE");
                 char buffer[64];
                 size_t len = strlen(ec.category().name());
                 memcpy(buffer, ec.category().name(), len);
                 buffer[len++] = ':';
-                len += framework::process::detail::format(buffer + len, ec.value());
+                len += detail::format(buffer + len, ec.value());
                 ::write(fd, buffer, len);
                 ::close(fd);
                 return true;
@@ -816,7 +817,7 @@ namespace framework
                 "FRAMEWORK_PROCESS_PARENT_ID", 
                 Buffer, 
                 sizeof(Buffer)) > 0) {
-                    DWORD dwPId = (DWORD)framework::process::detail::parse(Buffer, strlen(Buffer));
+                    DWORD dwPId = (DWORD)detail::parse(Buffer, strlen(Buffer));
                     hParent = ::OpenProcess(
                         PROCESS_ALL_ACCESS, 
                         FALSE, 
@@ -829,7 +830,7 @@ namespace framework
                     ::SetEnvironmentVariable(
                         "FRAMEWORK_PROCESS_WAIT_FILE", 
                         NULL);
-                    HANDLE hFileWrite = (HANDLE)framework::process::detail::parse(Buffer, strlen(Buffer));
+                    HANDLE hFileWrite = (HANDLE)detail::parse(Buffer, strlen(Buffer));
                     ::DuplicateHandle(
                         hParent, 
                         hFileWrite, 
@@ -841,7 +842,7 @@ namespace framework
                     size_t len = strlen(ec.category().name());
                     memcpy(Buffer, ec.category().name(), len);
                     Buffer[len++] = ':';
-                    len += framework::process::detail::format(Buffer + len, ec.value());
+                    len += detail::format(Buffer + len, ec.value());
                     DWORD NumberOfBytesWrite = 0;
                     ::WriteFile(
                         hFileWrite, 

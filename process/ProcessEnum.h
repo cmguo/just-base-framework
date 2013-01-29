@@ -16,6 +16,16 @@ namespace framework
             boost::filesystem::path bin_file;
         };
 
+        bool has_process_name(
+            boost::filesystem::path const & bin_file, 
+            boost::filesystem::path const & bin_path);
+
+        bool get_process_info(
+            ProcessInfo & info, 
+            int pid, 
+            boost::filesystem::path const & bin_file, 
+            boost::system::error_code & ec);
+
         boost::system::error_code enum_process(
             boost::filesystem::path const & bin_file, 
             std::vector<ProcessInfo> & processes);
