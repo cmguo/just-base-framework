@@ -15,26 +15,13 @@ using namespace framework::string;
 using namespace boost::filesystem;
 using namespace boost::system;
 
-#include <fstream>
-
 #ifdef BOOST_WINDOWS_API
 #  include <windows.h>
-#  ifndef __MINGW32__
+#  if (!defined WINRT) && (!defined WIN_PHONE) && (!defined __MINGW32__)
 #    include <winternl.h>
 #  endif
-#  ifdef UNDER_CE
-#    ifndef STARTF_USESTDHANDLES
-#       define STARTF_USESTDHANDLES     0x00000100
-#    endif
-#    ifndef NORMAL_PRIORITY_CLASS
-#       define NORMAL_PRIORITY_CLASS    0x00000020
-#    endif
-#    ifndef CREATE_NO_WINDOW
-#       define CREATE_NO_WINDOW         0x08000000
-#    endif
-#  else
+#  if (!defined UNDER_CE) && (!defined WIN_PHONE)
 #    include <fcntl.h>
-#    include <io.h>
 #    include <psapi.h>
 #    pragma comment(lib, "Psapi.lib")
 #  endif
@@ -99,7 +86,7 @@ namespace framework
             return false;
         }
 
-#elif (!defined UNDER_CE) && (!defined WINRT)
+#elif (!defined UNDER_CE) && (!defined WINRT) && (!defined WIN_PHONE)
 
         bool get_process_info(
             ProcessInfo & info, 
@@ -214,7 +201,7 @@ namespace framework
             return error_code();
         }
 
-#elif (!defined UNDER_CE) && (!defined WINRT)
+#elif (!defined UNDER_CE) && (!defined WINRT) && (!defined WIN_PHONE)
 
         boost::system::error_code enum_process(
             path const & bin_file, 

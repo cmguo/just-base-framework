@@ -14,22 +14,7 @@ using namespace boost::system;
 
 #ifdef BOOST_WINDOWS_API
 #  include <windows.h>
-#  ifndef __MINGW32__
-#    include <winternl.h>
-#  endif
-#  ifdef UNDER_CE
-#    ifndef STARTF_USESTDHANDLES
-#       define STARTF_USESTDHANDLES     0x00000100
-#    endif
-#    ifndef NORMAL_PRIORITY_CLASS
-#       define NORMAL_PRIORITY_CLASS    0x00000020
-#    endif
-#    ifndef CREATE_NO_WINDOW
-#       define CREATE_NO_WINDOW         0x08000000
-#    endif
-#  else
-#    include <fcntl.h>
-#    include <io.h>
+#  if (!defined UNDER_CE) && (!defined WIN_PHONE)
 #    include <psapi.h>
 #    pragma comment(lib, "Psapi.lib")
 #  endif
@@ -178,7 +163,7 @@ namespace framework
             return error_code();
         }
 
-#elif (!defined UNDER_CE) && (!defined WINRT)
+#elif (!defined UNDER_CE) && (!defined WINRT) && (!defined WIN_PHONE)
 
         error_code get_system_stat(
             SystemStat & stat)

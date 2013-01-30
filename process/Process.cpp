@@ -18,11 +18,9 @@ using namespace framework::process::error;
 using namespace boost::filesystem;
 using namespace boost::system;
 
-#include <fstream>
-
 #ifdef BOOST_WINDOWS_API
 #  include <windows.h>
-#  ifndef __MINGW32__
+#  if (!defined WINRT) && (!defined WIN_PHONE) && (!defined __MINGW32__)
 #    include <winternl.h>
 #  endif
 #  ifdef UNDER_CE
@@ -36,10 +34,7 @@ using namespace boost::system;
 #       define CREATE_NO_WINDOW         0x08000000
 #    endif
 #  else
-#    include <fcntl.h>
 #    include <io.h>
-#    include <psapi.h>
-#    pragma comment(lib, "Psapi.lib")
 #  endif
 #else
 #  include <sys/types.h>
@@ -145,7 +140,7 @@ namespace framework
 #ifdef BOOST_WINDOWS_API
         static HANDLE get_pipe_handle(int fd)
         {
-#if (defined UNDER_CE) || (defined WINRT)
+#if (defined UNDER_CE) || (defined WINRT) || (defined WIN_PHONE)
             return INVALID_HANDLE_VALUE;
 #else
             if (-1 == fd)
@@ -262,7 +257,7 @@ namespace framework
                 }
             }
 
-#elif (!defined WINRT)
+#elif (!defined WINRT) && (!defined WIN_PHONE)
 
             std::string cmdlinestr;
             if (bin_file_path.find(' ') == std::string::npos) {
@@ -417,7 +412,7 @@ namespace framework
                     for (size_t i = 0; i < pis.size(); ++i) {
                         data_->handle->push_back(pis[i]);
                     }
-#elif (!defined WINRT)
+#elif (!defined WINRT) && (!defined WIN_PHONE)
                     open(pis[0].pid, ec);
 #else
                     SetLastError(ERROR_NOT_SUPPORTED);
@@ -448,7 +443,7 @@ namespace framework
             } else {
                 LOG_DEBUG("open (no such process): " << ec.message());
             }
-#elif (!defined WINRT)
+#elif (!defined WINRT) && (!defined WIN_PHONE)
             data_->handle = ::OpenProcess(
                 PROCESS_ALL_ACCESS, 
                 FALSE, 
@@ -526,7 +521,7 @@ namespace framework
                         LOG_TRACE("is_alive (process not exist) " << data_->pid);
                     }
                 }
-#elif (!defined WINRT)
+#elif (!defined WINRT) && (!defined WIN_PHONE)
                 BOOL success = ::GetExitCodeProcess(data_->handle, &data_->status);
                 assert(success);
                 if (!success) {
@@ -558,7 +553,7 @@ namespace framework
                 } else {
                     ec = last_system_error();
                 }
-#elif (!defined WINRT)
+#elif (!defined WINRT) && (!defined WIN_PHONE)
                 if (WAIT_OBJECT_0 == ::WaitForSingleObject(data_->handle, INFINITE)) {
                     is_alive(ec);
                 } else {
@@ -635,7 +630,7 @@ namespace framework
                         ec = error_code(ETIMEDOUT, boost::system::get_system_category());
                     }
                 }
-#elif (!defined WINRT)
+#elif (!defined WINRT) && (!defined WIN_PHONE)
                 DWORD waitResult = ::WaitForSingleObject(data_->handle, milliseconds);
                 if (WAIT_OBJECT_0 == waitResult) {
                     is_alive(ec);
@@ -675,7 +670,7 @@ namespace framework
             if (data_->handle) {
                 delete data_->handle;
             }
-#elif (!defined WINRT)
+#elif (!defined WINRT) && (!defined WIN_PHONE)
             ::CloseHandle(data_->handle);
 #else
             SetLastError(ERROR_NOT_SUPPORTED);
@@ -702,7 +697,7 @@ namespace framework
                 } else {
                     ec = last_system_error();
                 }
-#elif (!defined WINRT)
+#elif (!defined WINRT) && (!defined WIN_PHONE)
                 ::TerminateProcess(data_->handle, 99);
                 ::CloseHandle(data_->handle);
 #else
@@ -810,7 +805,7 @@ namespace framework
                 ::close(fd);
                 return true;
             }
-#elif (!defined WINRT)
+#elif (!defined WINRT) && (!defined WIN_PHONE)
             char Buffer[64];
             HANDLE hParent = INVALID_HANDLE_VALUE;
             if (::GetEnvironmentVariable(

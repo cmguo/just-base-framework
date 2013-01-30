@@ -6,7 +6,6 @@
 #ifdef BOOST_WINDOWS_API
 #  include <windows.h>
 #  include "framework/system/LimitNumber.h"
-#  pragma comment(lib, "Kernel32.lib")
 #elif (defined __MACH__)
 #  include <mach/mach_time.h>
 #else

@@ -11,9 +11,11 @@
 #include <boost/asio/io_service.hpp>
 
 #ifdef BOOST_WINDOWS_API
-#include <windows.h>
-#include <iphlpapi.h>
-#pragma comment(lib, "Iphlpapi.lib")
+#  include <windows.h>
+#  if (!defined WINRT) && (!defined WIN_PHONE)
+#    include <iphlpapi.h>
+#    pragma comment(lib, "Iphlpapi.lib")
+#  endif
 #else
 #  include <net/if.h>
 #  include <sys/types.h>
@@ -55,7 +57,35 @@ namespace framework
 
 #ifdef BOOST_WINDOWS_API
 
-#ifndef WINRT
+#if (defined WINRT) || (defined WIN_PHONE)
+		
+        boost::system::error_code enum_interface(
+            std::vector<Interface> & interfaces)
+        {
+			char buf[1024];
+			int len = ::getadapters(buf, sizeof(buf));
+			if (len < 0) {
+				return framework::system::last_system_error();
+			}
+			char const * p = buf;
+            while (len) {
+				adapter const * a = (adapter const *)p;
+				p += a->len;
+				len -= a->len;
+                Interface inf;
+				inf.flags = Interface::up;
+				std::string name = framework::string::Uuid((framework::string::UUID const &)a->id).to_string();
+				strncpy(inf.name, name.c_str(), sizeof(inf.name));
+				boost::system::error_code ec;
+                inf.addr = boost::asio::ip::address::from_string((char *)(a + 1), ec);
+				if (!ec) {
+					interfaces.push_back(inf);
+				}
+            }
+            return  boost::system::error_code();
+        }
+
+#else
 
         boost::system::error_code enum_interface(
             std::vector<Interface> & interfaces)
@@ -123,34 +153,6 @@ namespace framework
             if (pAdapterInfo)
                 free(pAdapterInfo);
             return ec;
-        }
-
-#else // WINRT
-
-        boost::system::error_code enum_interface(
-            std::vector<Interface> & interfaces)
-        {
-			char buf[1024];
-			int len = ::getadapters(buf, sizeof(buf));
-			if (len < 0) {
-				return framework::system::last_system_error();
-			}
-			char const * p = buf;
-            while (len) {
-				adapter const * a = (adapter const *)p;
-				p += a->len;
-				len -= a->len;
-                Interface inf;
-				inf.flags = Interface::up;
-				std::string name = framework::string::Uuid((framework::string::UUID const &)a->id).to_string();
-				strncpy(inf.name, name.c_str(), sizeof(inf.name));
-				boost::system::error_code ec;
-                inf.addr = boost::asio::ip::address::from_string((char *)(a + 1), ec);
-				if (!ec) {
-					interfaces.push_back(inf);
-				}
-            }
-            return  boost::system::error_code();
         }
 
 #endif
