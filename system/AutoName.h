@@ -11,7 +11,7 @@
 #  elif (defined _DYNAMIC)
 #    define FRAMEWORK_DYNAMIC
 #  else
-#    ifdef DEFAULT_LIB_DYNAMIC
+#    ifndef DEFAULT_LIB_STATIC
 #      undef DEFAULT_LIB_DYNAMIC
 #      define FRAMEWORK_LIB_DYNAMIC
 #    else
@@ -38,7 +38,7 @@
 #endif
 
 #ifdef LIB
-#  ifdef BOOST_WINDOWS_API
+#  ifdef WINVER
 #    ifdef WINRT
 #      define PREFIX
 #    else
@@ -58,7 +58,7 @@
 #    endif
 #  endif
 #else
-#  ifdef BOOST_WINDOWS_API
+#  ifdef WINVER
 #    define PREFIX
 #    define SUFFIX .exe
 #  else
