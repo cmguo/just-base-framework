@@ -38,8 +38,8 @@
 #endif
 
 #ifdef LIB
-#  ifdef WINVER
-#    ifdef WINRT
+#if (defined _WIN32) || (defined WIN32)
+#    if (defined WINRT) || (defined WIN_PHONE)
 #      define PREFIX
 #    else
 #      define PREFIX lib
@@ -58,7 +58,7 @@
 #    endif
 #  endif
 #else
-#  ifdef WINVER
+#if (defined _WIN32) || (defined WIN32)
 #    define PREFIX
 #    define SUFFIX .exe
 #  else
