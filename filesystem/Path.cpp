@@ -51,6 +51,11 @@ namespace framework
 #endif
         }
 
+        boost::filesystem::path bin_path()
+        {
+            return bin_file().remove_leaf();
+        }
+
         /// 获取临时文件的路径
         ///
         ///     @note linux下一般为：/tmp下
@@ -109,9 +114,11 @@ namespace framework
             /// 绝对路径直接返回
             if ( file.has_root_directory() ) return file;
 
+            std::vector<boost::filesystem::path> search_paths;
+
+            std::vector<std::string> env_config_paths;
             std::string env_config_paths_str = 
                 framework::process::get_environment("LD_CONFIG_PATH");
-            std::vector<std::string> env_config_paths;
 #ifdef BOOST_WINDOWS_API
 #  define DELIM ";"
 #else
@@ -121,13 +128,15 @@ namespace framework
                 env_config_paths_str, std::back_inserter(env_config_paths), DELIM);
 #undef DELIM
 
+            search_paths.insert(search_paths.end(), env_config_paths.begin(), env_config_paths.end());
 #ifndef BOOST_WINDOWS_API
             env_config_paths.push_back("/etc");
 #endif
-            env_config_paths.push_back( temp_path().file_string() );
-            for (size_t i = 0; i < env_config_paths.size(); ++i) {
-                boost::filesystem::path ph(env_config_paths[i]);
-                ph /= file.file_string();
+            search_paths.push_back(temp_path());
+            search_paths.push_back(bin_path());
+
+            for (size_t i = 0; i < search_paths.size(); ++i) {
+                boost::filesystem::path ph(search_paths[i] / file);
                 if (boost::filesystem::exists(ph))
                     return ph;
             }

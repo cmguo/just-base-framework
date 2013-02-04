@@ -13,6 +13,9 @@ namespace framework
         /// 获取当前可执行文件路径
         boost::filesystem::path bin_file();
 
+        /// 获取当前可执行文件路径
+        boost::filesystem::path bin_path();
+
         /// 获取临时文件存放的路径
         boost::filesystem::path temp_path();
 
