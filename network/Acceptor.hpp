@@ -28,7 +28,6 @@ namespace framework
             if (n.svc().find('+') ) {
                 size_t ntry = 20;
                 while (ec == boost::asio::error::address_in_use && ntry) {
-                    (this->*closer_)(ec);
                     ep.port(ep.port() + 1);
                     --ntry;
                     open<InternetProtocol>(ep, ec);
@@ -48,6 +47,30 @@ namespace framework
             boost::asio::detail::throw_error(ec);
         }
 
+        struct close_helper
+        {
+            close_helper(
+                Acceptor & acceptor)
+                : acceptor_(&acceptor)
+            {
+            }
+
+            ~close_helper()
+            {
+                if (acceptor_) {
+                    boost::system::error_code ec;
+                    acceptor_->close(ec);
+                }
+            }
+
+            void release()
+            {
+                acceptor_ = NULL;
+            }
+
+            Acceptor * acceptor_;
+        };
+
         template <
             typename InternetProtocol
         >
@@ -59,6 +82,7 @@ namespace framework
             assert(sizeof(typename InternetProtocol::acceptor) <= sizeof(buf_));
             typedef typename InternetProtocol::acceptor acceptor;
             acceptor & a(* new (buf_) acceptor(io_svc_));
+            close_helper ch(*this);
             if (a.open(e.protocol(), ec)) {
                 return ec;
             }
@@ -72,6 +96,7 @@ namespace framework
             if (a.listen(1, ec))
                 return ec;
             ec.clear();
+            ch.release();
             closer_ = &Acceptor::closer<acceptor>;
             return ec;
         }
