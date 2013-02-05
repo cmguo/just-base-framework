@@ -20,9 +20,6 @@ using namespace boost::system;
 
 #ifdef BOOST_WINDOWS_API
 #  include <windows.h>
-#  if (!defined WINRT) && (!defined WIN_PHONE) && (!defined __MINGW32__)
-#    include <winternl.h>
-#  endif
 #  ifdef UNDER_CE
 #    ifndef STARTF_USESTDHANDLES
 #       define STARTF_USESTDHANDLES     0x00000100

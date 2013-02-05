@@ -8,8 +8,6 @@
 using namespace framework::system;
 using namespace framework::string;
 
-#include <fstream>
-
 using namespace boost::system;
 
 #ifdef BOOST_WINDOWS_API
@@ -21,6 +19,7 @@ using namespace boost::system;
 #else
 #  include <boost/filesystem/path.hpp>
 using namespace boost::filesystem;
+#  include <fstream>
 #  include <sys/types.h>
 #  include <sys/stat.h>
 #  include <sys/wait.h>
