@@ -59,6 +59,16 @@ namespace framework
             return ctx_->digest;
         }
 
+        Md5::bytes_type Md5::apply(
+            boost::uint8_t const * buf, 
+            size_t len)
+        {
+            Md5 sha;
+            sha.update(buf, len);
+            sha.final();
+            return sha.to_bytes();
+        }
+
         std::string Md5::to_string() const
         {
             char const * bytes = (char const *)&ctx_->digest;

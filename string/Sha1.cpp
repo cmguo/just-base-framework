@@ -115,6 +115,16 @@ namespace framework
             return ctx_->digest;
         }
 
+        Sha1::bytes_type Sha1::apply(
+            boost::uint8_t const * buf, 
+            size_t len)
+        {
+            Sha1 sha;
+            sha.update(buf, len);
+            sha.final();
+            return sha.to_bytes();
+        }
+
         std::string Sha1::to_string() const
         {
             char const * bytes = (char const *)&ctx_->digest;

@@ -1,7 +1,7 @@
-// Sha1.h
+// Sha256.h
 
-#ifndef _FRAMEWORK_STRING_SHA1_H_
-#define _FRAMEWORK_STRING_SHA1_H_
+#ifndef _FRAMEWORK_STRING_SHA256_H_
+#define _FRAMEWORK_STRING_SHA256_H_
 
 #include <boost/array.hpp>
 
@@ -10,24 +10,29 @@ namespace framework
     namespace string
     {
 
+        struct hash_no_init;
+
         namespace detail
         {
-            struct Sha1Ctx;
+            struct Sha256Ctx;
         }
 
-        class Sha1
+        class Sha256
         {
         public:
             static size_t const block_size = 64; // in bytes
 
-            static size_t const output_size = 20; // in bytes
+            static size_t const output_size = 32; // in bytes
 
             typedef boost::array<boost::uint8_t, output_size> bytes_type;
 
         public:
-            Sha1();
+            Sha256();
 
-            ~Sha1();
+            Sha256(
+                hash_no_init *);
+
+            ~Sha256();
 
         public:
             void init();
@@ -58,47 +63,47 @@ namespace framework
                 std::string const & str);
 
         private:
-            detail::Sha1Ctx * ctx_;
+            detail::Sha256Ctx * ctx_;
         };
 
-        inline Sha1::bytes_type sha1(
+        inline Sha256::bytes_type sha256(
             boost::uint8_t const * buf, 
             size_t len)
         {
-            return Sha1::apply(buf, len);
+            return Sha256::apply(buf, len);
         }
 
-        inline Sha1::bytes_type sha1(
+        inline Sha256::bytes_type sha256(
             std::string const & data)
         {
-            return Sha1::apply((boost::uint8_t const *)data.c_str(), data.size());
+            return Sha256::apply((boost::uint8_t const *)data.c_str(), data.size());
         }
 
-        inline Sha1::bytes_type sha1(
+        inline Sha256::bytes_type sha256(
             std::vector<boost::uint8_t> const & data)
         {
-            return Sha1::apply(data.empty() ? NULL : &data.at(0), data.size());
+            return Sha256::apply(data.empty() ? NULL : &data.at(0), data.size());
         }
 
         template <
             size_t N
         >
-        inline Sha1::bytes_type sha1(
+        inline Sha256::bytes_type sha256(
             boost::uint8_t const (& data)[N])
         {
-            return Sha1::apply(data, N);
+            return Sha256::apply(data, N);
         }
 
         template <
             size_t N
         >
-        inline Sha1::bytes_type sha1(
+        inline Sha256::bytes_type sha256(
             boost::array<boost::uint8_t, N> const & data)
         {
-            return Sha1::apply(data.data(), data.size());
+            return Sha256::apply(data.data(), data.size());
         }
 
     } // namespace string
 } // namespace framework
 
-#endif // _FRAMEWORK_STRING_SHA1_H_
+#endif // _FRAMEWORK_STRING_SHA256_H_

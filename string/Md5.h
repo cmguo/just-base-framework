@@ -18,7 +18,11 @@ namespace framework
         class Md5
         {
         public:
-            typedef boost::array<boost::uint8_t, 16> bytes_type;
+            static size_t const block_size = 64; // in bytes
+
+            static size_t const output_size = 16; // in bytes
+
+            typedef boost::array<boost::uint8_t, output_size> bytes_type;
 
         public:
             Md5(
@@ -39,6 +43,11 @@ namespace framework
             boost::uint8_t * digest() const;
 
         public:
+            static bytes_type apply(
+                boost::uint8_t const * buf, 
+                size_t len);
+
+        public:
             bytes_type to_bytes() const;
 
             void from_bytes(
@@ -53,6 +62,43 @@ namespace framework
         protected:
             detail::Md5Ctx * ctx_;
         };
+
+        inline Md5::bytes_type md5(
+            boost::uint8_t const * buf, 
+            size_t len)
+        {
+            return Md5::apply(buf, len);
+        }
+
+        inline Md5::bytes_type md5(
+            std::string const & data)
+        {
+            return Md5::apply((boost::uint8_t const *)data.c_str(), data.size());
+        }
+
+        inline Md5::bytes_type md5(
+            std::vector<boost::uint8_t> const & data)
+        {
+            return Md5::apply(data.empty() ? NULL : &data.at(0), data.size());
+        }
+
+        template <
+            size_t N
+        >
+        inline Md5::bytes_type md5(
+        boost::uint8_t const (& data)[N])
+        {
+            return Md5::apply(data, N);
+        }
+
+        template <
+            size_t N
+        >
+        inline Md5::bytes_type md5(
+        boost::array<boost::uint8_t, N> const & data)
+        {
+            return Md5::apply(data.data(), data.size());
+        }
 
     } // namespace string
 } // namespace framework
