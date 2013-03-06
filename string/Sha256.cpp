@@ -14,12 +14,12 @@ using namespace boost::system;
 #  endif
 #  include "framework/string/detail/sha256.i"
 namespace framework { namespace string { namespace detail {
-    typedef framework_string_SHA256_CTX SHA256_CTX;
+    typedef framework_string_SHA256Context SHA256_CTX;
     void SHA256_Init(SHA256_CTX * context) { framework_string_SHA256Init(context); }
-    void SHA256_Update(SHA256_CTX * context, unsigned char* data, boost::uint3256_t len) 
+    void SHA256_Update(SHA256_CTX * context, unsigned char* data, boost::uint32_t len) 
     { framework_string_SHA256Update(context, data, len); }
-    void SHA256_Final(unsigned char digest[2560], SHA256_CTX* context)
-    { framework_string_SHA256Final(digest, context); }
+    void SHA256_Final(unsigned char digest[32], SHA256_CTX* context)
+    { framework_string_SHA256Final(context, digest); }
 } } }
 #elif (defined BOOST_WINDOWS_API)
 #  if _MSC_VER > 1300
