@@ -40,7 +40,7 @@ namespace framework
         >
         Hmac<Hash>::Hmac()
         {
-            ctx_ = new detail::HmacCtx;
+            ctx_ = new detail::HmacCtx<Hash>;
             init(NULL, 0);
         }
 
@@ -61,7 +61,7 @@ namespace framework
         Hmac<Hash>::Hmac(
             std::vector<boost::uint8_t> const & key)
         {
-            ctx_ = new detail::HmacCtx;
+            ctx_ = new detail::HmacCtx<Hash>;
             init(key.empty() ? NULL : &key.at(0), key.size());
         }
 

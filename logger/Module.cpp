@@ -14,8 +14,8 @@ namespace framework
             char const * name, 
             size_t level)
             : next_(NULL)
-            , group_(group)
             , name_(name)
+            , group_(group)
             , level_(level)
         {
             short_name_ = strrchr(name, '.');
