@@ -101,11 +101,14 @@ namespace framework
 
         template <typename SocketType>
         boost::system::error_code Connector::connect(
-            SocketType & peer, 
+            SocketType & peer1, 
             Endpoint const & endpoint, 
             boost::system::error_code & ec)
         {
-            typedef typename SocketType::endpoint_type endpoint_type;
+            typedef typename SocketType::protocol_type::socket socket;
+            typedef typename socket::endpoint_type endpoint_type;
+
+            socket & peer(peer1); // we should use the real socket type, not the child type
 
             if (!started_) {
                 canceled_ = canceled_forever_;
@@ -165,10 +168,15 @@ namespace framework
 
         template <typename SocketType>
         boost::system::error_code Connector::connect(
-            SocketType & peer, 
+            SocketType & peer1, 
             NetName const & netname, 
             boost::system::error_code & ec)
         {
+            typedef typename SocketType::protocol_type::socket socket;
+            typedef typename socket::endpoint_type endpoint_type;
+
+            socket & peer(peer1); // we should use the real socket type, not the child type
+
             if (netname.is_digit()) {
                 return connect(peer, netname.endpoint(), ec);
             }
@@ -211,7 +219,7 @@ namespace framework
 #ifndef UNDER_CE
                             boost::asio::socket_base::receive_time_out cmd2(time_out_);
 #endif
-                            ec || peer.open(typename SocketType::endpoint_type(e).protocol(), ec) 
+                            ec || peer.open(endpoint_type(e).protocol(), ec) 
                                 || peer.io_control(cmd1, ec) 
 #ifndef UNDER_CE
                                 || peer.set_option(cmd2, ec)
@@ -495,7 +503,8 @@ namespace framework
             NetName const & netname, 
             ConnectHandler const & handler)
         {
-            typedef detail::connect_handler<SocketType, ConnectHandler> connect_handler_t;
+            typedef typename SocketType::protocol_type::socket socket;
+            typedef detail::connect_handler<socket, ConnectHandler> connect_handler_t;
 
             canceled_ = canceled_forever_;
             if (netname.is_digit()) {
