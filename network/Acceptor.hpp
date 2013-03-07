@@ -25,7 +25,7 @@ namespace framework
             using namespace boost::asio::ip;
             typename InternetProtocol::endpoint ep(address::from_string(n.host()), n.port());
             open<InternetProtocol>(ep, ec);
-            if (n.svc().find('+') ) {
+            if (n.svc().find('+') != std::string::npos) {
                 size_t ntry = 20;
                 while (ec == boost::asio::error::address_in_use && ntry) {
                     ep.port(ep.port() + 1);
