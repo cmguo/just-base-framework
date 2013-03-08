@@ -83,13 +83,13 @@ namespace framework
             {
                 if (!ec) {
                     proxy_->start();
-                    proxy_ = create(this, (Manager *)NULL);
-                    proxy_->async_accept(acceptor_, 
-                        boost::bind(&ServerManager::handle_accept, this, _1));
                 } else {
                     proxy_->on_error(ec);
                     delete proxy_;
                 }
+                proxy_ = create(this, (Manager *)NULL);
+                proxy_->async_accept(acceptor_, 
+                    boost::bind(&ServerManager::handle_accept, this, _1));
             }
 
         private:
