@@ -81,8 +81,7 @@ namespace framework
             assert(closer_ == NULL);
             assert(sizeof(typename InternetProtocol::acceptor) <= sizeof(buf_));
             typedef typename InternetProtocol::acceptor acceptor;
-            acceptor & a(* new (buf_) acceptor(io_svc_));
-            closer_ = &Acceptor::closer<acceptor>;
+            acceptor & a(get<acceptor>());
             close_helper ch(*this);
             if (a.open(e.protocol(), ec)) {
                 return ec;
@@ -210,6 +209,17 @@ namespace framework
             a.close(ec);
             (&a)->~AcceptorType();
             closer_ = NULL;
+        }
+
+        template <
+            typename AcceptorType
+        >
+        AcceptorType & Acceptor::get()
+        {
+            assert(!is_open());
+            AcceptorType & a(* new (buf_) AcceptorType(io_svc_));
+            closer_ = &Acceptor::closer<AcceptorType>;
+            return a;
         }
 
         template <

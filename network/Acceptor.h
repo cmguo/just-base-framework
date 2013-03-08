@@ -37,6 +37,8 @@ namespace framework
             void open(
                 typename InternetProtocol::endpoint const & e);
 
+            bool is_open();
+
             boost::system::error_code close(
                 boost::system::error_code & ec);
 
@@ -76,6 +78,11 @@ namespace framework
             >
             void closer(
                 boost::system::error_code & ec);
+
+            template <
+                typename AcceptorType
+            >
+            AcceptorType & get();
 
             template <
                 typename AcceptorType

@@ -87,6 +87,10 @@ namespace framework
                     proxy_->on_error(ec);
                     delete proxy_;
                 }
+                if (!acceptor_.is_open()) {
+                    proxy_ = NULL;
+                    return;
+                }
                 proxy_ = create(this, (Manager *)NULL);
                 proxy_->async_accept(acceptor_, 
                     boost::bind(&ServerManager::handle_accept, this, _1));
