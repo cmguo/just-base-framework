@@ -23,6 +23,11 @@ namespace framework
             };
         }
 
+        bool Acceptor::is_open()
+        {
+            return closer_ != NULL;
+        }
+
         boost::system::error_code Acceptor::close(
             boost::system::error_code & ec)
         {
