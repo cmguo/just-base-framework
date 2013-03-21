@@ -368,7 +368,7 @@ namespace framework
                     }
                     canceled_ = false;
                     socket_.get_io_service().post(
-                        boost::bind(handler_, ec));
+                        boost::asio::detail::bind_handler(handler_, ec));
                     delete this;
                 }
 
