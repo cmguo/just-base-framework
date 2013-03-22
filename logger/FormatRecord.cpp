@@ -16,7 +16,7 @@ namespace framework
             for (char const * p = fmt_; *p; ++p) {
                 if (*p == '%') {
                     char const * q = p + 1;
-                    bool all_digit = true;
+                    bool all_digit = *q != '%';
                     while ((*q < 'A' || *q > 'Z') && (*q < 'a' || *q > 'z') && *q != '%') {
                         all_digit = all_digit && (*q >='0' && *q <= '9');
                         ++q;
