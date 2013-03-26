@@ -133,7 +133,7 @@ namespace framework
                 return decode(n_, v_);
             }
 
-            _Ty size() const
+            boost::uint8_t size() const
             {
                 return v_.size;
             }

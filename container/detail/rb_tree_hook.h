@@ -253,7 +253,7 @@ namespace framework
                             } 
                             else {
                                 if (w->right() == pointer(0) || w->right()->color() == black) {
-									if (w->left() != pointer(0))
+                                    if (w->left() != pointer(0))
                                         w->left()->color() = black;
                                     w->color() = red;
                                     rotate_right(w, root);

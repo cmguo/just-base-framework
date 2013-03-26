@@ -20,7 +20,10 @@ namespace framework
             typedef _Pt pointer_traits;
 
         public:
-            _Ty * operator -> ()
+            Hook() {}
+
+        public:
+           _Ty * operator -> ()
             {
                 return get();
             }
@@ -43,6 +46,12 @@ namespace framework
             void detach()
             {
             }
+
+        private:
+            Hook(Hook const &);
+
+            Hook & operator=(
+                Hook const &);
         };
 
     } // namespace container

@@ -24,7 +24,7 @@ namespace framework
         template <
             typename _Ty, 
             typename _Key = identity<_Ty>, 
-            typename _Ls = std::less<BOOST_DEDUCED_TYPENAME _Key::result_type>
+            typename _Ls = std::less<BOOST_DEDUCED_TYPENAME _Key::value_type>
         >
         class OrderedUnidirList
         {
@@ -34,7 +34,7 @@ namespace framework
             typedef typename node_type::hook_type hook_type;
             typedef typename pointer_traits::pointer pointer;
             typedef typename pointer_traits::const_pointer const_pointer;
-            typedef typename _Key::result_type key_type;
+            typedef typename _Key::value_type key_type;
             typedef node_type value_type;
 
         public:
@@ -158,7 +158,7 @@ namespace framework
             {
                 assert(v->not_linked());
                 pointer * p = &header()->next();
-                key_type key = key_(*v);
+                typename _Key::result_type key = key_(*v);
                 while ((*p) && comp_(key_(**p), key))
                     p = &(*p)->next();
                 v->next() = *p;

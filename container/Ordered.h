@@ -28,7 +28,7 @@ namespace framework
         template <
             typename _Ty, 
             typename _Key = identity<_Ty>, 
-            typename _Ls = std::less<BOOST_DEDUCED_TYPENAME _Key::result_type>, 
+            typename _Ls = std::less<BOOST_DEDUCED_TYPENAME _Key::value_type>, 
             typename _Cat = ordered_unique_tag>
         class Ordered
         {
@@ -38,7 +38,7 @@ namespace framework
             typedef typename node_type::hook_type hook_type;
             typedef typename pointer_traits::pointer pointer;
             typedef typename pointer_traits::const_pointer const_pointer;
-            typedef typename _Key::result_type key_type;
+            typedef typename _Key::value_type key_type;
             typedef node_type value_type;
 
         public:
@@ -504,7 +504,7 @@ namespace framework
             }
 
             bool lower_link_point(
-                key_type k,
+                key_type const & k,
                 link_info & inf,
                 ordered_non_unique_tag)
             {

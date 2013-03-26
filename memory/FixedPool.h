@@ -94,6 +94,7 @@ namespace framework
 
             struct object_key
             {
+                typedef Object const * value_type;
                 typedef Object const * result_type;
 
                 result_type operator()(

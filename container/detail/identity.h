@@ -13,7 +13,8 @@ namespace framework
         >
         struct identity 
         {
-            typedef _Ty result_type;
+            typedef _Ty value_type;
+            typedef _Ty const & result_type;
 
             _Ty const & operator () (
                 _Ty const & t) const

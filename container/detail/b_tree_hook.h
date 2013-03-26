@@ -148,7 +148,7 @@ namespace framework
                 typename CompatibleCompare
             >
             static pointer find(
-			pointer top,
+            pointer top,
             pointer y,
             KeyFromValue const & key,
             CompatibleKey const & x,
