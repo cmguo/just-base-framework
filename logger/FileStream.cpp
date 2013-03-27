@@ -22,10 +22,11 @@ namespace framework
     {
 
         FileStream::FileStream()
+            : time_(true)
 #ifdef BOOST_WINDOWS_API
-            : handle_(INVALID_HANDLE_VALUE)
+            , handle_(INVALID_HANDLE_VALUE)
 #else
-            : fd_(-1)
+            , fd_(-1)
 #endif
             , app_(false)
             , daily_(false)
@@ -213,7 +214,7 @@ namespace framework
             if (!app) {
                 boost::filesystem::path ph(file_);
                 boost::filesystem::path ph2(ph.parent_path() / "log_bak");
-                boost::filesystem::path ph3(ph2 / (ph.leaf() + time_.time_str()));
+                boost::filesystem::path ph3(ph2 / (time_.time_str() + ph.leaf()));
                 try {
                     boost::filesystem::create_directory(ph2);
                     if (boost::filesystem::exists(ph))

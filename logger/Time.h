@@ -13,7 +13,8 @@ namespace framework
         class Time
         {
         public:
-            Time();
+            Time(
+                bool is_file = false);
 
             bool check() const;
 
@@ -28,6 +29,7 @@ namespace framework
             }
 
         private:
+            bool is_file_;
             char time_str_[32];                     /// ÈÕÆÚ´®
             time_t mid_night_;
         };

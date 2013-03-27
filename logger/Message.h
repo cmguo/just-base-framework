@@ -48,6 +48,11 @@ namespace framework
         static const size_t level_str_len = 8;
 
         static char const * const time_format_str = "<%Y-%m-%d %H:%M:%S> ";
+#ifdef BOOST_WINDOWS_API
+        static char const * const file_time_format_str = "[%Y-%m-%d %H'%M'%S]";
+#else
+        static char const * const file_time_format_str = "[%Y-%m-%d %H:%M:%S]";
+#endif
         static const size_t time_str_len = 24;
 
     } // namespace logger

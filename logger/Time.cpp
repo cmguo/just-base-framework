@@ -41,9 +41,11 @@ namespace framework
             return buf;
         }
 
-        Time::Time()
+        Time::Time(
+            bool is_file)
+            : is_file_(is_file)
         {
-            time_str_now(time_str_, sizeof(time_str_), time_format_str);
+            time_str_now(time_str_, sizeof(time_str_), is_file_ ? file_time_format_str : time_format_str);
             time_t tt = time(NULL);
             struct tm lt;
             localtime_r(&tt, &lt);
@@ -62,7 +64,7 @@ namespace framework
         {
             int t_diff = (int)(time(NULL) - mid_night_);
             if (t_diff >= 24 * 60 * 60) {
-                time_str_now(time_str_, sizeof(time_str_), time_format_str);
+                time_str_now(time_str_, sizeof(time_str_), is_file_ ? file_time_format_str : time_format_str);
                 mid_night_ += 24 * 60 * 60;
                 t_diff -= 24 * 60 * 60;
             }
@@ -73,6 +75,7 @@ namespace framework
         {
             int t_diff = (int)(time(NULL) - mid_night_);
             if (t_diff >= 24 * 60 * 60) {
+                t_diff -= 24 * 60 * 60;
                 // Ë«±£ÏÕ
                 boost::mutex::scoped_lock locker(lock);
                 update();
