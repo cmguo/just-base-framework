@@ -72,6 +72,37 @@ namespace framework
                 return out2;
             }
 
+            boost::uint64_t static_transfer(
+                boost::uint64_t n) const
+            {
+                if (scale_in_ == 1) {
+                    if (scale_out_ == 1) {
+                        return n;
+                    } else {
+                        return n * scale_out_;
+                    }
+                }
+                boost::uint64_t out = trans1_[n & 0xff].out;
+                boost::uint64_t left = trans1_[n & 0xff].left;
+                n >>= 8;
+                if (n) {
+                    size_t i = 0;
+                    do {
+                        if (n & 1) {
+                            out += trans2_[i].out;
+                            left += trans2_[i].left;
+                            if (left >= scale_in_) {
+                                ++out;
+                                left -= scale_in_;
+                            }
+                        }
+                        n >>= 1;
+                        ++i;
+                    } while (n);
+                }
+                return out;
+            }
+
         public:
             void reset(
                 boost::uint64_t scale_in, 
