@@ -16,6 +16,41 @@ namespace framework
             template<
                 typename _Ty
             >
+            class cycle_iterator;
+
+            struct cycle_iterator_acess
+            {
+                template <
+                    typename _Ty
+                >
+                static _Ty * beg(
+                    cycle_iterator<_Ty> const & i)
+                {
+                    return i.beg_;
+                }
+
+                template <
+                    typename _Ty
+                >
+                static _Ty * cur(
+                    cycle_iterator<_Ty> const & i)
+                {
+                    return i.cur_;
+                }
+
+                template <
+                    typename _Ty
+                >
+                static _Ty * end(
+                    cycle_iterator<_Ty> const & i)
+                {
+                    return i.end_;
+                }
+            };
+
+            template<
+                typename _Ty
+            >
             class cycle_iterator
                 : public boost::forward_iterator_helper<
                 cycle_iterator<_Ty>, 
@@ -46,9 +81,9 @@ namespace framework
                 >
                 cycle_iterator(
                     cycle_iterator<_Ty1> const & r)
-                    : beg_(r.beg_)
-                    , cur_(r.cur_)
-                    , end_(r.end_)
+                    : beg_(cycle_iterator_access::beg(r))
+                    , cur_(cycle_iterator_access::cur(r))
+                    , end_(cycle_iterator_access::end(r))
                 {
                 }
 
@@ -76,10 +111,7 @@ namespace framework
                 }
 
             private:
-                template<
-                    typename _Ty1
-                >
-                friend class cycle_iterator<_Ty1>;
+                friend class cycle_iterator_access;
 
             private:
                 _Ty * beg_;
