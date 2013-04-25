@@ -1,144 +1,14 @@
-// CycleBuffer.h
+// Cycle.h
 
 #ifndef _FRAMEWORK_CONTAINER_CYCLE_BUFFER_H_
 #define _FRAMEWORK_CONTAINER_CYCLE_BUFFER_H_
 
-#include <boost/operators.hpp>
+#include "framework/container/detail/cycle_iterator.h"
 
 namespace framework
 {
     namespace container
     {
-
-        template<
-            typename _Ty
-        >
-        class cycle_const_iterator;
-
-        template<
-            typename _Ty
-        >
-        class cycle_iterator
-            : public boost::forward_iterator_helper<
-                cycle_iterator<_Ty>, 
-                _Ty
-            >
-        {
-        public:
-            cycle_iterator(
-                _Ty * beg, 
-                _Ty * cur, 
-                _Ty * end)
-                : beg_(beg)
-                , cur_(cur)
-                , end_(end)
-            {
-            }
-
-            cycle_iterator(
-                cycle_iterator const & r)
-                : beg_(r.beg_)
-                , cur_(r.cur_)
-                , end_(r.end_)
-            {
-            }
-
-        public:
-            _Ty & operator*() const
-            {
-                return *cur_;
-            }
-
-            cycle_iterator & operator++()
-            {
-                ++cur_;
-                if (cur_ == end_)
-                    cur_ = beg_;
-                return *this;
-            }
-
-        public:
-            friend bool operator ==(
-                cycle_iterator const & l,
-                cycle_iterator const & r)
-            {
-                assert(l.beg_ == r.beg_ && l.end_ == r.end_);
-                return l.cur_ == r.cur_;
-            }
-
-        private:
-            friend class cycle_const_iterator<_Ty>;
-
-        private:
-            _Ty * beg_;
-            _Ty * cur_;
-            _Ty * end_;
-        };
-
-        template<
-            typename _Ty
-        >
-        class cycle_const_iterator
-            : public boost::forward_iterator_helper<
-                cycle_const_iterator<_Ty>, 
-                _Ty const
-            >
-        {
-        public:
-            cycle_const_iterator(
-                _Ty const * beg, 
-                _Ty const * cur, 
-                _Ty const * end)
-                : beg_(beg)
-                , cur_(cur)
-                , end_(end)
-            {
-            }
-
-            cycle_const_iterator(
-                cycle_const_iterator const & r)
-                : beg_(r.beg_)
-                , cur_(r.cur_)
-                , end_(r.end_)
-            {
-            }
-
-            cycle_const_iterator(
-                cycle_iterator<_Ty> const & r)
-                : beg_(r.beg_)
-                , cur_(r.cur_)
-                , end_(r.end_)
-            {
-            }
-
-        public:
-            _Ty const & operator*() const
-            {
-                return *cur_;
-            }
-
-            cycle_const_iterator & operator++()
-            {
-                ++cur_;
-                if (cur_ == end_)
-                    cur_ = beg_;
-                return *this;
-            }
-
-        public:
-            friend bool operator ==(
-                cycle_const_iterator const & l,
-                cycle_const_iterator const & r)
-            {
-                assert(l.beg_ == r.beg_ && l.end_ == r.end_);
-                return l.cur_ == r.cur_;
-            }
-
-        private:
-            _Ty const * beg_;
-            _Ty const * cur_;
-            _Ty const * end_;
-        };
 
         template <
             typename _Ty
@@ -148,9 +18,9 @@ namespace framework
         public:
             typedef _Ty value_type;
 
-            typedef cycle_iterator<value_type> iterator;
+            typedef detail::cycle_iterator<value_type> iterator;
 
-            typedef cycle_const_iterator<value_type> const_iterator;
+            typedef detail::cycle_iterator<value_type const> const_iterator;
 
         public:
             Cycle(
