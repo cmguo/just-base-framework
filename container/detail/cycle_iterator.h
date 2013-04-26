@@ -18,7 +18,7 @@ namespace framework
             >
             class cycle_iterator;
 
-            struct cycle_iterator_acess
+            struct cycle_iterator_access
             {
                 template <
                     typename _Ty
