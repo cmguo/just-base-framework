@@ -48,12 +48,15 @@ namespace framework
                 m_datas[m_write_index] = t;
                 ++m_write_index;
                 ++m_size;
+                if (m_write_index == m_capacity) {
+                    m_write_index = 0;
+                }
             }
 
             void pop()
             {
                 assert(m_size > 0);
-                ++ m_read_index;
+                ++m_read_index;
                 --m_size;
                 if (m_read_index == m_capacity) {
                     m_read_index = 0;

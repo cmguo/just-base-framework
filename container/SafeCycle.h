@@ -49,6 +49,9 @@ namespace framework
                 }
                 m_datas[m_write_index] = t;
                 ++m_write_index;
+                if (m_write_index == m_capacity) {
+                    m_write_index = 0;
+                }
                 return true;
             }
 
@@ -58,7 +61,7 @@ namespace framework
                 if (empty()) {
                     return false;
                 }
-                ++ m_read_index;
+                ++m_read_index;
                 if (m_read_index == m_capacity) {
                     m_read_index = 0;
                 }
