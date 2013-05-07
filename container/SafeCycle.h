@@ -23,6 +23,14 @@ namespace framework
             typedef detail::cycle_iterator<value_type const> const_iterator;
 
         public:
+            SafeCycle()
+                : m_capacity(0)
+                , m_datas(NULL)
+                , m_write_index(0)
+                , m_read_index(0)
+            {
+            }
+
             SafeCycle(
                 size_t capacity)
                 : m_capacity(capacity + 1)
@@ -30,7 +38,6 @@ namespace framework
                 , m_write_index(0)
                 , m_read_index(0)
             {
-
             }
 
             ~SafeCycle()
@@ -66,6 +73,36 @@ namespace framework
                     m_read_index = 0;
                 }
                 return true;
+            }
+
+            bool pop(
+                size_t n)
+            {
+                assert(size() >= n);
+                if (size() < n) {
+                    return false;
+                }
+                m_read_index += n;
+                if (m_read_index >= m_capacity) {
+                    m_read_index -= m_capacity;
+                }
+                return true;
+            }
+
+            void reserve(
+                size_t n)
+            {
+                assert(size() <= n);
+                if (size() <= n) {
+                    return;
+                }
+                value_type * datas = new value_type[++n];
+                std::copy(begin(), end(), datas);
+                delete m_datas;
+                m_datas = datas;
+                m_write_index = size();
+                m_read_index = 0;
+                m_capacity = n;
             }
 
             void clear()

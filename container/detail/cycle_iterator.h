@@ -111,7 +111,7 @@ namespace framework
                 }
 
             private:
-                friend class cycle_iterator_access;
+                friend struct cycle_iterator_access;
 
             private:
                 _Ty * beg_;
