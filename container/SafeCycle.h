@@ -24,26 +24,26 @@ namespace framework
 
         public:
             SafeCycle()
-                : m_capacity(0)
-                , m_datas(NULL)
-                , m_write_index(0)
-                , m_read_index(0)
+                : capacity_(0)
+                , datas_(NULL)
+                , write_index_(0)
+                , read_index_(0)
             {
             }
 
             SafeCycle(
                 size_t capacity)
-                : m_capacity(capacity + 1)
-                , m_datas(new value_type[capacity + 1])
-                , m_write_index(0)
-                , m_read_index(0)
+                : capacity_(capacity + 1)
+                , datas_(new value_type[capacity + 1])
+                , write_index_(0)
+                , read_index_(0)
             {
             }
 
             ~SafeCycle()
             {
-                if (m_datas)
-                    delete m_datas;
+                if (datas_)
+                    delete datas_;
             }
 
         public:
@@ -54,11 +54,12 @@ namespace framework
                 if (full()) {
                     return false;
                 }
-                m_datas[m_write_index] = t;
-                ++m_write_index;
-                if (m_write_index == m_capacity) {
-                    m_write_index = 0;
+                datas_[write_index_] = t;
+                size_t idx = ++write_index_;
+                if (idx == capacity_) {
+                    idx = 0;
                 }
+                write_index_ = idx;
                 return true;
             }
 
@@ -68,10 +69,11 @@ namespace framework
                 if (empty()) {
                     return false;
                 }
-                ++m_read_index;
-                if (m_read_index == m_capacity) {
-                    m_read_index = 0;
+                size_t idx = ++read_index_;
+                if (idx == capacity_) {
+                    idx = 0;
                 }
+                read_index_ = idx;
                 return true;
             }
 
@@ -82,10 +84,11 @@ namespace framework
                 if (size() < n) {
                     return false;
                 }
-                m_read_index += n;
-                if (m_read_index >= m_capacity) {
-                    m_read_index -= m_capacity;
+                size_t idx = read_index_ + n;
+                if (idx >= capacity_) {
+                    idx -= capacity_;
                 }
+                read_index_ = idx;
                 return true;
             }
 
@@ -98,116 +101,113 @@ namespace framework
                 }
                 value_type * datas = new value_type[++n];
                 std::copy(begin(), end(), datas);
-                delete m_datas;
-                m_datas = datas;
-                m_write_index = size();
-                m_read_index = 0;
-                m_capacity = n;
+                delete datas_;
+                datas_ = datas;
+                write_index_ = size();
+                read_index_ = 0;
+                capacity_ = n;
             }
 
             void clear()
             {
-                m_write_index = m_read_index = 0;
+                write_index_ = read_index_ = 0;
             }
 
         public:
             size_t capacity() const
             {
-                return m_capacity - 1;
+                return capacity_ - 1;
             }
 
             size_t size() const
             {
-                return m_read_index <= m_write_index 
-                    ? m_write_index - m_read_index 
-                    : m_write_index + m_capacity - m_read_index;
+                return read_index_ <= write_index_ 
+                    ? write_index_ - read_index_ 
+                    : write_index_ + capacity_ - read_index_;
             }
 
             bool empty() const
             {
-                return m_read_index == m_write_index;
+                return read_index_ == write_index_;
             }
 
             bool full() const
             {
-                return m_write_index + 1 == m_read_index
-                    || (m_write_index + 1 == m_capacity && m_read_index == 0);
+                return write_index_ + 1 == read_index_
+                    || (write_index_ + 1 == capacity_ && read_index_ == 0);
             }
 
         public:
             value_type const & front() const
             {
                 assert(!empty());
-                return m_datas[m_read_index];
+                return datas_[read_index_];
             }
 
             value_type & front()
             {
                 assert(!empty());
-                return m_datas[m_read_index];
+                return datas_[read_index_];
             }
 
             value_type const & back() const
             {
                 assert(!empty());
-                size_t index = m_write_index == 0 ? m_capacity - 1 : m_write_index - 1;
-                return m_datas[index];
+                size_t index = write_index_ == 0 ? capacity_ - 1 : write_index_ - 1;
+                return datas_[index];
             }
 
             value_type & back()
             {
                 assert(!empty());
-                size_t index = m_write_index == 0 ? m_capacity - 1 : m_write_index - 1;
-                return m_datas[index];
+                size_t index = write_index_ == 0 ? capacity_ - 1 : write_index_ - 1;
+                return datas_[index];
             }
 
             value_type const & operator[](size_t index) const
             {
                 assert(index < size());
-                index += m_read_index;
-                if (index >= m_capacity)
-                    index -= m_capacity;
-                return m_datas[index];
+                index += read_index_;
+                if (index >= capacity_)
+                    index -= capacity_;
+                return datas_[index];
             }
 
             value_type & operator[](size_t index)
             {
                 assert(index < size());
-                index += m_read_index;
-                if (index >= m_capacity)
-                    index -= m_capacity;
-                return m_datas[index];
+                index += read_index_;
+                if (index >= capacity_)
+                    index -= capacity_;
+                return datas_[index];
             }
 
         public:
             iterator begin()
             {
-                return iterator(m_datas, m_datas + m_read_index, m_datas + m_capacity);
+                return iterator(datas_, datas_ + read_index_, datas_ + capacity_);
             }
 
             iterator end()
             {
-                return iterator(m_datas, m_datas + m_write_index, m_datas + m_capacity);
+                return iterator(datas_, datas_ + write_index_, datas_ + capacity_);
             }
 
             const_iterator begin() const
             {
-                return const_iterator(m_datas, m_datas + m_read_index, m_datas + m_capacity);
+                return const_iterator(datas_, datas_ + read_index_, datas_ + capacity_);
             }
 
             const_iterator end() const
             {
-                return const_iterator(m_datas, m_datas + m_write_index, m_datas + m_capacity);
+                return const_iterator(datas_, datas_ + write_index_, datas_ + capacity_);
             }
 
         private:
-            size_t m_capacity;
-
-            value_type * m_datas;
-
-            volatile size_t m_write_index;
-
-            volatile size_t m_read_index;
+            size_t capacity_;
+            value_type * datas_;
+            volatile size_t write_index_;
+            volatile size_t read_index_;
         };
 
     } // namespace container
