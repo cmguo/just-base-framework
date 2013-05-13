@@ -32,7 +32,7 @@ namespace framework
             unsigned long tid = ::GetCurrentThreadId();
 #else
             pid_t pid = getpid();
-            unsigned long tid = gettid();
+            pid_t tid = (pid_t)gettid();
 #endif
             for (char const * p = fmt; *p; ++p) {
                 if (*p == '%') {
