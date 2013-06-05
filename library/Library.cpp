@@ -67,10 +67,30 @@ namespace framework
 				SetLastError(ERROR_PATH_NOT_FOUND);
 			}
 #else
-            if (name.find('.') == std::string::npos)
-                handle_ = ::dlopen((std::string("lib") + name + ".so").c_str(), RTLD_LAZY | RTLD_LOCAL);
-            else
-                handle_ = ::dlopen(name.c_str(), RTLD_LAZY | RTLD_LOCAL);
+            std::string name2;
+            if (name2.find('.') == std::string::npos) {
+                name2 = std::string("lib") + name + ".so";
+            } else {
+                name2 = name;
+            }
+            handle_ = ::dlopen(name2.c_str(), RTLD_LAZY | RTLD_LOCAL);
+#ifdef __ANDROID__
+            if (handle_ == NULL) {
+                std::vector<std::string> env_config_paths;
+                std::string env_config_paths_str = 
+                    framework::process::get_environment("LD_CONFIG_PATH");
+                framework::string::slice<std::string>(
+                    env_config_paths_str, std::back_inserter(env_config_paths), ":");
+                for (size_t i = 0; i < env_config_paths.size(); ++i) {
+                    boost::filesystem::path ph(env_config_paths[i]);
+                    ph /= name2;
+                    if (boost::filesystem::exists(ph)) {
+                        handle_ = ::dlopen(ph.file_string().c_str(), RTLD_LAZY | RTLD_LOCAL);
+                        break;
+                    }
+                }
+            }
+#endif
             if (handle_ == NULL)
                 LOG_WARN("[open] dlopen: %1%" % ::dlerror());
 #endif

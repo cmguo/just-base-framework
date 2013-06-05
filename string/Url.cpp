@@ -73,7 +73,7 @@ namespace framework
 #define HOST        "[-\\w]+(?:\\.[-\\w]+)*"
 #define PORT        "\\d+"
 #define PATH        "/[^\\?#\\*\\s]*"
-#define PARAM       "[-a-zA-Z0-9+&@/%=~_|!:,.;\\(\\)]*"
+#define PARAM       "[-a-zA-Z0-9+&@/%=~_|!:,.;\\(\\)\\{\\}]*"
 #define AUCHOR      PARAM
 
             static std::string expr = "^(?:("PROTOCOL"):/{1,2}(?:(?:("USER")(?::("PASS"))?@)?("HOST")(?::("PORT"))?)?)("PATH")(?:\\?("PARAM"))?(?:#("AUCHOR"))?$";
