@@ -80,7 +80,8 @@ namespace framework
                     typename _Ty1
                 >
                 cycle_iterator(
-                    cycle_iterator<_Ty1> const & r)
+                    cycle_iterator<_Ty1> const & r, 
+                    typename boost::enable_if<boost::is_convertible<_Ty1 *, _Ty *> >::type * = NULL)
                     : beg_(cycle_iterator_access::beg(r))
                     , cur_(cycle_iterator_access::cur(r))
                     , end_(cycle_iterator_access::end(r))
