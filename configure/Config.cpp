@@ -67,12 +67,13 @@ namespace framework
         error_code Config::set_force(
             std::string const & m, 
             std::string const & k, 
-            std::string const & v)
+            std::string const & v, 
+            bool save)
         {
             error_code ec = set(m, k, v, true);
             if (ec == no_permission || ec == item_not_exist) {
                 // 即使不存在，或者没权限，也让设置
-                pf_.set(m, k, v);
+                pf_.set(m, k, v, save);
                 //ec = success;
             }
             return ec;

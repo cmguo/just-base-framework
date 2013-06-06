@@ -33,7 +33,7 @@ namespace framework
             "[All..] "
         };
 
-        static LevelEnum str_to_level(
+        inline LevelEnum str_to_level(
             char c)
         {
             static LevelEnum level[] = {

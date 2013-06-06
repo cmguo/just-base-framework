@@ -226,7 +226,6 @@ namespace framework
 
             if (!has_empty) {
                 Group * g = new Group(*this);
-                Stream * s = streams_;
                 for (Stream * s = streams_; s; s = s->next_) {
                     g->add_stream(s);
                 }

@@ -149,7 +149,8 @@ namespace framework
             boost::system::error_code set_force(
                 std::string const & m, 
                 std::string const & k, 
-                std::string const & v);
+                std::string const & v, 
+                bool save = false);
 
             // 读取配置参数值
             boost::system::error_code get(

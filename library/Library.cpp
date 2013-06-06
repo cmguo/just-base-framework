@@ -5,8 +5,12 @@
 #include "framework/system/ErrorCode.h"
 #include "framework/logger/Logger.h"
 #include "framework/logger/FormatRecord.h"
+#include "framework/process/Environments.h"
+#include "framework/filesystem/Path.h"
+#include "framework/string/Slice.h"
 using namespace framework::system;
 
+#include <boost/filesystem/operations.hpp>
 using namespace boost::system;
 
 #include <iostream>
@@ -78,7 +82,7 @@ namespace framework
             if (handle_ == NULL) {
                 std::vector<std::string> env_config_paths;
                 std::string env_config_paths_str = 
-                    framework::process::get_environment("LD_CONFIG_PATH");
+                    framework::process::get_environment("LD_LIBRARY_PATH");
                 framework::string::slice<std::string>(
                     env_config_paths_str, std::back_inserter(env_config_paths), ":");
                 for (size_t i = 0; i < env_config_paths.size(); ++i) {
