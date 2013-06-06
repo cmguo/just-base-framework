@@ -68,7 +68,7 @@ namespace framework
 			}
 #else
             std::string name2;
-            if (name2.find('.') == std::string::npos) {
+            if (name.find('.') == std::string::npos) {
                 name2 = std::string("lib") + name + ".so";
             } else {
                 name2 = name;
