@@ -55,7 +55,7 @@ namespace framework
                     return false;
                 }
                 datas_[write_index_] = t;
-                size_t idx = ++write_index_;
+                size_t idx = write_index_ + 1;
                 if (idx == capacity_) {
                     idx = 0;
                 }
@@ -69,7 +69,7 @@ namespace framework
                 if (empty()) {
                     return false;
                 }
-                size_t idx = ++read_index_;
+                size_t idx = read_index_ + 1;
                 if (idx == capacity_) {
                     idx = 0;
                 }
@@ -96,7 +96,7 @@ namespace framework
                 size_t n)
             {
                 assert(size() <= n);
-                if (size() <= n) {
+                if (size() >= n) {
                     return;
                 }
                 value_type * datas = new value_type[++n];

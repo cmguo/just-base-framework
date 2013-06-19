@@ -5,6 +5,8 @@
 #include "framework/logger/Record.h"
 #include "framework/logger/Buffer.h"
 
+#include <stdarg.h>
+
 #ifdef BOOST_WINDOWS_API
 #  define va_copy(dst, src) dst = src
 #endif
