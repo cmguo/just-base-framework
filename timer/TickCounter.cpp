@@ -44,6 +44,7 @@ namespace framework
             struct timespec t = { 0 };
             int res = clock_gettime(CLOCK_MONOTONIC, &t);
             assert(0 == res);
+            (void)res;
             boost::uint64_t val = ( boost::uint64_t )t.tv_sec * 1000 + t.tv_nsec / 1000 / 1000;
             return val;
 #endif

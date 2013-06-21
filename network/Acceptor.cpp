@@ -31,8 +31,11 @@ namespace framework
         boost::system::error_code Acceptor::close(
             boost::system::error_code & ec)
         {
-            assert(closer_ != NULL);
-            (this->*closer_)(ec);
+            if (closer_ == NULL) {
+                ec = boost::asio::error::bad_descriptor;
+            } else {
+                (this->*closer_)(ec);
+            }
             return ec;
         }
 
