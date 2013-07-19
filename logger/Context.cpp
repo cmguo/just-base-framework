@@ -7,10 +7,14 @@
 
 #ifdef BOOST_WINDOWS_API
 #else
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-#define gettid() pthread_self()
+#  include <stdio.h>
+#  include <sys/types.h>
+#  include <sys/syscall.h>
+#  include <unistd.h>
+#  ifndef SYS_gettid
+#    define SYS_gettid __NR_gettid
+#  endif
+#  define gettid() syscall(SYS_gettid)
 #endif
 
 #include <sstream>
