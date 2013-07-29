@@ -153,7 +153,9 @@ namespace framework
             // linux 需要shutdown套接字才能取消同步阻塞操作
             super::shutdown(boost::asio::socket_base::shutdown_both, ec);
 #else           // win32 shutdown套接字会发生错误
+#  ifndef WINRT
             super::close(ec);
+#  endif
 #endif
             return ec;
         }
