@@ -59,8 +59,8 @@ namespace framework
             if (im == end())
                 return error_code(item_not_exist);
             error_code ec = im->second.set(k, v);
-            if (!ec && save)
-                pf_.set(m, k, v);
+            if (!ec)
+                pf_.set(m, k, v, save);
             return ec;
         }
 
@@ -70,7 +70,7 @@ namespace framework
             std::string const & v, 
             bool save)
         {
-            error_code ec = set(m, k, v, true);
+            error_code ec = set(m, k, v, save);
             if (ec == no_permission || ec == item_not_exist) {
                 // 即使不存在，或者没权限，也让设置
                 pf_.set(m, k, v, save);
