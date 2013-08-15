@@ -78,6 +78,7 @@ namespace framework
 				strncpy(inf.name, name.c_str(), sizeof(inf.name));
 				boost::system::error_code ec;
                 inf.addr = boost::asio::ip::address::from_string((char *)(a + 1), ec);
+                memcpy(inf.hwaddr, a->id.Data4, sizeof(inf.hwaddr));
 				if (!ec) {
 					interfaces.push_back(inf);
 				}
