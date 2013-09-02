@@ -42,8 +42,10 @@ namespace framework
             for (size_t i = 0; i < size; ++i, ++data) {
                 if ((i % 16) == 0) {
                     // 行号
-                    if (q + total_len > e)
+                    if (q + total_len >= e) {
+                        size = 0; // 禁止后面的空格填充
                         break;
+                    }
                     p = q;
                     q = p + text_start;
                     size_t n = i >> 4;
@@ -83,6 +85,8 @@ namespace framework
                 *q++ = '|';
                 *q++ = '\n';
             }
+
+            *q = 0;
 
             return q - buf;
         }
