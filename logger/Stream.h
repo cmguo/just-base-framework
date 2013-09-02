@@ -3,6 +3,10 @@
 #ifndef _FRAMEWORK_LOGGER_STREAM_H_ 
 #define _FRAMEWORK_LOGGER_STREAM_H_
 
+#include "framework/container/Array.h"
+
+#include <boost/asio/buffer.hpp>
+
 namespace framework
 {
 
@@ -21,11 +25,9 @@ namespace framework
         class Stream
         {
         public:
-            struct buffer_t 
-            {
-                char const * buf;
-                size_t len;
-            };
+            typedef boost::asio::const_buffer buffer_t;
+
+            typedef framework::container::Array<buffer_t> buffers_t;
 
         public:
             static bool register_(
@@ -37,8 +39,7 @@ namespace framework
 
         public:
             virtual void write( 
-                buffer_t const * bufs, 
-                size_t len) = 0;
+                buffers_t const & buffers) = 0;
 
         protected:
             Stream();

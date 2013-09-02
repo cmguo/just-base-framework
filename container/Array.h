@@ -18,6 +18,7 @@ namespace framework
             typedef value_type * iterator;
             typedef value_type const * const_iterator;
 
+        public:    
             Array()
                 : pointer_(NULL)
                 , count_(0)
@@ -39,6 +40,7 @@ namespace framework
             {
             }
 
+        public:    
             Array & operator=(
                 Array const & r)
             {
@@ -47,6 +49,7 @@ namespace framework
                 return *this;
             }
 
+        public:    
             value_type * address() const
             {
                 return pointer_;
@@ -67,6 +70,7 @@ namespace framework
                 return count_ == 0;
             }
 
+        public:    
             iterator begin()
             {
                 return iterator(pointer_);
@@ -85,6 +89,17 @@ namespace framework
             const_iterator end() const
             {
                 return const_iterator(pointer_ + count_);
+            }
+
+        public:    
+            value_type & operator[](int i)
+            {
+                return *(pointer_ + i);
+            }
+
+            value_type const & operator[](int i) const
+            {
+                return *(pointer_ + i);
             }
 
         private:

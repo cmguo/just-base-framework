@@ -5,6 +5,7 @@
 
 #include "framework/logger/Stream.h"
 #include "framework/logger/Time.h"
+#include "framework/filesystem/File.h"
 
 #include <boost/thread/mutex.hpp>
 
@@ -23,12 +24,11 @@ namespace framework
             virtual ~FileStream();
 
         private:
-            virtual void write( 
-                buffer_t const * bufs, 
-                size_t len);
-
             virtual void load_config(
                 framework::configure::ConfigModule & cm);
+
+            virtual void write( 
+                buffers_t const & buffers);
 
         private:
             bool open();
@@ -51,16 +51,12 @@ namespace framework
         private:
             Time time_;
             boost::mutex mutex_;
-#ifdef BOOST_WINDOWS_API
-            HANDLE handle_;
-#else
-            int fd_;
-#endif
+            framework::filesystem::File file_;
             bool app_;
             bool daily_;
             bool roll_;
             size_t size_;
-            std::string file_;
+            std::string name_;
         };
 
         LOG_REG_STREAM_TYPE(file, FileStream)

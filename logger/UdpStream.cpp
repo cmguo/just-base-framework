@@ -30,16 +30,11 @@ namespace framework
             open();
         }
 
-        void UdpStream::write( 
-            buffer_t const * bufs, 
-            size_t len )
+        void UdpStream::write(
+            buffers_t const & buffers)
         {
-            std::vector<boost::asio::const_buffer> vec;
-            for (size_t i = 0; i < len; ++i) {
-                vec.push_back(boost::asio::buffer(bufs[i].buf, bufs[i].len));
-            }
             boost::system::error_code ec;
-            socket_.send(vec, 0, ec);
+            socket_.send(buffers, 0, ec);
         }
 
         bool UdpStream::open()

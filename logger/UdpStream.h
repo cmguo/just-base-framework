@@ -21,12 +21,11 @@ namespace framework
             virtual ~UdpStream();
 
         private:
-            virtual void write( 
-                buffer_t const * bufs, 
-                size_t len);
-
             virtual void load_config(
                 framework::configure::ConfigModule & cm);
+
+            virtual void write(
+                buffers_t const & buffers);
 
         private:
             bool open();

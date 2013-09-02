@@ -23,11 +23,6 @@ namespace framework
 
         FileStream::FileStream()
             : time_(true)
-#ifdef BOOST_WINDOWS_API
-            , handle_(INVALID_HANDLE_VALUE)
-#else
-            , fd_(-1)
-#endif
             , app_(false)
             , daily_(false)
             , roll_(false)
@@ -45,27 +40,26 @@ namespace framework
         {
             Stream::load_config(cm);
 
-            cm << CONFIG_PARAM_NAME_RDWR("file", file_);
+            cm << CONFIG_PARAM_NAME_RDWR("file", name_);
             cm << CONFIG_PARAM_NAME_RDWR("append", app_);
             cm << CONFIG_PARAM_NAME_RDWR("daily", daily_);
             cm << CONFIG_PARAM_NAME_RDWR("size", size_);
             cm << CONFIG_PARAM_NAME_RDWR("roll", roll_);
 
-            if (file_[0] == '$' 
-                && file_[1] == 'L' 
-                && file_[2] == 'O' 
-                && file_[3] == 'G') {
-                    file_ = 
+            if (name_[0] == '$' 
+                && name_[1] == 'L' 
+                && name_[2] == 'O' 
+                && name_[3] == 'G') {
+                    name_ = 
                         framework::filesystem::log_path().file_string() 
-                        + file_.substr(4);
+                        + name_.substr(4);
             }
 
             backup_file();
         }
 
         void FileStream::write( 
-            buffer_t const * bufs, 
-            size_t len )
+            buffers_t const & buffers)
         {
             if (check_file()) {
                 boost::mutex::scoped_lock lk(mutex_);
@@ -75,64 +69,25 @@ namespace framework
                 }
             }
 
-#ifdef BOOST_WINDOWS_API
-            DWORD dw = 0;
-            for ( size_t iLoop = 0; iLoop < len; ++iLoop ) {
-                ::WriteFile(
-                    handle_, 
-                    bufs[iLoop].buf, 
-                    bufs[iLoop].len, 
-                    &dw, 
-                    NULL);
-            }
-
-#else
-            ::writev(
-                fd_, 
-                (iovec *)bufs, 
-                len);
-#endif
+            boost::system::error_code ec;
+            file_.write_some(buffers, ec);
         }
 
         bool FileStream::open()
         {
-#ifdef BOOST_WINDOWS_API
-            handle_ = ::CreateFileA(
-                file_.c_str(), 
-                GENERIC_READ | GENERIC_WRITE, 
-                FILE_SHARE_READ | FILE_SHARE_WRITE, 
-                NULL, 
-                OPEN_ALWAYS, 
-                FILE_ATTRIBUTE_NORMAL, 
-                NULL);
-#else
-            fd_ = ::open(
-                file_.c_str(),
-                O_CREAT | O_RDWR | O_EXCL, 
-                00666);
-#endif
-            return is_open();
+            boost::system::error_code ec;
+            return file_.open(name_, ec);
         }
 
         bool FileStream::is_open() const
         {
-#ifdef BOOST_WINDOWS_API
-            return handle_ != INVALID_HANDLE_VALUE;
-#else
-            return fd_ != -1;
-#endif
+            return file_.is_open();
         }
 
         bool FileStream::close()
         {
-#ifdef BOOST_WINDOWS_API
-            ::CloseHandle(
-                handle_);
-#else
-            ::close(
-                fd_);
-#endif
-            return true;
+            boost::system::error_code ec;
+            return file_.close(ec);
         }
 
         bool FileStream::reopen()
@@ -140,53 +95,25 @@ namespace framework
 #ifdef BOOST_WINDOWS_API
             return false;
 #else
-            int fd = ::open(
-                file_.c_str(),
-                O_CREAT | O_RDWR | O_EXCL, 
-                00666);
-            int fd2 = fd_;
-            fd_ = fd;
-            ::close(
-                fd2);
-            return is_open();
+            
+            framework::filesystem::File file;
+            file.open(name_);
+            file.swap(file_);
+            return file_.is_open();
 #endif
         }
 
         bool FileStream::seek(
             bool beg_or_end)
         {
-#ifdef BOOST_WINDOWS_API
-            DWORD dw = ::SetFilePointer(
-                handle_, 
-                0, 
-                NULL, 
-                beg_or_end ? FILE_BEGIN : FILE_END);
-            return dw != INVALID_SET_FILE_POINTER;
-#else
-            off_t of = ::lseek(
-                fd_, 
-                beg_or_end ? SEEK_SET : SEEK_END, 
-                0);
-            return of != -1;
-#endif
+            boost::system::error_code ec;
+            return file_.seek(beg_or_end ? file_.beg : file_.end, 0, ec);
         }
 
         size_t FileStream::position()
         {
-#ifdef BOOST_WINDOWS_API
-            DWORD dw = ::SetFilePointer(
-                handle_, 
-                0, 
-                NULL, 
-                FILE_CURRENT);
-            return dw; //INVALID_SET_FILE_POINTER
-#else
-            off_t of = ::lseek(
-                fd_, 
-                SEEK_CUR, 
-                0);
-            return (size_t)of;
-#endif
+            boost::system::error_code ec;
+            return (size_t)file_.tell(ec);
         }
 
         bool FileStream::check_file()
@@ -212,7 +139,7 @@ namespace framework
                 app = false;
             }
             if (!app) {
-                boost::filesystem::path ph(file_);
+                boost::filesystem::path ph(name_);
                 boost::filesystem::path ph2(ph.parent_path() / "log_bak");
                 boost::filesystem::path ph3(ph2 / (time_.time_str() + ph.leaf()));
                 try {

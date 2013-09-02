@@ -4,6 +4,7 @@
 #define _FRAMEWORK_LOGGER_CONSOLE_STREAM_H_
 
 #include "framework/logger/Stream.h"
+#include "framework/filesystem/File.h"
 
 namespace framework
 {
@@ -19,19 +20,14 @@ namespace framework
             virtual ~ConsoleStream();
 
         private:
-            virtual void write( 
-                buffer_t const * bufs, 
-                size_t len );
-
             virtual void load_config(
                 framework::configure::ConfigModule & cm);
 
+            virtual void write(
+                buffers_t const & buffers);
+
         private:
-#ifdef BOOST_WINDOWS_API
-            HANDLE handle_;
-#else
-            int fd_;
-#endif
+            framework::filesystem::File file_;
             bool color_;
         };
         

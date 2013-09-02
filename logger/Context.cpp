@@ -62,27 +62,17 @@ namespace framework
         {
             init_pid_buffer(id_fmt, pid_buffer_, sizeof(pid_buffer_));
 
-            buffers_[mi_time].buf = time_str;
-            buffers_[mi_time].len = strlen(time_str);
-            buffers_[mi_pid].buf = pid_buffer_;
-            buffers_[mi_pid].len = strlen(pid_buffer_);
-            buffers_[mi_level].buf = NULL;
-            buffers_[mi_level].len = level_str_len;
-            buffers_[mi_module].buf = NULL;
-            buffers_[mi_module].len = 0;
-            buffers_[mi_msg].buf = msg_buffer_;
-            buffers_[mi_msg].len = sizeof(msg_buffer_);
-            buffers_[mi_other].buf = NULL;
-            buffers_[mi_other].len = 0;
+            buffers_[mi_time] = boost::asio::buffer(time_str, strlen(time_str));
+            buffers_[mi_pid] = boost::asio::buffer(pid_buffer_, strlen(pid_buffer_));
+            buffers_[mi_msg] = boost::asio::buffer(msg_buffer_, sizeof(msg_buffer_));
         }
 
         void Context::reset(
             Module const & module, 
             LevelEnum level)
         {
-            buffers_[mi_level].buf = level_str[level];
-            buffers_[mi_module].buf = module.short_name_;
-            buffers_[mi_module].len = module.name_size_;
+            buffers_[mi_level] = boost::asio::buffer(level_str[level], level_str_len);
+            buffers_[mi_module] = boost::asio::buffer(module.short_name_, module.name_size_);
         }
 
     } // namespace logger

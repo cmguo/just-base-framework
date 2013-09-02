@@ -54,13 +54,14 @@ namespace framework
     {
 
         ConsoleStream::ConsoleStream()
-#ifdef BOOST_WINDOWS_API
-            : handle_(GetStdHandle(STD_OUTPUT_HANDLE))
-#else
-            : fd_(fileno(stdout))
-#endif
-            , color_(false) 
+            : color_(false) 
         {
+            boost::system::error_code ec;
+#ifdef BOOST_WINDOWS_API
+            file_.assign(GetStdHandle(STD_OUTPUT_HANDLE), ec);
+#else
+            file_.assign(fileno(stdout));
+#endif
         }
 
         ConsoleStream::~ConsoleStream()
@@ -75,47 +76,26 @@ namespace framework
             cm << CONFIG_PARAM_NAME_RDWR("color", color_);
         }
 
-        void ConsoleStream::write( 
-            buffer_t const * bufs, 
-            size_t len )
+        void ConsoleStream::write(
+            buffers_t const & buffers)
         {
-            if ( !len ) return;
-
+            buffers_t buffers2 = buffers;
             if (color_) {
-                LevelEnum lvl = str_to_level(bufs[mi_level].buf[1]);
 #ifdef BOOST_WINDOWS_API
+                LevelEnum lvl = str_to_level(boost::asio::buffer_cast<char const *>(buffers[mi_level])[1]);
                 /// 打印有颜色的串
-                ::SetConsoleTextAttribute(handle_, clr[lvl]);
+                ::SetConsoleTextAttribute(file_.native(), clr[lvl]);
+                boost::system::error_code ec;
+                file_.write_some(buffers, ec);
 #else
-                --bufs;
-                len += 1;
-                ((buffer_t *)bufs)->buf = color_str[lvl];
-                ((buffer_t *)bufs)->len = color_str_len[lvl];
+                buffers2 = buffers_t(buffers.address() - 1, buffers.size() + 1);
+                buffers2[0] = boost::asio::buffer(color_str[lvl], color_str_len[lvl]);
+                boost::system::error_code ec;
+                file_.write_some(buffers2, ec);
 #endif
             }
-
-#ifdef BOOST_WINDOWS_API
-            DWORD dw = 0;
-            for (size_t iLoop = 0; iLoop < len; ++iLoop) {
-                ::WriteFile(
-                    handle_, 
-                    bufs[iLoop].buf, 
-                    bufs[iLoop].len, 
-                    &dw, 
-                    NULL);
-            }
-#  else 
-            ::writev(
-                fd_, 
-                (iovec *)bufs, 
-                len);
-#endif
-
-            if (color_) {
-#ifdef BOOST_WINDOWS_API
-                ::SetConsoleTextAttribute(handle_, clr[0]);
-#endif
-            }
+            boost::system::error_code ec;
+            file_.write_some(buffers2, ec);
         }
 
     } // namespace logger

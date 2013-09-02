@@ -105,14 +105,13 @@ namespace framework
             size_t count = mi_other;
             char const * buf = record.other_buffer(len);
             if (buf) {
-                ctx[mi_other].buf = buf;
-                ctx[mi_other].len = len;
+                ctx[mi_other] = boost::asio::buffer(buf, len);
                 count = mi_max;
             }
 
             StreamNode * cur = streams_;
             while (cur && cur->stream->level_ >= level) {
-                cur->stream->write(ctx.buffers(), count);
+                cur->stream->write(Stream::buffers_t(ctx.buffers(), count));
                 cur = cur->next;
             }
         }

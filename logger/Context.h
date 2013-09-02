@@ -34,7 +34,7 @@ namespace framework
             void stack_pop();
 
         public:
-            buffer_t const * buffers()
+            buffer_t * buffers()
             {
                 return buffers_;
             }
@@ -52,7 +52,7 @@ namespace framework
             void msg_len(
                 size_t len)
             {
-                buffers_[mi_msg].len = len;
+                buffers_[mi_msg] = boost::asio::buffer(msg_buffer_, len);
             }
 
             buffer_t & operator[](

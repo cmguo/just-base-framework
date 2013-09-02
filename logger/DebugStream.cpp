@@ -24,15 +24,14 @@ namespace framework
             Stream::load_config(cm);
         }
 
-        void DebugStream::write( 
-            buffer_t const * bufs, 
-            size_t len )
+        void DebugStream::write(
+            buffers_t const & buffers)
         {
 #ifdef BOOST_WINDOWS_API
             DWORD dw = 0;
-            for ( size_t iLoop = 0; iLoop < len; ++iLoop ) {
+            for (size_t iLoop = 0; iLoop < buffers.size(); ++iLoop) {
                 ::OutputDebugStringA(
-                    bufs[iLoop].buf);
+                    boost::asio::buffer_cast<LPCSTR>(buffers[iLoop]));
             }
 
 #else

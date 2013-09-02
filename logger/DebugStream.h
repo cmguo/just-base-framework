@@ -20,12 +20,11 @@ namespace framework
             virtual ~DebugStream();
 
         private:
-            virtual void write( 
-                buffer_t const * bufs, 
-                size_t len);
-
             virtual void load_config(
                 framework::configure::ConfigModule & cm);
+
+            virtual void write( 
+                buffers_t const & buffers);
         };
 
         LOG_REG_STREAM_TYPE(debug, DebugStream)
