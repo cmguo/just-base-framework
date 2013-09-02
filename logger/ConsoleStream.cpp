@@ -85,13 +85,9 @@ namespace framework
 #ifdef BOOST_WINDOWS_API
                 /// 打印有颜色的串
                 ::SetConsoleTextAttribute(file_.native(), clr[lvl]);
-                boost::system::error_code ec;
-                file_.write_some(buffers, ec);
 #else
                 buffers2 = buffers_t(buffers.address() - 1, buffers.size() + 1);
                 buffers2[0] = boost::asio::buffer(color_str[lvl], color_str_len[lvl]);
-                boost::system::error_code ec;
-                file_.write_some(buffers2, ec);
 #endif
             }
             boost::system::error_code ec;

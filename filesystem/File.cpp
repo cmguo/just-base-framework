@@ -57,7 +57,7 @@ namespace framework
 #else
             fd_ = ::open(
                 path.file_string().c_str(),
-                O_CREAT | O_RDWR | O_EXCL, 
+                O_CREAT | O_RDWR, 
                 00666);
 #endif
             if (is_open()) {
@@ -151,8 +151,8 @@ namespace framework
 #else
             off_t of = ::lseek(
                 fd_, 
-                dir, 
-                offset);
+                offset, 
+                dir);
             if (of == -1) {
                 ec = framework::system::last_system_error();
             }
@@ -180,12 +180,12 @@ namespace framework
 #else
             off_t of = ::lseek(
                 fd_, 
-                SEEK_CUR, 
-                0);
+                0,
+                SEEK_CUR);
             if (of == -1) {
                 ec = framework::system::last_system_error();
             }
-            return (size_t)of;
+            return (boost::uint64_t)of;
 #endif
         }
 
@@ -259,7 +259,7 @@ namespace framework
             if (result == -1) {
                 ec = framework::system::last_system_error();
                 result = 0;
-            } else if (result = 0) {
+            } else if (result == 0) {
                 ec = boost::asio::error::eof;
             }
             return result;
