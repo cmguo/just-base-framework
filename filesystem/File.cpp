@@ -212,8 +212,7 @@ namespace framework
             int result = ::read(
                 fd_, 
                 boost::asio::buffer_cast<void *>(buffer), 
-                boost::asio::buffer_size(buffer), 
-                len);
+                boost::asio::buffer_size(buffer));
             if (result == -1) {
                 ec = framework::system::last_system_error();
                 result = 0;
@@ -249,11 +248,9 @@ namespace framework
                 return 0;
             }
             struct iovec iov[IOV_MAX];
-            for (mutable_buffers_t::const_iterator iter = buffers.begin(); 
-                iter != buffers.end() && !ec; 
-                ++iter) {
-                    iov.iov_base = boost::asio::buffer_cast<void *>(*iter), 
-                    iov.iov_len = boost::asio::buffer_size(*iter), 
+            for (size_t i = 0; i < buffers.size() && !ec; ++i) {
+                iov[i].iov_base = boost::asio::buffer_cast<void *>(buffers[i]);
+                iov[i].iov_len = boost::asio::buffer_size(buffers[i]);
             }
             int result = ::readv(
                 fd_, 
@@ -289,8 +286,7 @@ namespace framework
             int result = ::write(
                 fd_, 
                 boost::asio::buffer_cast<const void *>(buffer), 
-                boost::asio::buffer_size(buffer), 
-                len);
+                boost::asio::buffer_size(buffer));
             if (result == -1) {
                 ec = framework::system::last_system_error();
                 result = 0;
@@ -320,11 +316,9 @@ namespace framework
                 return 0;
             }
             struct iovec iov[IOV_MAX];
-            for (const_buffers_t::const_iterator iter = buffers.begin(); 
-                iter != buffers.end() && !ec; 
-                ++iter) {
-                    iov.iov_base = boost::asio::buffer_cast<LPCVOID>(*iter), 
-                    iov.iov_len = boost::asio::buffer_size(*iter), 
+            for (size_t i = 0; i < buffers.size() && !ec; ++i) {
+                iov[i].iov_base = (void *)boost::asio::buffer_cast<void const *>(buffers[i]);
+                iov[i].iov_len = boost::asio::buffer_size(buffers[i]);
             }
             int result = ::writev(
                 fd_, 

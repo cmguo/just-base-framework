@@ -60,7 +60,7 @@ namespace framework
 #ifdef BOOST_WINDOWS_API
             file_.assign(GetStdHandle(STD_OUTPUT_HANDLE), ec);
 #else
-            file_.assign(fileno(stdout));
+            file_.assign(fileno(stdout), ec);
 #endif
         }
 
@@ -81,8 +81,8 @@ namespace framework
         {
             buffers_t buffers2 = buffers;
             if (color_) {
-#ifdef BOOST_WINDOWS_API
                 LevelEnum lvl = str_to_level(boost::asio::buffer_cast<char const *>(buffers[mi_level])[1]);
+#ifdef BOOST_WINDOWS_API
                 /// 打印有颜色的串
                 ::SetConsoleTextAttribute(file_.native(), clr[lvl]);
                 boost::system::error_code ec;

@@ -97,7 +97,8 @@ namespace framework
 #else
             
             framework::filesystem::File file;
-            file.open(name_);
+	    boost::system::error_code ec;
+            file.open(name_, ec);
             file.swap(file_);
             return file_.is_open();
 #endif
