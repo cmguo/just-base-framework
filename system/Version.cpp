@@ -109,7 +109,7 @@ namespace framework
         boost::system::error_code Version::set_version(
             std::string const & file, 
             std::string const & module, 
-            std::string const & version)
+            std::string & version)
         {
             FileTag ft(file, "version");
             return ft.set(module, version);

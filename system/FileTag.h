@@ -32,7 +32,7 @@ static char const * name ## _string() \
 #define FILE_TAG_NAME(name) name ## _string()
 
 #define DEFINE_FILE_TAG_TYPE(type, name, value) \
-static char const * name ## _string() \
+static char const * type ## _string() \
 { \
     return FILE_TAG_VALUE(type, name, value); \
 }
@@ -43,32 +43,6 @@ namespace framework
 {
     namespace system
     {
-
-        class FileFinder
-        {
-        public:
-            FileFinder(
-                std::string const & file);
-
-            bool find(
-                std::string const & regex, 
-                std::string & result);
-
-            void read(
-                std::string & result);
-
-            void write(
-                std::string const & result);
-
-            bool fail() const;
-
-            void close();
-
-        private:
-            std::fstream fs_;
-            boost::asio::streambuf buf_;
-            size_t pos_;
-        };
 
         class FileTag
         { 
@@ -84,7 +58,7 @@ namespace framework
 
             boost::system::error_code set(
                 std::string const & item, 
-                std::string const & value);
+                std::string & value);
 
             boost::system::error_code get_all(
                 std::map<std::string, std::string> & values);

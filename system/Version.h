@@ -71,7 +71,7 @@ namespace framework
             static boost::system::error_code set_version(
                 std::string const & file, 
                 std::string const & module, 
-                std::string const & version);
+                std::string & version);
 
         private:
             static boost::system::error_code file_version(
