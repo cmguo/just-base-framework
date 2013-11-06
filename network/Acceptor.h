@@ -50,6 +50,11 @@ namespace framework
                 return io_svc_;
             }
 
+            boost::uint16_t listen_port() const
+            {
+                return port_;
+            }
+
         public:
             template <
                 typename SocketType
@@ -96,6 +101,7 @@ namespace framework
             char buf_[256];
             boost::asio::io_service & io_svc_;
             closer_t closer_;
+            boost::uint16_t port_;
         };
 
     } // namespace network

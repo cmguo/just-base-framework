@@ -86,15 +86,18 @@ namespace framework
             if (a.open(e.protocol(), ec)) {
                 return ec;
             }
+#ifndef BOOST_WINDOWS_API
             {
                 boost::system::error_code ec1;
                 boost::asio::socket_base::reuse_address cmd(true);
                 a.set_option(cmd, ec1);
             }
+#endif
             if (a.bind(e, ec))
                 return ec;
-            if (a.listen(1, ec))
+            if (a.listen(boost::asio::socket_base::max_connections, ec))
                 return ec;
+            port_ = e.port();
             ec.clear();
             ch.release();
             return ec;
@@ -205,6 +208,7 @@ namespace framework
         void Acceptor::closer(
             boost::system::error_code & ec)
         {
+            port_ = 0;
             AcceptorType & a(as<AcceptorType>());
             a.close(ec);
             (&a)->~AcceptorType();

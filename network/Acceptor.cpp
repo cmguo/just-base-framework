@@ -13,6 +13,7 @@ namespace framework
             boost::asio::io_service & io_svc)
             : io_svc_(io_svc)
             , closer_(NULL)
+            , port_(0)
         {
         }
 
