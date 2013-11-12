@@ -27,7 +27,7 @@ namespace framework
             }
 #else
             std::string value(64, 0);
-            DWORD len = ::GetEnvironmentVariable(
+            DWORD len = ::GetEnvironmentVariableA(
                 key.c_str(), 
                 &value.at(0), 
                 value.size());
@@ -36,7 +36,7 @@ namespace framework
                 return value;
             } else if (len > 0) {
                 value.resize(len);
-                len = ::GetEnvironmentVariable(
+                len = ::GetEnvironmentVariableA(
                     key.c_str(), 
                     &value.at(0), 
                     value.size());
@@ -55,7 +55,7 @@ namespace framework
 #ifndef BOOST_WINDOWS_API
             ::setenv(key.c_str(), value.c_str(), 1 /* overwrite */);
 #else
-            ::SetEnvironmentVariable(
+            ::SetEnvironmentVariableA(
                 key.c_str(), 
                 value.c_str());
 #endif
@@ -67,7 +67,7 @@ namespace framework
 #ifndef BOOST_WINDOWS_API
             ::unsetenv(key.c_str());
 #else
-            ::SetEnvironmentVariable(
+            ::SetEnvironmentVariableA(
                 key.c_str(), 
                 NULL);
 #endif
