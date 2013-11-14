@@ -124,7 +124,7 @@ namespace framework
             ParamPair<this_type, Param<Back> > const operator%(
                 Back const & back) const
             {
-                return (*this).operator()<Back>(back);
+                return (*this).template operator()<Back>(back);
             }
 
             template <
@@ -133,7 +133,7 @@ namespace framework
             ParamPair<this_type, Param<Back> > const operator<<(
                 Back const & back) const
             {
-                return (*this).operator()<Back>(back);
+                return (*this).template operator()<Back>(back);
             }
 
         public:

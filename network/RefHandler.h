@@ -22,7 +22,7 @@ namespace framework
             }
 
             RefHandler(
-                Handler & handler)
+                Handler const & handler)
                 : handler_(&handler)
             {
             }
@@ -35,7 +35,7 @@ namespace framework
             }
 
         private:
-            Handler * handler_;
+            Handler const * handler_;
         };
 
     } // namespace network

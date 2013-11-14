@@ -231,7 +231,11 @@ namespace framework
         >
         AcceptorType & Acceptor::as()
         {
-            assert(closer_ == (closer_t)&Acceptor::closer<AcceptorType>);
+            // ios: internal compiler error
+            // assert(closer_ == &Acceptor::closer<AcceptorType>);
+            closer_t closer = &Acceptor::closer<AcceptorType>;
+            assert(closer_ == closer);
+            (void)closer;
             return *(AcceptorType *)buf_;
         }
 

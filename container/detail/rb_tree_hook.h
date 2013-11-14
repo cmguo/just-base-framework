@@ -224,14 +224,14 @@ namespace framework
                         if (z->right() == pointer(0)) { /* z->left() must be null also */
                             leftmost = z->parent();
                         } else {              
-                            leftmost = minimum(x);      /* makes leftmost == header if z == root */
+                            leftmost = super::minimum(x);      /* makes leftmost == header if z == root */
                         }
                     }
                     if (rightmost == z) {
                         if (z->left() == pointer(0)) {  /* z->right() must be null also */
                             rightmost = z->parent();
                         } else {                   /* x == z->left() */
-                            rightmost = maximum(x); /* makes rightmost == header if z == root */
+                            rightmost = super::maximum(x); /* makes rightmost == header if z == root */
                         }
                     }
                 }
