@@ -13,6 +13,12 @@ namespace framework
         class TickCounter
         {
         public:
+            static boost::uint64_t tick_count()
+            {
+                return ClockTime::tick_count();
+            }
+
+        public:
             TickCounter()
                 : running_(true)
             {

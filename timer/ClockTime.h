@@ -267,6 +267,8 @@ namespace framework
         public:
             typedef Time time_type;
             typedef Duration duration_type;
+
+            static boost::uint64_t tick_count();
         };
 
     } // namespace timer
