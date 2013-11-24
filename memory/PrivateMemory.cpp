@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 
-#ifdef BOOST_WINDOWS_API
+#if (defined BOOST_WINDOWS_API) && (!defined __CYGWIN__)
 #  include <windows.h>
 #else
 #  include <unistd.h>
@@ -29,7 +29,7 @@ namespace framework
         void * PrivateMemory::alloc_block(
             size_t size)
         {
-#ifdef _WIN32
+#if (defined BOOST_WINDOWS_API) && (!defined __CYGWIN__)
             void * addr = VirtualAlloc(0, size, MEM_COMMIT, PAGE_READWRITE);
 #else
             void * addr = mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -56,7 +56,7 @@ namespace framework
             void * addr, 
             size_t size)
         {
-#ifdef _WIN32
+#if (defined BOOST_WINDOWS_API) && (!defined __CYGWIN__)
             VirtualFree(addr, 0, MEM_RELEASE);
 #else
             munmap(addr, size);

@@ -114,7 +114,7 @@ namespace framework
                         NULL);
 
                     if (hFileMap == NULL) {
-                        return false;
+                        return NULL;
                     }
 
                     ow.reset(hFileMap, ::CloseHandle);

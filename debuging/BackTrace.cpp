@@ -5,7 +5,7 @@
 #include "framework/debuging/detail/SymbolBuffer.h"
 
 #ifdef BOOST_WINDOWS_API
-#  ifndef __MINGW32__
+#  if (!defined __MINGW32__) && (!defined __CYGWIN__)
 #    include <dbghelp.h>
 #    pragma comment(lib, "dbghelp.lib")
 #  endif
@@ -22,7 +22,7 @@ namespace framework
 
         bool back_trace_init()
         {
-#ifndef __MINGW32__
+#if (!defined __MINGW32__) && (!defined __CYGWIN__)
             return ::SymInitialize(
                 ::GetCurrentProcess(), 
                 NULL, 
@@ -36,7 +36,7 @@ namespace framework
             void ** addrs, 
             size_t num)
         {
-#ifndef __MINGW32__
+#if (!defined __MINGW32__) && (!defined __CYGWIN__)
             STACKFRAME64 StackFrame;
             ZeroMemory(&StackFrame, sizeof(StackFrame));
             StackFrame.AddrPC.Mode = AddrModeFlat;
@@ -79,7 +79,7 @@ label:
             void *const * addrs, 
             size_t num)
         {
-#ifndef __MINGW32__
+#if (!defined __MINGW32__) && (!defined __CYGWIN__)
             detail::SymbolBuffer buffer(num);
             for (size_t i = 0; i < num; ++i) {
                 buffer.next();

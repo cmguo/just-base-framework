@@ -3,6 +3,8 @@
 #ifndef _FRAMEWORK_MEMORY_BLOCK_MEMORY_H_
 #define _FRAMEWORK_MEMORY_BLOCK_MEMORY_H_
 
+#include <stdlib.h>
+
 namespace framework
 {
     namespace memory

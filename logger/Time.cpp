@@ -3,16 +3,12 @@
 #include "framework/Framework.h"
 #include "framework/logger/Time.h"
 #include "framework/logger/Message.h"
+#include "framework/logger/Buffer.h"
 
-#ifdef BOOST_WINDOWS_API
-#  if (defined UNDER_CE) || (defined __MINGW32__)
-#    define localtime_r(x, y) *y = *localtime(x)
-#  else 
-#    define localtime_r(x, y) localtime_s(y, x)
-#  endif
-#  define snprintf _snprintf
-#  define mkdir(x, y) mkdir(x)
-#endif
+#include <boost/date_time/posix_time/ptime.hpp>
+#include <boost/date_time/posix_time/conversion.hpp>
+#include <boost/date_time/c_local_time_adjustor.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
 
 #define DATE_START  1
 #define TIME_START  (DATE_START + 11)
@@ -34,10 +30,14 @@ namespace framework
             size_t size, 
             char const * fmt)
         {
-            time_t tt = time(NULL);
-            struct tm lt;
-            localtime_r(&tt, &lt);
-            strftime(buf, size, fmt, &lt);
+            boost::posix_time::ptime t = 
+                boost::posix_time::second_clock::local_time();
+            typedef boost::date_time::time_facet<boost::posix_time::ptime, char> facet_t;;
+            Buffer buffer(buf, size);
+            std::ostream os(&buffer);
+            os.imbue(std::locale(os.getloc(),new facet_t(fmt)));
+            os << t;
+            os.put(0);
             return buf;
         }
 
@@ -47,10 +47,11 @@ namespace framework
         {
             time_str_now(time_str_, sizeof(time_str_), is_file_ ? file_time_format_str : time_format_str);
             time_t tt = time(NULL);
-            struct tm lt;
-            localtime_r(&tt, &lt);
-            lt.tm_hour = lt.tm_min = lt.tm_sec = 0;
-            mid_night_ = mktime(&lt);
+            boost::posix_time::ptime t = boost::posix_time::from_time_t(tt);
+            typedef boost::date_time::c_local_adjustor<boost::posix_time::ptime> local_adjustor_t;
+            boost::posix_time::ptime t1 = local_adjustor_t::utc_to_local(t);
+            boost::posix_time::ptime t2(t1.date());
+            mid_night_ = tt - (t1 - t2).total_seconds();
             update();
         }
 
