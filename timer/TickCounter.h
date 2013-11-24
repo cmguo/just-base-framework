@@ -19,8 +19,9 @@ namespace framework
             }
 
         public:
-            TickCounter()
-                : running_(true)
+            TickCounter(
+                bool running = true)
+                : running_(running)
             {
             }
 
