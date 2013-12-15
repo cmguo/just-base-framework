@@ -36,10 +36,6 @@ namespace framework
             return enum_process(boost::filesystem::path(), processes);
         }
 
-		class Process;
-
-		Process & self();
-
     } // namespace process
 
     namespace this_process

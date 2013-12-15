@@ -16,6 +16,8 @@ namespace framework
         class Convert
         {
         public:
+            Convert();
+
             // 构造一定转换器，指定源编码格式和目标编码格式
             Convert(
                 std::string const & to_code, 
@@ -24,10 +26,18 @@ namespace framework
             ~Convert();
 
         public:
+            bool open(
+                std::string const & to_code, 
+                std::string const & from_code, 
+                boost::system::error_code & ec);
+
             // 使用转换器转换字符编码
-            boost::system::error_code convert(
+            bool convert(
                 std::string const & from, 
-                std::string & to);
+                std::string & to, 
+                boost::system::error_code & ec);
+
+            void close();
 
             std::size_t err_pos() const
             {
@@ -35,8 +45,7 @@ namespace framework
             }
 
         private:
-            std::string t1; // 目标编码格式
-            std::string t2; // 源编码格式
+            void * ctx_;
             std::size_t err_pos_;
         };
 

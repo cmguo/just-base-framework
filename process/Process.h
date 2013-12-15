@@ -83,9 +83,9 @@ namespace framework
                 boost::system::error_code & ec);
 
             /**
-                Send signal to this process.
-                It don't work on win32 os
-             */
+            Send signal to this process.
+            It don't work on win32 os
+            */
             boost::system::error_code signal(
                 Signal sig, 
                 boost::system::error_code & ec);
@@ -123,6 +123,8 @@ namespace framework
         private:
             detail::process_data_base * data_;
         };
+
+        Process & self();
 
         bool notify_wait(
             boost::system::error_code const & ec);
