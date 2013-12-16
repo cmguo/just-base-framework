@@ -101,7 +101,7 @@ namespace framework
         }
 
         boost::system::error_code get_process_stat(
-            int pid, 
+            HANDLE hp, 
             ProcessStat & stat)
         {
             memset(&stat, 0, sizeof(stat));
@@ -110,12 +110,26 @@ namespace framework
         }
 
         boost::system::error_code get_process_statm(
-            int pid, 
+            HANDLE hp, 
             ProcessStatM & statm)
         {
             memset(&statm, 0, sizeof(statm));
             SetLastError(ERROR_NOT_SUPPORTED);
             return last_system_error();
+        }
+
+        boost::system::error_code get_process_stat(
+            int pid, 
+            ProcessStat & stat)
+        {
+            return get_process_stat((HANDLE)NULL, stat);
+        }
+
+        boost::system::error_code get_process_statm(
+            int pid, 
+            ProcessStatM & statm)
+        {
+            return get_process_statm((HANDLE)NULL, statm);
         }
 
 
