@@ -10,9 +10,9 @@
 
 #include <sstream>
 
-#if (defined(__ANDROID__)) && (!defined(__SONY_ANDROID_TV__))
-#include <time64.h>
-#endif
+//#if (defined(__ANDROID__)) && (!defined(__SONY_ANDROID_TV__))
+//#include <time64.h>
+//#endif
 
 namespace framework
 {
@@ -70,19 +70,28 @@ namespace framework
         time_t TimeHelper::make_local_time(
             tm_t * tm)
         {
+            //typedef boost::date_time::c_local_adjustor<boost::posix_time::ptime> local_adjustor_t;
+            //boost::posix_time::ptime start(boost::gregorian::date(1970,1,1));
+            //boost::posix_time::ptime pt = boost::posix_time::ptime_from_tm(*tm);
+            //boost::posix_time::ptime pt1 = local_adjustor_t::utc_to_local(pt);
+            //time_t t = (pt1 - start).total_seconds();
             return mktime(tm);
         }
 
         time_t TimeHelper::make_utc_time(
             tm_t * tm)
         {
-#ifdef __FreeBSD__
-            return timegm(tm);
-#elif (defined(__ANDROID__)) && (!defined(__SONY_ANDROID_TV__))
-            return (time_t)(timegm64(tm));
-#else
-            return mktime(tm) - (time_t)timezone;
-#endif
+            boost::posix_time::ptime start(boost::gregorian::date(1970,1,1));
+            boost::posix_time::ptime pt = boost::posix_time::ptime_from_tm(*tm);
+            time_t t = (time_t)(pt - start).total_seconds();
+            return t;
+//#ifdef __FreeBSD__
+//            return timegm(tm);
+//#elif (defined(__ANDROID__)) && (!defined(__SONY_ANDROID_TV__))
+//            return (time_t)(timegm64(tm));
+//#else
+//            return mktime(tm) - (time_t)timezone;
+//#endif
         }
 
     } // namespace timer
