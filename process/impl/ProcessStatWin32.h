@@ -92,7 +92,7 @@ namespace framework
 
 #else
 
-        error_code get_system_stat(
+        boost::system::error_code get_system_stat(
             SystemStat & stat)
         {
             memset(&stat.cpu, 0, sizeof(stat.cpu));

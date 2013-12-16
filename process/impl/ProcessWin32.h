@@ -491,7 +491,6 @@ namespace framework
             error_code const & ec)
         {
             SetLastError(ERROR_NOT_SUPPORTED);
-            ec = last_system_error();
             return false;
         }
 
