@@ -37,6 +37,10 @@ namespace framework
                 std::string & to, 
                 boost::system::error_code & ec);
 
+            boost::system::error_code convert(
+                std::string const & from, 
+                std::string & to);
+
             void close();
 
             std::size_t err_pos() const

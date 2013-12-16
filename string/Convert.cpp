@@ -42,5 +42,14 @@ namespace framework
             close();
         }
 
+        boost::system::error_code Convert::convert(
+            std::string const & from, 
+            std::string & to)
+        {
+            boost::system::error_code ec;
+            convert(from, to, ec);
+            return ec;
+        }
+
     } // namespace string
 } // namespace framework
