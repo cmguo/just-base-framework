@@ -203,9 +203,8 @@ namespace framework
                 NULL);
             if (result == FALSE) {
                 ec = framework::system::last_system_error();
-                if (ec.value() == ERROR_HANDLE_EOF) {
-                    ec = boost::asio::error::eof;
-                }
+            } else if (dw == 0) {
+                ec = boost::asio::error::eof;
             }
             return dw;
 #else
