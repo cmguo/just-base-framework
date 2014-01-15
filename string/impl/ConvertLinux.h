@@ -11,11 +11,11 @@ namespace framework
     {
 
         bool Convert::open(
-            std::string const & t0, 
+            std::string const & to, 
             std::string const & from, 
             boost::system::error_code & ec)
         {
-            iconv_t cd = iconv_open(t1.c_str(), t2.c_str());
+            iconv_t cd = iconv_open(to.c_str(), from.c_str());
             if (cd == (iconv_t)-1) {
                 ec = framework::system::last_system_error();
                 return false;
@@ -64,7 +64,7 @@ namespace framework
 
         void Convert::close()
         {
-            if (ctx_)
+            if (ctx_) {
                 delete (iconv_t *)ctx_; 
                 ctx_ = NULL;
             }

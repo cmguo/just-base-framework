@@ -2,6 +2,8 @@
 
 // simulation of back trace
 
+#include <stdio.h>
+
 #define WORD_WIDTH 16
 
 namespace framework
