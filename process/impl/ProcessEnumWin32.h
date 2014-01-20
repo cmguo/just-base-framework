@@ -11,6 +11,16 @@ using namespace boost::filesystem;
 using namespace boost::system;
 
 #include <windows.h>
+/*
+#if (!defined WINRT) && (!defined WIN_PHONE) && (!defined __MINGW32__)
+#  include <winternl.h>
+#endif
+*/
+#if (!defined UNDER_CE) && (!defined WINRT) && (!defined WIN_PHONE)
+#  include <fcntl.h>
+#  include <psapi.h>
+#  pragma comment(lib, "Psapi.lib")
+#endif
 
 namespace framework
 {
@@ -27,7 +37,7 @@ namespace framework
                 : bin_path.stem() == bin_file.stem());
         }
 
-#if (defined UNDER_CE) || (!defined WINRT) || (!defined WIN_PHONE)
+#if (defined UNDER_CE) || (defined WINRT) || (defined WIN_PHONE)
 
         bool get_process_info(
             ProcessInfo & info, 
