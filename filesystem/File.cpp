@@ -38,26 +38,85 @@ namespace framework
             std::string const & name, 
             boost::system::error_code & ec)
         {
-            return open(boost::filesystem::path(name), ec);
+            return open(name, f_read_write, ec);
         }
 
         bool File::open(
             boost::filesystem::path const & path, 
             boost::system::error_code & ec)
         {
+            return open(path, f_read_write, ec);
+        }
+
+        bool File::open(
+            std::string const & name, 
+            int flags, 
+            boost::system::error_code & ec)
+        {
+            return open(boost::filesystem::path(name), flags, ec);
+        }
+
+        bool File::open(
+            boost::filesystem::path const & path, 
+            int flags, 
+            boost::system::error_code & ec)
+        {
 #ifdef BOOST_WINDOWS_API
+            DWORD dwDesiredAccess = 0;
+            if (flags & f_read) {
+                dwDesiredAccess |= GENERIC_READ;
+            }
+            if (flags & f_write) {
+                dwDesiredAccess |= GENERIC_WRITE;
+            }
+            DWORD dwCreationDispositionTable[] = {
+                OPEN_EXISTING, // 
+                OPEN_EXISTING, // f_exclude
+                TRUNCATE_EXISTING, // f_trunc
+                TRUNCATE_EXISTING, // f_exclude | f_trunc
+                OPEN_ALWAYS, // f_create
+                CREATE_NEW, // f_create | f_exclude
+                CREATE_ALWAYS, // f_create | f_trunc
+                CREATE_NEW, // f_create | f_exclude | f_trunc
+            };
+            DWORD dwCreationDisposition = dwCreationDispositionTable[flags & 0x07];
             handle_ = ::CreateFileA(
                 path.file_string().c_str(), 
-                GENERIC_READ | GENERIC_WRITE, 
+                dwDesiredAccess, 
                 FILE_SHARE_READ | FILE_SHARE_WRITE, 
                 NULL, 
-                OPEN_ALWAYS, 
+                dwCreationDisposition, 
                 FILE_ATTRIBUTE_NORMAL, 
                 NULL);
 #else
+            int flags_table[] = {
+                O_TRUNC, 
+                O_EXCL, 
+                O_CREATE, 
+            };
+            int f = 0;
+            if (flags & f_read) {
+                dwDesiredAccess |= GENERIC_READ;
+                if (flags & f_write) {
+                    f |= O_RDWR;
+                } else {
+                    f |= O_RDONLY;
+                }
+            } else {
+                f |= O_WRONLY;
+            }
+            if (flags & f_create) {
+                f |= O_CREAT;
+                if (flags & f_exclude) {
+                    f |= O_EXCL;
+                }
+            }
+            if (flags & f_trunc) {
+                f |= O_TRUNC;
+            }
             fd_ = ::open(
                 path.file_string().c_str(),
-                O_CREAT | O_RDWR, 
+                f, 
                 00666);
 #endif
             if (is_open()) {

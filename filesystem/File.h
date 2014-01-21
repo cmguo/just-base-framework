@@ -20,7 +20,7 @@ namespace framework
          *   不支持常规文件
          * boost::asio::stream_handle
          *   需要外部打开句柄
-         *   不知持seek
+         *   不支持seek
          * boost::asio::random_access_handle
          *   需要外部打开句柄
          *   需要外部记录读写位置
@@ -28,6 +28,16 @@ namespace framework
 
         class File
         {
+        public:
+            enum {
+                f_exclude = 1, 
+                f_trunc = 2, 
+                f_create = 4, 
+                f_read = 8, 
+                f_write = 16, 
+                f_read_write = f_read | f_write,
+            };
+
         public:
             File();
 
@@ -40,6 +50,16 @@ namespace framework
 
             bool open(
                 boost::filesystem::path const & path, 
+                boost::system::error_code & ec);
+
+            bool open(
+                std::string const & name, 
+                int flags, 
+                boost::system::error_code & ec);
+
+            bool open(
+                boost::filesystem::path const & path, 
+                int flags, 
                 boost::system::error_code & ec);
 
             bool assign(
