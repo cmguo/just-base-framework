@@ -34,7 +34,7 @@ namespace framework
                 char const * fmt, 
                 va_list args)
                 : Record(format_message)
-                , fmt_(fmt))
+                , fmt_(fmt)
             {
                 va_copy(args_, args);
             }

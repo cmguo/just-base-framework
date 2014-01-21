@@ -89,14 +89,8 @@ namespace framework
                 FILE_ATTRIBUTE_NORMAL, 
                 NULL);
 #else
-            int flags_table[] = {
-                O_TRUNC, 
-                O_EXCL, 
-                O_CREATE, 
-            };
             int f = 0;
             if (flags & f_read) {
-                dwDesiredAccess |= GENERIC_READ;
                 if (flags & f_write) {
                     f |= O_RDWR;
                 } else {
