@@ -38,14 +38,14 @@ namespace framework
             std::string const & name, 
             boost::system::error_code & ec)
         {
-            return open(name, f_read_write, ec);
+            return open(name, f_create | f_read_write, ec);
         }
 
         bool File::open(
             boost::filesystem::path const & path, 
             boost::system::error_code & ec)
         {
-            return open(path, f_read_write, ec);
+            return open(path, f_create | f_read_write, ec);
         }
 
         bool File::open(
