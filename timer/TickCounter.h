@@ -50,7 +50,7 @@ namespace framework
 
             boost::uint32_t elapsed() const
             {
-                return (Time() - start_).total_milliseconds();
+                return (boost::uint32_t)(Time() - start_).total_milliseconds();
             }
 
         private:
