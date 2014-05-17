@@ -53,7 +53,7 @@ namespace framework
 
         private:
             char const * fmt_;
-            va_list args_;
+            mutable va_list args_;
         };
 
     } // namespace logger
