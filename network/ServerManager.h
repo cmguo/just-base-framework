@@ -34,6 +34,7 @@ namespace framework
                 boost::system::error_code & ec)
             {
                 if (!acceptor_.open<boost::asio::ip::tcp>(addr, ec)) {
+                    addr.port(acceptor_.listen_port());
                     proxy_ = create(this, (Manager *)NULL);
                     proxy_->async_accept(acceptor_, 
                         boost::bind(&ServerManager::handle_accept, this, _1));
@@ -45,6 +46,7 @@ namespace framework
                 framework::network::NetName & addr)
             {
                 acceptor_.open<boost::asio::ip::tcp>(addr);
+                addr.port(acceptor_.listen_port());
                 proxy_ = create(this, (Manager *)NULL);
                 proxy_->async_accept(acceptor_, 
                     boost::bind(&ServerManager::handle_accept, this, _1));
