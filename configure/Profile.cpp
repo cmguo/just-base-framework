@@ -27,6 +27,33 @@ namespace framework
             load(file);
         }
 
+        Profile::Profile(
+            Profile const & parent, 
+            std::string const & subset)
+        {
+            std::string pattern = subset;
+            pattern.append(1, '.');
+            size_t n = pattern.size();
+
+            std::map<std::string, std::map<std::string, std::string> >::const_iterator s;
+            
+            s = parent.pre_sec_key_vals_.lower_bound(pattern);
+            while (s != parent.pre_sec_key_vals_.end() && s->first.size() >= pattern.size() && s->first.substr(0, pattern.size()) == pattern) {
+                pre_sec_key_vals_.insert(std::make_pair(s->first.substr(n), s->second));
+                ++s;
+            }
+            s = parent.sec_key_vals_.lower_bound(pattern);
+            while (s != parent.sec_key_vals_.end() && s->first.size() >= pattern.size() && s->first.substr(0, pattern.size()) == pattern) {
+                sec_key_vals_.insert(std::make_pair(s->first.substr(n), s->second));
+                ++s;
+            }
+            s = parent.post_sec_key_vals_.lower_bound(pattern);
+            while (s != parent.post_sec_key_vals_.end() && s->first.size() >= pattern.size() && s->first.substr(0, pattern.size()) == pattern) {
+                post_sec_key_vals_.insert(std::make_pair(s->first.substr(n), s->second));
+                ++s;
+            }
+        }
+
         Profile::~Profile()
         {
         }
@@ -51,7 +78,7 @@ namespace framework
                 if (line[0] == '[') {
                     if (line[line.length() - 1] == ']') {
                         if (!section.empty())
-                            sec_key_vals[section] = key_vals;
+                            sec_key_vals_[section] = key_vals;
                         key_vals.clear();
                         section = line.substr(1, line.length() - 2);
                     }
@@ -67,7 +94,7 @@ namespace framework
                 }
             }
             if (!section.empty())
-                sec_key_vals[section] = key_vals;
+                sec_key_vals_[section] = key_vals;
 
             return 0;
         }
@@ -88,7 +115,7 @@ namespace framework
             std::copy(beg, end, std::inserter(text, text.end()));
             std::string text2;
 
-            std::map<std::string, std::map<std::string, std::string> > temp = sec_key_vals;
+            std::map<std::string, std::map<std::string, std::string> > temp = sec_key_vals_;
             std::string section;
             std::map<std::string, std::string> key_vals;
 
@@ -185,24 +212,24 @@ namespace framework
             std::string const & key, 
             std::string & val) const
         {
-            std::map<std::string, std::map<std::string, std::string> >::const_iterator s = pre_sec_key_vals.find(sec);
-            if (s != pre_sec_key_vals.end()) {
+            std::map<std::string, std::map<std::string, std::string> >::const_iterator s = pre_sec_key_vals_.find(sec);
+            if (s != pre_sec_key_vals_.end()) {
                 std::map<std::string, std::string>::const_iterator k = s->second.find(key);
                 if (k != s->second.end()) {
                     val = k->second;
                     return 0;
                 }
             }
-            s = sec_key_vals.find(sec);
-            if (s != sec_key_vals.end()) {
+            s = sec_key_vals_.find(sec);
+            if (s != sec_key_vals_.end()) {
                 std::map<std::string, std::string>::const_iterator k = s->second.find(key);
                 if (k != s->second.end()) {
                     val = k->second;
                     return 0;
                 }
             }
-            s = post_sec_key_vals.find(sec);
-            if (s != post_sec_key_vals.end()) {
+            s = post_sec_key_vals_.find(sec);
+            if (s != post_sec_key_vals_.end()) {
                 std::map<std::string, std::string>::const_iterator k = s->second.find(key);
                 if (k != s->second.end()) {
                     val = k->second;
@@ -218,7 +245,7 @@ namespace framework
             std::string const & val, 
             bool b_save)
         {
-            sec_key_vals[section][key] = val;
+            sec_key_vals_[section][key] = val;
             if (!b_save)
                 return 0;
 
@@ -324,7 +351,7 @@ namespace framework
             std::string::size_type pos_dot = line.substr(0, pos_eq).rfind('.', pos_eq);
             if (pos_dot == std::string::npos)
                 return 2;
-            pre_sec_key_vals[line.substr(0, pos_dot)][line.substr(pos_dot + 1, pos_eq - pos_dot - 1)] = line.substr(pos_eq + 1);
+            pre_sec_key_vals_[line.substr(0, pos_dot)][line.substr(pos_dot + 1, pos_eq - pos_dot - 1)] = line.substr(pos_eq + 1);
             return 0;
         }
 
@@ -337,7 +364,7 @@ namespace framework
             std::string::size_type pos_dot = line.substr(0, pos_eq).rfind('.', pos_eq);
             if (pos_dot == std::string::npos)
                 return 2;
-            post_sec_key_vals[line.substr(0, pos_dot)][line.substr(pos_dot + 1, pos_eq - pos_dot - 1)] = line.substr(pos_eq + 1);
+            post_sec_key_vals_[line.substr(0, pos_dot)][line.substr(pos_dot + 1, pos_eq - pos_dot - 1)] = line.substr(pos_eq + 1);
             return 0;
         }
 
@@ -348,18 +375,18 @@ namespace framework
         {
             std::map<std::string, std::map<std::string, std::string> >::const_iterator s;
             
-            s = pre_sec_key_vals.lower_bound(pattern);
-            while (s != pre_sec_key_vals.end() && s->first.size() >= pattern.size() && s->first.substr(0, pattern.size()) == pattern) {
+            s = pre_sec_key_vals_.lower_bound(pattern);
+            while (s != pre_sec_key_vals_.end() && s->first.size() >= pattern.size() && s->first.substr(0, pattern.size()) == pattern) {
                 sections.insert(s->first);
                 ++s;
             }
-            s = sec_key_vals.lower_bound(pattern);
-            while (s != sec_key_vals.end() && s->first.size() >= pattern.size() && s->first.substr(0, pattern.size()) == pattern) {
+            s = sec_key_vals_.lower_bound(pattern);
+            while (s != sec_key_vals_.end() && s->first.size() >= pattern.size() && s->first.substr(0, pattern.size()) == pattern) {
                 sections.insert(s->first);
                 ++s;
             }
-            s = post_sec_key_vals.lower_bound(pattern);
-            while (s != post_sec_key_vals.end() && s->first.size() >= pattern.size() && s->first.substr(0, pattern.size()) == pattern) {
+            s = post_sec_key_vals_.lower_bound(pattern);
+            while (s != post_sec_key_vals_.end() && s->first.size() >= pattern.size() && s->first.substr(0, pattern.size()) == pattern) {
                 sections.insert(s->first);
                 ++s;
             }
@@ -385,7 +412,7 @@ namespace framework
         void Profile::get_all(
             std::map<std::string, std::map<std::string, std::string> > & mkvs)
         {
-            mkvs = sec_key_vals;
+            mkvs = sec_key_vals_;
         }
     }
 }

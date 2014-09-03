@@ -27,6 +27,11 @@ namespace framework
             Profile(
                 std::string const & file);
 
+            // 构造一个子集
+            Profile(
+                Profile const & parent, 
+                std::string const & subset);
+
             ~Profile();
 
         public:
@@ -79,9 +84,9 @@ namespace framework
 
         private:
             std::string file_; // 保存配置信息的文件名
-            std::map<std::string, std::map<std::string, std::string> > sec_key_vals; // 配置参数集
-            std::map<std::string, std::map<std::string, std::string> > pre_sec_key_vals; // 配置参数集
-            std::map<std::string, std::map<std::string, std::string> > post_sec_key_vals; // 配置参数集
+            std::map<std::string, std::map<std::string, std::string> > sec_key_vals_; // 配置参数集
+            std::map<std::string, std::map<std::string, std::string> > pre_sec_key_vals_; // 配置参数集
+            std::map<std::string, std::map<std::string, std::string> > post_sec_key_vals_; // 配置参数集
         };
 
     } // namespace configure

@@ -114,6 +114,10 @@ namespace framework
             Config(
                 std::string const & file);
 
+            Config(
+                Config const & parent, 
+                std::string const & subset);
+
             ~Config(void);
 
         public:

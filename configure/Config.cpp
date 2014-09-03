@@ -27,6 +27,13 @@ namespace framework
         {
         }
 
+        Config::Config(
+            Config const & parent, 
+            std::string const & subset)
+            : pf_(parent.pf_, subset)
+        {
+        }
+
         Config::~Config(void)
         {
         }
