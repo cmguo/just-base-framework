@@ -17,29 +17,21 @@
 #include <sstream>
 #include <functional>
 
+namespace std
+{
+
+    inline std::string to_string(
+        std::string const & v)
+    {
+        return v;
+    }
+
+}
+
 namespace framework
 {
     namespace string
     {
-
-        template <typename T>
-        struct Formator;
-
-        template <typename T>
-        inline std::string format(
-            T const & v);
-
-        template <typename T>
-        inline boost::system::error_code format2(
-            std::string & str, 
-            T const & v);
-
-        template <typename T>
-        inline std::string to_string(
-            T const & v)
-        {
-            return v.to_string();
-        }
 
         // 函数模板，可以不要指定数据类型，编译器自动决定
         inline std::string operator + (
@@ -49,31 +41,45 @@ namespace framework
             return std::string(left) + right;
         }
 
-        struct format_pointer
+        struct to_string_pointer;
+        struct to_string_enum;
+        struct to_string_non_pointer;
+
+        template <typename T>
+        inline std::string to_string(
+            T const & v)
         {
-            template<typename T>
-            static std::string invoke(
-                T const * const & v)
-            {
-                return Formator<T>()(*v);
-            }
+            typedef typename boost::mpl::if_<
+                boost::is_pointer<T>, 
+                to_string_pointer, 
+                BOOST_DEDUCED_TYPENAME boost::mpl::if_<
+                    boost::is_enum<T>, 
+                    to_string_enum, 
+                    to_string_non_pointer
+                >::type
+            >::type invoke_type;
+            return invoke_type::invoke(v);
+        }
+        
+        template <typename T>
+        inline void to_string(
+            std::string & str, 
+            T const & v)
+        {
+            str = to_string(v);
+        }
 
-            template<typename T>
-            static std::string invoke(
-                T * const & v)
-            {
-                return Formator<T>()(*v);
-            }
-
+        struct to_string_pointer
+        {
             template<typename T>
             static std::string invoke(
                 T const & v)
             {
-                return Formator<typename T::value_type>()(*v);
+                return to_string(*v);
             }
 
             static std::string invoke(
-                void * v)
+                void const * v)
             {
                 std::ostringstream oss;
                 oss << v;
@@ -81,21 +87,21 @@ namespace framework
             }
         };
 
-        struct format_enum
+        struct to_string_enum
         {
             template<typename T>
             static std::string invoke(
                 T const & v)
             {
                 const int i = static_cast<int>(v);
-                return format(i);
+                return to_string(i);
             }
         };
 
-        struct format_non_pointer
+        struct to_string_non_pointer
         {
             /// 处理基本类型序列化
-            struct format_primitive
+            struct to_string_primitive
             {
                 template<typename T>
                 static std::string invoke(
@@ -109,7 +115,7 @@ namespace framework
                 static std::string invoke(
                     unsigned char const & v)
                 {
-                    return format((int)v);
+                    return to_string((int)v);
                 }
 
                 static std::string invoke(
@@ -120,13 +126,13 @@ namespace framework
             };
 
             /// 处理标准类型（非基本类型）序列化
-            struct format_standard
+            struct to_string_standard
             {
                 template<typename T>
                 static std::string invoke(
                     T const & v)
                 {
-                    return to_string(v);
+                    return v.to_string();
                 }
             };
 
@@ -137,51 +143,18 @@ namespace framework
                 /// 根据类型类别（基本类型，标准类型），分别处理序列化
                 typedef typename boost::mpl::if_<
                     boost::is_fundamental<T>, 
-                    format_primitive, 
-                    format_standard
+                    to_string_primitive, 
+                    to_string_standard
                 >::type invoke_type;
                 return invoke_type::invoke(v);
             }
-        };
-
-        template <typename T>
-        struct Formator
-            : std::unary_function<T, std::string>
-        {
-            std::string operator () (
-                T const & v) const
-            {
-                typedef typename boost::mpl::if_<
-                    boost::is_pointer<T>, 
-                    format_pointer, 
-                    BOOST_DEDUCED_TYPENAME boost::mpl::if_<
-                    boost::is_enum<T>, 
-                    format_enum, 
-                    format_non_pointer
-                    >::type
-                >::type invoke_type;
-                return invoke_type::invoke(v);
-            }
-        };
-
-        template <typename T>
-        struct Formator2
-            : std::binary_function<std::string, T, boost::system::error_code>
-        {
-            boost::system::error_code operator () (
-                std::string & str, 
-                T const & v) const
-            {
-                str = Formator<T>()(v);
-                return framework::system::logic_error::succeed;
-            }
-        };
+        }; // struct to_string_non_pointer
 
         template <typename T>
         inline std::string format(
             T const & v)
         {
-            return Formator<T>()(v);
+            return to_string(v);
         }
 
         template <typename T>
@@ -189,21 +162,9 @@ namespace framework
             std::string & str, 
             T const & v)
         {
-            str = Formator<T>()(v);
-            return framework::system::logic_error::succeed;
+            str = to_string(v);
+            return boost::system::error_code();
         }
-
-        template <>
-        struct Formator<std::string>
-            : std::binary_function<std::string, std::string, boost::system::error_code>
-        {
-        public:
-            std::string operator () (
-                std::string const & v)
-            {
-                return v;
-            }
-        };
 
     } // namespace string
 } // namespace framework
