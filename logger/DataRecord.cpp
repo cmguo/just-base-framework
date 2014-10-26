@@ -32,7 +32,7 @@ namespace framework
 
             Buffer sbuf(buf, len);
             std::ostream os(&sbuf);
-            os << title << " [data: s" << size << " bytes]\n";
+            os << title << " [data: " << size << " bytes]\n";
             sbuf.finish();
 
             char * p(buf + sbuf.size());
