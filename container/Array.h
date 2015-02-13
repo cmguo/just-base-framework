@@ -113,6 +113,21 @@ namespace framework
             return Array<T>(t, s);
         }
 
+        template<class T>
+        inline Array<T> const make_array(T & t){
+            return Array<T>(&t, sizeof(t));
+        }
+
+        template<typename _Ty, typename _Ax>
+        inline Array<_Ty> const make_array(std::vector<_Ty, _Ax> & vec){
+            return Array<_Ty>(&vec[0], vec.size());
+        }
+
+        template<typename _Ty, typename _Ax>
+        inline Array<_Ty> const make_array(std::vector<_Ty, _Ax> const & vec){
+            return Array<_Ty const>(&vec[0], vec.size());
+        }
+
         /// 从定常数组构造array
 #if !BOOST_WORKAROUND(BOOST_MSVC, < 1301)
         template<class T, std::size_t s>

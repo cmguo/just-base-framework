@@ -1,7 +1,7 @@
-// RawPointer.h
+// NativePointer.h
 
-#ifndef _FRAMEWORK_GENERIC_NATIVE_POINTER_H_
-#define _FRAMEWORK_GENERIC_NATIVE_POINTER_H_
+#ifndef _FRAMEWORK_GENERIC_NATIVE_POINTER_TRAITS_H_
+#define _FRAMEWORK_GENERIC_NATIVE_POINTER_TRAITS_H_
 
 namespace framework
 {
@@ -51,4 +51,4 @@ namespace framework
     } // namespace generic
 } // namespace framework
 
-#endif // #ifndef _FRAMEWORK_GENERIC_NATIVE_POINTER_H_
+#endif // _FRAMEWORK_GENERIC_NATIVE_POINTER_TRAITS_H_
