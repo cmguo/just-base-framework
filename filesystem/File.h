@@ -36,6 +36,10 @@ namespace framework
                 f_read = 8, 
                 f_write = 16, 
                 f_read_write = f_read | f_write,
+
+                fm_shared = 0x100 | 1, 
+                fm_read = 0x100 | 2,
+                fm_write = 0x100 | 4,
             };
 
         public:
@@ -82,6 +86,19 @@ namespace framework
                 File & r);
 
             bool close(
+                boost::system::error_code & ec);
+
+         public:
+            void * map(
+                boost::uint64_t offset, 
+                size_t size, 
+                int flags, 
+                boost::system::error_code & ec);
+
+            bool unmap(
+                void * addr, 
+                boost::uint64_t offset, 
+                size_t size, 
                 boost::system::error_code & ec);
 
         public:

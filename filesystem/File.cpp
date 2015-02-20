@@ -3,6 +3,7 @@
 #include "framework/Framework.h"
 #include "framework/filesystem/File.h"
 #include "framework/system/ErrorCode.h"
+#include "framework/memory/MemoryPage.h"
 
 #ifdef BOOST_WINDOWS_API
 #  include <windows.h>
@@ -11,6 +12,7 @@
 #  include <sys/stat.h>
 #  include <fcntl.h>
 #  include <unistd.h>
+#  include <sys/mman.h>
 #  define MAX_PATH 256
 #endif
 
@@ -182,6 +184,115 @@ namespace framework
             }
 #endif
             return !ec;
+        }
+
+        void * File::map(
+            boost::uint64_t offset, 
+            size_t size, 
+            int flags, 
+            boost::system::error_code & ec)
+        {
+            boost::uint64_t o = offset;
+            framework::memory::MemoryPage::align_page(o, size);
+#ifdef BOOST_WINDOWS_API
+            DWORD dwFlags = 0;
+            if (flags & fm_read)
+                dwFlags = PAGE_READONLY;
+            if (flags & fm_write)
+                dwFlags = PAGE_READWRITE;
+            if (flags & fm_shared)
+                dwFlags |= 0;
+            else
+                dwFlags |= PAGE_WRITECOPY;
+            HANDLE hFileMap = ::CreateFileMappingA(
+                handle_, 
+                NULL, 
+                dwFlags, 
+                0, 
+                0, 
+                NULL);
+
+            if (hFileMap == NULL) {
+                ec = framework::system::last_system_error();
+                return NULL;
+            }
+
+            void * p = MapViewOfFile(
+                hFileMap, 
+                FILE_MAP_ALL_ACCESS, 
+                0, 
+                0, 
+                0);
+
+            if (p == NULL) {
+                ec = framework::system::last_system_error();
+                ::CloseHandle(
+                    hFileMap);
+                return NULL;
+            }
+
+            ::CloseHandle(
+                hFileMap);
+            ec.clear();
+            return (char *)p + size_t(offset - o);
+#else
+            int p = 0;
+            int f = 0;
+            if (flags & fm_read)
+                p |= PROT_READ;
+            if (flags & fm_write)
+                p |= PROT_WRITE;
+            if (flags & fm_shared)
+                f |= MAP_SHARED;
+            else
+                f |= MAP_PRIVATE;
+            void * addr = ::mmap(
+                NULL, 
+                size, 
+                p, 
+                f, 
+                fd_,
+                o);
+
+            if (addr == MAP_FAILED) {
+                ec = framework::system::last_system_error();
+                return NULL;
+            }
+            ec.clear();
+            return (char *)addr + size_t(offset - o);
+#endif
+        }
+
+        bool File::unmap(
+            void * addr, 
+            boost::uint64_t offset, 
+            size_t size, 
+            boost::system::error_code & ec)
+        {
+            boost::uint64_t o = offset;
+            framework::memory::MemoryPage::align_page(o, size);
+            addr = (char *)addr - size_t(offset - o);
+#ifdef BOOST_WINDOWS_API
+            BOOL b = ::UnmapViewOfFile(
+                addr);
+            if (b == FALSE) {
+                ec = framework::system::last_system_error();
+                return false;
+            }
+            ec.clear();
+            return true;
+#else
+            int r = ::munmap(
+                addr, 
+                size);
+
+            if (r == -1) {
+                ec = framework::system::last_system_error();
+                return false;
+            }
+            ec.clear();
+            return true;
+#endif
         }
 
         bool File::seek(

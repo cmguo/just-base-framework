@@ -119,8 +119,8 @@ namespace framework
 
                     ow.reset(hFileMap, ::CloseHandle);
 
-                    void * p = MapViewOfFile(
-                        id, 
+                    void * p = ::MapViewOfFile(
+                        hFileMap, 
                         FILE_MAP_ALL_ACCESS, 
                         0, 
                         0, 
