@@ -3,6 +3,7 @@
 // simulation of back trace
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define WORD_WIDTH 16
 

@@ -3,6 +3,8 @@
 #include "framework/Framework.h"
 #include "framework/string/Des.h"
 
+#include <stdlib.h>
+
 namespace framework
 {
     namespace string

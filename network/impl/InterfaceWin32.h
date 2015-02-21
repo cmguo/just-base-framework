@@ -69,7 +69,6 @@ namespace framework
             ULONG ulOutBufLen = sizeof (IP_ADAPTER_INFO);
             pAdapterInfo = (IP_ADAPTER_INFO *) malloc(sizeof (IP_ADAPTER_INFO));
             if (pAdapterInfo == NULL) {
-                printf("Error allocating memory needed to call GetAdaptersinfo\n");
                 return framework::system::last_system_error();
             }
             // Make an initial call to GetAdaptersInfo to get
@@ -78,7 +77,6 @@ namespace framework
                 free(pAdapterInfo);
                 pAdapterInfo = (IP_ADAPTER_INFO *) malloc(ulOutBufLen);
                 if (pAdapterInfo == NULL) {
-                    printf("Error allocating memory needed to call GetAdaptersinfo\n");
                     return framework::system::last_system_error();
                 }
             }
@@ -107,7 +105,6 @@ namespace framework
                     pAdapter = pAdapter->Next;
                 }
             } else {
-                printf("GetAdaptersInfo failed with error: %d\n", dwRetVal);
                 ec = framework::system::last_system_error();
             }
             if (pAdapterInfo)

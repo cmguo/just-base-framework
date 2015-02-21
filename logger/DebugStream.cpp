@@ -28,7 +28,6 @@ namespace framework
             buffers_t const & buffers)
         {
 #ifdef BOOST_WINDOWS_API
-            DWORD dw = 0;
             for (size_t iLoop = 0; iLoop < buffers.size(); ++iLoop) {
                 ::OutputDebugStringA(
                     boost::asio::buffer_cast<LPCSTR>(buffers[iLoop]));
