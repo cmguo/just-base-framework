@@ -10,7 +10,7 @@
 #include <boost/type_traits/is_array.hpp>
 #include <boost/type_traits/is_enum.hpp>
 #include <boost/type_traits/is_fundamental.hpp>
-#include <boost/type_traits/remove_const.hpp>
+#include <boost/type_traits/remove_cv.hpp>
 #include <boost/mpl/if.hpp>
 
 #include <framework/system/LogicError.h>
@@ -72,9 +72,10 @@ namespace framework
             template<typename T>
             static bool invoke(
                 std::string const & str, 
-                T const * & v)
+                T * & v)
             {
-                T * t = new T;
+                typedef typename boost::remove_cv<T>::type value_type;
+                value_type * t = new value_type;
                 if (from_string(str, *t)) {
                     v = t;
                     return true;
@@ -85,7 +86,7 @@ namespace framework
             template<typename T>
             static bool invoke(
                 std::string const & str, 
-                T const & v)
+                T & v)
             {
                 typedef typename T::value_type value_type;
                 value_type * t = new value_type;
@@ -98,7 +99,7 @@ namespace framework
 
             static bool invoke(
                 std::string const & str, 
-                void const * & v)
+                void * & v)
             {
                 std::istringstream iss(str);
                 void * v1;
@@ -107,6 +108,19 @@ namespace framework
                     v = v1;
                 }
                 return !!iss;
+            }
+
+            static bool invoke(
+                std::string const & str, 
+                void const * & v)
+            {
+                void * v1;
+                if (invoke(str, v1)) {
+                    v = v1;
+                    return true;
+                } else {
+                    return false;
+                }
             }
         };
 
