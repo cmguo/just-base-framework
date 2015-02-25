@@ -7,6 +7,8 @@
 #include "framework/string/Slice.h"
 #include "framework/string/StringToken.h"
 
+#include <boost/type_traits/remove_const.hpp>
+
 #include <iterator>
 
 namespace std
