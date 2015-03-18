@@ -199,6 +199,16 @@ namespace framework
                 std::string const & k, 
                 std::string const & v);
 
+            void param_add(
+                std::string const & k, 
+                std::string const & v);
+
+            void param_del(
+                std::string const & k);
+
+            void param_del_all(
+                std::string const & k);
+
             void anchor(
                 std::string const & v)
             {

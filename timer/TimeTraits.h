@@ -4,7 +4,6 @@
 #define _FRAMEWORK_TIMER_TIME_TRAITS_H_
 
 #include <framework/timer/ClockTime.h>
-using namespace framework::timer;
 
 #include <boost/asio/basic_deadline_timer.hpp>
 

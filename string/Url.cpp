@@ -179,6 +179,36 @@ namespace framework
             }
         }
 
+        void Url::param_add(
+            std::string const & key, 
+            std::string const & value)
+        {
+            params_.push_back(Parameter(key, value));
+        }
+
+        void Url::param_del(
+            std::string const & key)
+        {
+            param_map::iterator i = 
+                std::find(params_.begin(), params_.end(), key);
+            if (i != params_.end())
+                params_.erase(i);
+        }
+
+        void Url::param_del_all(
+            std::string const & key)
+        {
+            param_map::iterator i = 
+                std::remove(params_.begin(), params_.end(), key);
+            params_.erase(i, params_.end());
+        }
+
+        void Url::param(
+            std::string const & key, 
+            std::string const & value)
+        {
+        }
+
         void Url::encode()
         {
             path_ = encode(path_, "/.");
