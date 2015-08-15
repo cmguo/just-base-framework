@@ -113,7 +113,7 @@ namespace framework
             for (; iter != end; ++iter) {
                 ProcessInfo info;
                 error_code ec;
-                if (get_process_info(info, framework::string::parse<pid_t>(iter->path().filename()), bin_file, ec)) {
+                if (get_process_info(info, framework::string::parse<pid_t>(iter->path().filename().string()), bin_file, ec)) {
                     processes.push_back(info);
                 }
             }

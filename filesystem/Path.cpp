@@ -46,7 +46,7 @@ namespace framework
 #endif
             boost::system::error_code ec;
             boost::filesystem::path ph_h( "/proc/self" );
-            boost::filesystem::path ph(read_symlink(ph_h / PROC_EXE , ec));
+            boost::filesystem::path ph(boost::filesystem::read_symlink(ph_h / PROC_EXE , ec));
             return ph;
 #endif
         }
@@ -71,7 +71,8 @@ namespace framework
                 return boost::filesystem::path();
             }
 #else
-            return boost::interprocess::detail::get_temporary_path();
+            boost::system::error_code ec;
+            return boost::filesystem::temp_directory_path(ec);
 #endif
         }
 

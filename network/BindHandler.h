@@ -74,7 +74,7 @@ namespace framework
             static void * create_handler(
                 Handler const & handler)
             {
-                void * ptr = boost_asio_handler_alloc_helpers::allocate(sizeof(Handler), &handler);
+                void * ptr = boost_asio_handler_alloc_helpers::allocate(sizeof(Handler), handler);
                 new (ptr) Handler(handler);
                 return ptr;
             }

@@ -41,7 +41,7 @@ namespace framework
             if (is_open())
                 return ec = already_open;
 
-            std::string bin_file_path = bin_file.file_string();
+            std::string bin_file_path = bin_file.string();
             const char * filename = bin_file_path.c_str();
             std::vector<char *> cmdArr(paramter.args.size() + 2, 0);
             cmdArr[0] = &bin_file_path[0];
@@ -119,7 +119,7 @@ namespace framework
                 }
             }
             LOG_DEBUG("create " 
-                << bin_file.file_string() 
+                << bin_file.string() 
                 << " " << (data_ ? data_->pid : 0) 
                 << " " << ec.message());
             return ec;
@@ -147,7 +147,7 @@ namespace framework
                     }
                 }
             }
-            LOG_DEBUG("open " << bin_file.file_string() 
+            LOG_DEBUG("open " << bin_file.string() 
                 << " " << (data_ ? data_->pid : 0) 
                 << " " << ec.message());
             return ec;

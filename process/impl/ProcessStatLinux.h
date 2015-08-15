@@ -93,7 +93,7 @@ namespace framework
             SystemStat & stat)
         {
             path ph("/proc/stat");
-            std::ifstream ifs(ph.file_string().c_str());
+            std::ifstream ifs(ph.string().c_str());
             std::string title;
             ifs >> title >> stat.cpu;
             while (ifs >> title) {
@@ -112,7 +112,7 @@ namespace framework
             ProcessStat & stat)
         {
             path ph(path("/proc") / framework::string::format(pid) / "stat");
-            std::ifstream ifs(ph.file_string().c_str());
+            std::ifstream ifs(ph.string().c_str());
             if (ifs.bad()) {
                 return last_system_error();
             }
@@ -125,7 +125,7 @@ namespace framework
             ProcessStatM & statm)
         {
             path ph(path("/proc") / framework::string::format(pid) / "statm");
-            std::ifstream ifs(ph.file_string().c_str());
+            std::ifstream ifs(ph.string().c_str());
             if (ifs.bad()) {
                 return last_system_error();
             }

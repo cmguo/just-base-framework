@@ -18,12 +18,12 @@ namespace framework
         {
             boost::filesystem::path ph = framework::filesystem::bin_file();
             ph.replace_extension(".ini");
-            pf_.load(ph.file_string());
+            pf_.load(ph.string());
         }
 
         Config::Config(
             std::string const & file)
-            : pf_(framework::filesystem::which_config_file(file).file_string())
+            : pf_(framework::filesystem::which_config_file(file).string())
         {
         }
 

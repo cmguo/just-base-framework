@@ -203,12 +203,6 @@ namespace framework
             params_.erase(i, params_.end());
         }
 
-        void Url::param(
-            std::string const & key, 
-            std::string const & value)
-        {
-        }
-
         void Url::encode()
         {
             path_ = encode(path_, "/.");

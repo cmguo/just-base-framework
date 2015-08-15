@@ -26,7 +26,7 @@ namespace framework
 #ifndef BOOST_WINDOWS_API
             std::string ph2;
             ph2.resize(MAX_PATH);
-            int ret = ::readlink(ph.file_string().c_str(), &ph2[0], MAX_PATH);
+            int ret = ::readlink(ph.string().c_str(), &ph2[0], MAX_PATH);
             if (ret > 0) {
                 ec = error_code();
                 ph2.resize(ret);

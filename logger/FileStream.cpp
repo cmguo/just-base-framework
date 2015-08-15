@@ -51,7 +51,7 @@ namespace framework
                 && name_[2] == 'O' 
                 && name_[3] == 'G') {
                     name_ = 
-                        framework::filesystem::log_path().file_string() 
+                        framework::filesystem::log_path().string() 
                         + name_.substr(4);
             }
 
@@ -142,7 +142,7 @@ namespace framework
             if (!app) {
                 boost::filesystem::path ph(name_);
                 boost::filesystem::path ph2(ph.parent_path() / "log_bak");
-                boost::filesystem::path ph3(ph2 / (time_.time_str() + ph.leaf()));
+                boost::filesystem::path ph3(ph2 / (time_.time_str() + ph.filename().string()));
                 try {
                     boost::filesystem::create_directory(ph2);
                     if (boost::filesystem::exists(ph))

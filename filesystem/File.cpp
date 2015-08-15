@@ -12,7 +12,9 @@
 #  include <sys/stat.h>
 #  include <fcntl.h>
 #  include <unistd.h>
+#  include <limits.h>
 #  include <sys/mman.h>
+#  include <sys/uio.h>
 #  define MAX_PATH 256
 #endif
 
@@ -83,7 +85,7 @@ namespace framework
             };
             DWORD dwCreationDisposition = dwCreationDispositionTable[flags & 0x07];
             handle_ = ::CreateFileA(
-                path.file_string().c_str(), 
+                path.string().c_str(), 
                 dwDesiredAccess, 
                 FILE_SHARE_READ | FILE_SHARE_WRITE, 
                 NULL, 
@@ -111,7 +113,7 @@ namespace framework
                 f |= O_TRUNC;
             }
             fd_ = ::open(
-                path.file_string().c_str(),
+                path.string().c_str(),
                 f, 
                 00666);
 #endif

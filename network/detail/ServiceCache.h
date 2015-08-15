@@ -62,25 +62,25 @@ namespace framework
                     return ec;
 #else
                     if (name.protocol() == NetName::tcp) {
-                        tcp::resolver_iterator iter = tcp_resolver_.resolve(
-                            tcp::resolver_query(tcp::v4(), name.svc().c_str()), ec);
+                        tcp::resolver::iterator iter = tcp_resolver_.resolve(
+                            tcp::resolver::query(tcp::v4(), name.svc().c_str()), ec);
                         if (!ec) {
                             endpoint = Endpoint(Endpoint::tcp, (*iter).endpoint().port());
                         }
                     } else if (name.protocol() == NetName::udp) {
-                        udp::resolver_iterator iter = udp_resolver_.resolve(
-                            udp::resolver_query(udp::v4(), name.svc().c_str()), ec);
+                        udp::resolver::iterator iter = udp_resolver_.resolve(
+                            udp::resolver::query(udp::v4(), name.svc().c_str()), ec);
                         if (!ec) {
                             endpoint = Endpoint(Endpoint::udp, (*iter).endpoint().port());
                         }
                     } else {
-                        tcp::resolver_iterator iter = tcp_resolver_.resolve(
-                            tcp::resolver_query(tcp::v4(), name.svc().c_str()), ec);
+                        tcp::resolver::iterator iter = tcp_resolver_.resolve(
+                            tcp::resolver::query(tcp::v4(), name.svc().c_str()), ec);
                         if (!ec) {
                             endpoint = Endpoint(Endpoint::tcp, (*iter).endpoint().port());
                         } else {
-                            udp::resolver_iterator iter = udp_resolver_.resolve(
-                                udp::resolver_query(udp::v4(), name.svc().c_str()), ec);
+                            udp::resolver::iterator iter = udp_resolver_.resolve(
+                                udp::resolver::query(udp::v4(), name.svc().c_str()), ec);
                             if (!ec) {
                                 endpoint = Endpoint(Endpoint::udp, (*iter).endpoint().port());
                             }

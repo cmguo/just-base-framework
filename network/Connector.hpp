@@ -318,6 +318,24 @@ namespace framework
                 {
                 }
 
+                struct ref
+                {
+                    ref(connect_handler & r) : ref_(r) {}
+                    connect_handler & ref_;
+                    
+                    void operator ()( // handle_resolve
+                        boost::system::error_code const & ec, 
+                        ResolverIterator iter)
+                    {
+                        ref_(ec, iter);
+                    }
+                    void operator ()( // handle connect
+                        boost::system::error_code const & ec)
+                    {
+                        ref_(ec);
+                    }
+                };
+
                 void start(
                     Endpoint const & e)
                 {
@@ -344,11 +362,11 @@ namespace framework
                         if (time_out_ != 0) {
                             socket_.async_connect(e, timed_handler_.wrap(
                                 time_out_, 
-                                boost::bind(boost::ref(*this), _1), 
+                                ref(*this), 
                                 boost::bind(&connect_handler::cancel, this)));
                         } else {
                             socket_.async_connect(e, 
-                                boost::bind(boost::ref(*this), _1));
+                                ref(*this));
                         }
                     }
                 }
@@ -363,7 +381,7 @@ namespace framework
                     } else {
                         // 在加锁的情况下启动
                         resolver_.async_resolve(netname, 
-                            boost::bind(boost::ref(*this), _1, _2));
+                            ref(*this));
                         return;
                     }
                     canceled_ = false;
@@ -409,11 +427,11 @@ namespace framework
                             if (time_out_ != 0) {
                                 socket_.async_connect(e, timed_handler_.wrap(
                                     time_out_, 
-                                    boost::bind(boost::ref(*this), _1), 
+                                    ref(*this), 
                                     boost::bind(&connect_handler::cancel, this)));
                             } else {
                                 socket_.async_connect(e, 
-                                    boost::bind(boost::ref(*this), _1));
+                                    ref(*this));
                             }
                             return;
                         }
@@ -459,11 +477,11 @@ namespace framework
                                 if (time_out_ != 0) {
                                     socket_.async_connect(e, timed_handler_.wrap(
                                         time_out_, 
-                                        boost::bind(boost::ref(*this), _1), 
+                                        ref(*this), 
                                         boost::bind(&connect_handler::cancel, this)));
                                 } else {
                                     socket_.async_connect(e, 
-                                        boost::bind(boost::ref(*this), _1));
+                                        ref(*this));
                                 }
                                 return;
                             }

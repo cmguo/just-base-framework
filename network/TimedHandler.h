@@ -19,7 +19,7 @@ namespace framework
             template <
                 typename Canceler
             >
-            struct timed_dispatcher_ref;
+            struct timed_dispatcher;
 
             template <
                 typename Handler, 
@@ -27,8 +27,8 @@ namespace framework
             >
             struct timed_wrapped_type
             {
-                typedef detail::timed_dispatcher_ref<Canceler> dispatcher;
-                typedef boost::asio::detail::wrapped_handler<dispatcher, Handler> wrapped_handler;
+                typedef detail::timed_dispatcher<Canceler> dispatcher;
+                typedef boost::asio::detail::wrapped_handler<dispatcher, Handler, boost::asio::detail::is_continuation_if_running> wrapped_handler;
             };
 
         } // namespace detail
@@ -62,7 +62,7 @@ namespace framework
             >
             typename detail::timed_wrapped_type<Handler, Canceler>::wrapped_handler wrap(
                 boost::uint32_t delay, 
-                Handler const & handler, 
+                Handler handler, 
                 Canceler const & canceler);
 
             template <
@@ -70,14 +70,14 @@ namespace framework
                 typename Canceler
             >
             typename detail::timed_wrapped_type<Handler, Canceler>::wrapped_handler wrap(
-                Handler const & handler, 
+                Handler handler, 
                 Canceler const & canceler);
 
             template <
                 typename Handler
             >
             typename detail::timed_wrapped_type<Handler, RefHandler<BindHandler const> >::wrapped_handler wrap(
-                Handler const & handler);
+                Handler handler);
 
         private:
             boost::asio::deadline_timer timer_;

@@ -124,18 +124,18 @@ namespace framework
                             ec2 = boost::asio::error::host_not_found;
                         } else {
                             iter = tcp_resolver_.resolve(
-                                boost::asio::ip::tcp::resolver_query(boost::asio::ip::tcp::v4(), name.host().c_str(), name.svc().c_str()), ec1);
+                                boost::asio::ip::tcp::resolver::query(boost::asio::ip::tcp::v4(), name.host().c_str(), name.svc().c_str()), ec1);
                         }
 #else
                         if (name.family() == NetName::v6) {
                             iter = tcp_resolver_.resolve(
-                                boost::asio::ip::tcp::resolver_query(boost::asio::ip::tcp::v6(), name.host().c_str(), name.svc().c_str()), ec1);
+                                boost::asio::ip::tcp::resolver::query(boost::asio::ip::tcp::v6(), name.host().c_str(), name.svc().c_str()), ec1);
                         } else if (name.family() == NetName::v4) {
                             iter = tcp_resolver_.resolve(
-                                boost::asio::ip::tcp::resolver_query(boost::asio::ip::tcp::v4(), name.host().c_str(), name.svc().c_str()), ec1);
+                                boost::asio::ip::tcp::resolver::query(boost::asio::ip::tcp::v4(), name.host().c_str(), name.svc().c_str()), ec1);
                         } else {
                             iter = tcp_resolver_.resolve(
-                                boost::asio::ip::tcp::resolver_query(name.host().c_str(), name.svc().c_str()), ec1);
+                                boost::asio::ip::tcp::resolver::query(name.host().c_str(), name.svc().c_str()), ec1);
                         }
 #endif
                         boost::asio::ip::tcp::resolver::iterator end;
@@ -156,18 +156,18 @@ namespace framework
                             ec2 = boost::asio::error::host_not_found;
                         } else {
                             iter = udp_resolver_.resolve(
-                                boost::asio::ip::udp::resolver_query(boost::asio::ip::udp::v4(), name.host().c_str(), name.svc().c_str()), ec2);
+                                boost::asio::ip::udp::resolver::query(boost::asio::ip::udp::v4(), name.host().c_str(), name.svc().c_str()), ec2);
                         }
 #else
                         if (name.family() == NetName::v6) {
                             iter = udp_resolver_.resolve(
-                                boost::asio::ip::udp::resolver_query(boost::asio::ip::udp::v6(), name.host().c_str(), name.svc().c_str()), ec2);
+                                boost::asio::ip::udp::resolver::query(boost::asio::ip::udp::v6(), name.host().c_str(), name.svc().c_str()), ec2);
                         } else if (name.family() == NetName::v4) {
                             iter = udp_resolver_.resolve(
-                                boost::asio::ip::udp::resolver_query(boost::asio::ip::udp::v4(), name.host().c_str(), name.svc().c_str()), ec2);
+                                boost::asio::ip::udp::resolver::query(boost::asio::ip::udp::v4(), name.host().c_str(), name.svc().c_str()), ec2);
                         } else {
                             iter = udp_resolver_.resolve(
-                                boost::asio::ip::udp::resolver_query(name.host().c_str(), name.svc().c_str()), ec2);
+                                boost::asio::ip::udp::resolver::query(name.host().c_str(), name.svc().c_str()), ec2);
                         }
 #endif
                         boost::asio::ip::udp::resolver::iterator end;
@@ -267,7 +267,7 @@ namespace framework
                 void load()
                 {
                     std::ifstream ifs;
-                    ifs.open(cache_file().file_string().c_str());
+                    ifs.open(cache_file().string().c_str());
                     std::string line;
                     while (std::getline(ifs, line)) {
                         if (line.empty() || line[0] == '#') {
@@ -310,7 +310,7 @@ namespace framework
                 void save() const
                 {
                     std::ofstream ofs;
-                    ofs.open(cache_file().file_string().c_str());
+                    ofs.open(cache_file().string().c_str());
                     std::map<std::string, CacheData>::const_iterator iter = cache_.begin();
                     for (; iter != cache_.end(); ++iter) {
                         CacheData const & data = iter->second;

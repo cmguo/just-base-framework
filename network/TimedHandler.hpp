@@ -35,82 +35,57 @@ namespace framework
             template <
                 typename Canceler
             >
-            struct timed_dispatcher
+            struct timed_dispatcher_impl
             {
-                timed_dispatcher(
+                timed_dispatcher_impl(
                     boost::asio::deadline_timer & timer, 
                     boost::uint32_t delay, 
                     Canceler const & canceler)
-                    : canceler_(canceler)
+                    : nref_(0)
+                    , canceler_(canceler)
                     , timer_(&timer)
                     , time_out_or_callback_(false)
-                    , nref_(0)
-                {
-                    timer_->expires_from_now(boost::posix_time::milliseconds(delay));
-                    timer_->async_wait(boost::bind(&timed_dispatcher::handler_timer, boost::intrusive_ptr<timed_dispatcher>(this), _1));
-                }
-
-                template <
-                    typename Handler
-                >
-                void dispatch(
-                    Handler const & handler)
-                {
-                    if (time_out_or_callback_) {
-                        boost_asio_handler_invoke_helpers::invoke(handler, &handler);
-                    } else {
-                        time_out_or_callback_ = true;
-                        delay_handler_.bind(handler);
-                        timer_->cancel(ec_);
+                    {
                     }
-                }
-
-                void handler_timer(
-                    boost::system::error_code & ec)
-                {
-                    if (time_out_or_callback_) {
-                        delay_handler_();
-                        delay_handler_.clear();
-                    } else {
-                        time_out_or_callback_ = true;
-                        canceler_();
-                    }
-                }
-
-            private:
+                size_t nref_;
                 Canceler canceler_;
                 boost::asio::deadline_timer * timer_;
                 bool time_out_or_callback_;
                 BindHandler delay_handler_;
                 boost::system::error_code ec_;
-            public:
-                size_t nref_;
             };
 
             template <typename Canceler>
-            void intrusive_ptr_add_ref(timed_dispatcher<Canceler>* p)
+            void intrusive_ptr_add_ref(timed_dispatcher_impl<Canceler> * p)
             {
                 ++p->nref_;
             }
 
             template <typename Canceler>
-            void intrusive_ptr_release(timed_dispatcher<Canceler>* p)
+            void intrusive_ptr_release(timed_dispatcher_impl<Canceler> * p)
             {
                 if (--p->nref_ == 0)
                     delete p;
             }
 
+
             template <
                 typename Canceler
             >
-            struct timed_dispatcher_ref
+            struct timed_dispatcher
             {
-                timed_dispatcher_ref(
+                static bool running_in_this_thread() { return true; }
+
+                typedef timed_dispatcher_impl<Canceler> impl_t;
+
+                timed_dispatcher(
                     boost::asio::deadline_timer & timer, 
                     boost::uint32_t delay, 
                     Canceler const & canceler)
-                    : dispatcher_(new timed_dispatcher<Canceler>(timer, delay, canceler))
+                    : impl_(new impl_t(timer, delay, canceler))
                 {
+                    timer.expires_from_now(boost::posix_time::milliseconds(delay));
+                    timer.async_wait(boost::bind(&timed_dispatcher::handler_timer, impl_, _1));
                 }
 
                 template <
@@ -119,10 +94,30 @@ namespace framework
                 void dispatch(
                     Handler const & handler)
                 {
-                    dispatcher_->dispatch(handler);
+                    if (impl_->time_out_or_callback_) {
+                        boost_asio_handler_invoke_helpers::invoke(handler, handler);
+                    } else {
+                        impl_->time_out_or_callback_ = true;
+                        impl_->delay_handler_.bind(handler);
+                        impl_->timer_->cancel(impl_->ec_);
+                    }
                 }
 
-                boost::intrusive_ptr<timed_dispatcher<Canceler> > dispatcher_;
+                static void handler_timer(
+                    boost::intrusive_ptr<impl_t> impl, 
+                    boost::system::error_code const & ec)
+                {
+                    if (impl->time_out_or_callback_) {
+                        impl->delay_handler_();
+                        impl->delay_handler_.clear();
+                    } else {
+                        impl->time_out_or_callback_ = true;
+                        impl->canceler_();
+                    }
+                }
+
+            private:
+                boost::intrusive_ptr<impl_t> impl_;
             };
 
         } // namespace detail
@@ -146,7 +141,7 @@ namespace framework
         >
         typename detail::timed_wrapped_type<Handler, Canceler>::wrapped_handler TimedHandler::wrap(
             boost::uint32_t delay, 
-            Handler const & handler, 
+            Handler handler, 
             Canceler const & canceler)
         {
             typedef typename detail::timed_wrapped_type<Handler, Canceler>::dispatcher dispatcher;
@@ -160,7 +155,7 @@ namespace framework
             typename Canceler
         >
         typename detail::timed_wrapped_type<Handler, Canceler>::wrapped_handler TimedHandler::wrap(
-            Handler const & handler, 
+            Handler handler, 
             Canceler const & canceler)
         {
             typedef typename detail::timed_wrapped_type<Handler, Canceler>::dispatcher dispatcher;
@@ -173,7 +168,7 @@ namespace framework
             typename Handler
         >
         typename detail::timed_wrapped_type<Handler, RefHandler<BindHandler const> >::wrapped_handler TimedHandler::wrap(
-            Handler const & handler)
+            Handler handler)
         {
             assert(canceler_);
             typedef typename detail::timed_wrapped_type<Handler, RefHandler<BindHandler const> >::dispatcher dispatcher;
