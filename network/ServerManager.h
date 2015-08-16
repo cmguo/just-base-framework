@@ -54,8 +54,14 @@ namespace framework
 
             void stop()
             {
-                boost::system::error_code ec;
+                acceptor_.close();
+            }
+
+            bool stop(
+                boost::system::error_code & ec)
+            {
                 acceptor_.close(ec);
+                return !ec;
             }
 
         public:
@@ -161,8 +167,14 @@ namespace framework
 
             void stop()
             {
-                boost::system::error_code ec;
+                acceptor_.close();
+            }
+
+            bool stop(
+                boost::system::error_code & ec)
+            {
                 acceptor_.close(ec);
+                return !ec;
             }
 
         public:
