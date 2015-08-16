@@ -69,7 +69,7 @@ namespace framework
                 return boost::asio::ip::udp::endpoint(
                     boost::asio::ip::address_v4(ip_v4_), port_);
             } else if (family_ == v6) {
-                boost::array<unsigned char, 16> bytes;
+                boost::asio::ip::address_v6::bytes_type bytes;
                 memcpy(bytes.data(), ip_v6_, sizeof(ip_v6_));
                 return boost::asio::ip::udp::endpoint(
                     boost::asio::ip::address_v6(bytes), port_);
@@ -85,7 +85,7 @@ namespace framework
                 return boost::asio::ip::tcp::endpoint(
                     boost::asio::ip::address_v4(ip_v4_), port_);
             } else if (family_ == v6) {
-                boost::array<unsigned char, 16> bytes;
+                boost::asio::ip::address_v6::bytes_type bytes;
                 memcpy(bytes.data(), ip_v6_, sizeof(ip_v6_));
                 return boost::asio::ip::tcp::endpoint(
                     boost::asio::ip::address_v6(bytes), port_);
@@ -175,7 +175,7 @@ namespace framework
             if (family_ == v4) {
                 return boost::asio::ip::address_v4(ip_v4_).to_string();
             } else if (family_ == v6) {
-                boost::array<unsigned char, 16> bytes;
+                boost::asio::ip::address_v6::bytes_type bytes;
                 memcpy(bytes.data(), ip_v6_, sizeof(ip_v6_));
                 return "["+ boost::asio::ip::address_v6(bytes).to_string() + "]";
             } else {
