@@ -37,9 +37,9 @@ namespace framework
                 f_write = 16, 
                 f_read_write = f_read | f_write,
 
-                fm_shared = 0x100 | 1, 
-                fm_read = 0x100 | 2,
-                fm_write = 0x100 | 4,
+                fm_shared = 0x100, 
+                fm_read = 0x200,
+                fm_write = 0x400,
             };
 
         public:

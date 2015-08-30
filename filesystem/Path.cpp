@@ -116,6 +116,7 @@ namespace framework
             if ( file.has_root_directory() ) return file;
 
             std::vector<boost::filesystem::path> search_paths;
+            search_paths.push_back(".");
 
             std::vector<std::string> env_config_paths;
             std::string env_config_paths_str = 
