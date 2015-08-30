@@ -15,14 +15,48 @@ namespace framework
             struct Md5Ctx;
         }
 
-        class Md5
+        class Md5Sum
         {
         public:
-            static size_t const block_size = 64; // in bytes
-
             static size_t const output_size = 16; // in bytes
 
             typedef boost::array<boost::uint8_t, output_size> bytes_type;
+
+        public:
+            bytes_type to_bytes() const;
+
+            void from_bytes(
+                bytes_type const & str);
+
+        public:
+            std::string to_string() const;
+
+            boost::system::error_code from_string(
+                std::string const & str);
+
+            friend bool operator==(
+                Md5Sum const & l, 
+                Md5Sum const & r)
+            {
+                return l.bytes_ == r.bytes_;
+            }
+
+            friend bool operator!=(
+                Md5Sum const & l, 
+                Md5Sum const & r)
+            {
+                return !(l == r);
+            }
+
+        protected:
+            bytes_type bytes_;
+        };
+
+        class Md5
+            : public Md5Sum
+        {
+        public:
+            static size_t const block_size = 64; // in bytes
 
         public:
             Md5(
@@ -40,24 +74,12 @@ namespace framework
 
             void final();
 
-            boost::uint8_t * digest() const;
+            boost::uint8_t const * digest() const;
 
         public:
             static bytes_type apply(
                 boost::uint8_t const * buf, 
                 size_t len);
-
-        public:
-            bytes_type to_bytes() const;
-
-            void from_bytes(
-                bytes_type const & str);
-
-        public:
-            std::string to_string() const;
-
-            boost::system::error_code from_string(
-                std::string const & str);
 
         protected:
             detail::Md5Ctx * ctx_;
@@ -86,7 +108,7 @@ namespace framework
             size_t N
         >
         inline Md5::bytes_type md5(
-        boost::uint8_t const (& data)[N])
+            boost::uint8_t const (& data)[N])
         {
             return Md5::apply(data, N);
         }
@@ -95,7 +117,7 @@ namespace framework
             size_t N
         >
         inline Md5::bytes_type md5(
-        boost::array<boost::uint8_t, N> const & data)
+            boost::array<boost::uint8_t, N> const & data)
         {
             return Md5::apply(data.data(), data.size());
         }

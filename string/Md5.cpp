@@ -52,11 +52,12 @@ namespace framework
         void Md5::final()
         {
             detail::MD5Final(ctx_);
+            memcpy(bytes_.elems, ctx_->digest, 16);
         }
 
-        boost::uint8_t * Md5::digest() const
+        boost::uint8_t const * Md5::digest() const
         {
-            return ctx_->digest;
+            return bytes_.elems;
         }
 
         Md5::bytes_type Md5::apply(
@@ -69,35 +70,33 @@ namespace framework
             return sha.to_bytes();
         }
 
-        std::string Md5::to_string() const
+        std::string Md5Sum::to_string() const
         {
-            char const * bytes = (char const *)&ctx_->digest;
+            char const * bytes = (char const *)bytes_.elems;
             return Base16::encode(std::string(bytes, 16));
         }
 
-        error_code Md5::from_string(
+        error_code Md5Sum::from_string(
             std::string const & str)
         {
             std::string md5 = Base16::decode(str);
-            if (md5.size() == sizeof(ctx_->digest)) {
-                memcpy((char *)&ctx_->digest, md5.c_str(), sizeof(ctx_->digest));
+            if (md5.size() == 16) {
+                memcpy((char *)bytes_.elems, md5.c_str(), 16);
                 return succeed;
             } else {
                 return invalid_argument;
             }
         }
 
-        Md5::bytes_type Md5::to_bytes() const
+        Md5::bytes_type Md5Sum::to_bytes() const
         {
-            bytes_type bytes;
-            memcpy(bytes.elems, ctx_->digest, sizeof(ctx_->digest));
-            return bytes;
+            return bytes_;
         }
 
-        void Md5::from_bytes(
+        void Md5Sum::from_bytes(
             bytes_type const & bytes)
         {
-            memcpy(ctx_->digest, bytes.elems, sizeof(ctx_->digest));
+            bytes_ = bytes;
         }
 
     } // namespace string
