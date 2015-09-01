@@ -241,7 +241,7 @@ namespace framework
                 Time const & l, 
                 Time const & r)
             {
-                return l.t_ < r.t_;
+                return (l - r) < Duration();
             }
 
             friend inline bool operator==(
