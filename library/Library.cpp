@@ -89,7 +89,7 @@ namespace framework
                     boost::filesystem::path ph(env_config_paths[i]);
                     ph /= name2;
                     if (boost::filesystem::exists(ph)) {
-                        handle_ = ::dlopen(ph.file_string().c_str(), RTLD_LAZY | RTLD_LOCAL);
+                        handle_ = ::dlopen(ph.string().c_str(), RTLD_LAZY | RTLD_LOCAL);
                         break;
                     }
                 }
