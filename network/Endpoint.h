@@ -5,6 +5,7 @@
 
 #include <boost/asio/ip/udp.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/array.hpp>
 
 namespace framework
 {
@@ -30,6 +31,9 @@ namespace framework
                 unspec_family, 
             };
 
+            typedef boost::array< unsigned char, 16 > ip_v6_bytes_type;
+
+        public:
             Endpoint(
                 ProtocolEnum protocol = unspec_protocol)
                 : protocol_(protocol)
@@ -75,7 +79,7 @@ namespace framework
                 , family_(r.family_)
                 , port_(r.port_)
             {
-                memcpy(ip_v6_, r.ip_v6_, sizeof(ip_v6_));
+                ip_v6_ = r.ip_v6_;
             }
 
             Endpoint(
@@ -110,7 +114,7 @@ namespace framework
                 return l.protocol_ == r.protocol_ 
                     && l.family_ == r.family_ 
                     && (l.family_ == v4 ? l.ip_v4_ == r.ip_v4_ : (
-                        l.family_ == v6 ? memcmp(l.ip_v6_, r.ip_v6_, sizeof(l.ip_v6_)) == 0 : true))
+                        l.family_ == v6 ? l.ip_v6_ == r.ip_v6_ : true))
                     && l.port_ == r.port_;
             }
 
@@ -144,9 +148,16 @@ namespace framework
                 family_ = f;
             }
 
+            boost::asio::ip::address ip() const;
+
             boost::uint32_t ip_v4() const
             {
                 return ip_v4_;
+            }
+
+            ip_v6_bytes_type ip_v6() const
+            {
+                return ip_v6_;
             }
 
             void ip_v4(
@@ -159,6 +170,15 @@ namespace framework
 
             void ip(
                 std::string const & h);
+
+            void ip(
+                boost::asio::ip::address const & h);
+
+            void ip_v4(
+                boost::asio::ip::address_v4 const & h);
+
+            void ip_v6(
+                boost::asio::ip::address_v6 const & h);
 
             boost::uint16_t port() const
             {
@@ -187,7 +207,7 @@ namespace framework
             FamilyEnum family_;
             union {
                 boost::uint32_t ip_v4_;
-                boost::uint8_t ip_v6_[16];
+                ip_v6_bytes_type ip_v6_;
             };
             boost::uint16_t port_;
         };
