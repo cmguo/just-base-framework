@@ -29,30 +29,35 @@ namespace framework
             if (!is_valid()) {
                 return "invalid url";
             }
-            std::string url = protocol_ + "://";
+            std::ostringstream oss;
+            oss << protocol_ << "://";
             if (!user_.empty()) {
-                url += user_;
+                oss << user_;
                 if (!password_.empty()) {
-                    url += ":";
-                    url += password_;
+                    oss << ':';
+                    oss << password_;
                 }
-                url += "@";
+                oss << '@';
             }
-            url += host_;
+            oss << host_;
             if (!svc_.empty()) {
-                url += ":";
-                url += svc_;
+                oss << ':';
+                oss << svc_;
             }
-            url += path_;
+            oss << encode(path_, "/.");
             if (!params_.empty()) {
-                url += "?";
-                url += join(params_.begin(), params_.end(), "&");
+                char d = '?';
+                param_map::const_iterator i = params_.begin();
+                for (; i != params_.end(); ++i) {
+                    oss << d << i->key() << '=' << encode(i->value(), "/.@");
+                    d = '&';
+                }
             }
             if (!anchor_.empty()) {
-                url += "#";
-                url += anchor_;
+                oss << '#';
+                oss << anchor_;
             }
-            return url;
+            return oss.str();
         }
 
         struct not_graph
@@ -101,11 +106,18 @@ namespace framework
                         host_ = what[4].str();
                     if (what[5].matched)
                         svc_ = what[5].str();
-                    if (what[6].matched)
+                    if (what[6].matched) {
                         path_ = (p_url == &url) ? what[6].str() : 
                             url.substr(what[6].first - p_url->c_str(), what[6].second - what[6].first);
+                        path_ = decode(path_);
+                    }
                     if (what[7].matched) {
                         slice<param_map::value_type>(what[7].str(), std::inserter(params_, params_.end()), "&");
+                        param_map::iterator i = params_.begin();
+                        for (; i != params_.end(); ++i) {
+                            std::string v = decode(i->value());
+                            const_cast<Parameter &>(*i) = v;
+                        }
                     }
                     if (what[8].matched) {
                         anchor_ = what[8].str();
@@ -203,26 +215,6 @@ namespace framework
             params_.erase(i, params_.end());
         }
 
-        void Url::encode()
-        {
-            path_ = encode(path_, "/.");
-            param_map::iterator i = params_.begin();
-            for (; i != params_.end(); ++i) {
-                std::string v = encode(i->value(), "/.@");
-                const_cast<Parameter &>(*i) = v;
-            }
-        }
-
-        void Url::decode()
-        {
-            path_ = decode(path_);
-            param_map::iterator i = params_.begin();
-            for (; i != params_.end(); ++i) {
-                std::string v = decode(i->value());
-                const_cast<Parameter &>(*i) = v;
-            }
-        }
-
         std::string Url::encode(
             std::string const & str, 
             char const * ignore)
@@ -235,7 +227,7 @@ namespace framework
                     || ('a' <= c && c <= 'z') 
                     || ('A' <= c && c <= 'Z') 
                     || strchr(ignore, c)) {
-                        result += c;
+                    result += c;
                 } else {
                     int j = (short int)c;
                     if (j < 0) {

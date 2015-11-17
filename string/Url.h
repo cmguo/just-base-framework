@@ -72,11 +72,6 @@ namespace framework
                 std::string const & url);
 
         public:
-            void encode();
-
-            void decode();
-
-        public:
             bool is_valid() const
             {
                 return is_valid_;
