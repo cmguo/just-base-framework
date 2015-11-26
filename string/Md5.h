@@ -3,6 +3,8 @@
 #ifndef _FRAMEWORK_STRING_MD5_H_
 #define _FRAMEWORK_STRING_MD5_H_
 
+#include "framework/string/Digest.h"
+
 #include <boost/array.hpp>
 
 namespace framework
@@ -15,42 +17,7 @@ namespace framework
             struct Md5Ctx;
         }
 
-        class Md5Sum
-        {
-        public:
-            static size_t const output_size = 16; // in bytes
-
-            typedef boost::array<boost::uint8_t, output_size> bytes_type;
-
-        public:
-            bytes_type to_bytes() const;
-
-            void from_bytes(
-                bytes_type const & str);
-
-        public:
-            std::string to_string() const;
-
-            boost::system::error_code from_string(
-                std::string const & str);
-
-            friend bool operator==(
-                Md5Sum const & l, 
-                Md5Sum const & r)
-            {
-                return l.bytes_ == r.bytes_;
-            }
-
-            friend bool operator!=(
-                Md5Sum const & l, 
-                Md5Sum const & r)
-            {
-                return !(l == r);
-            }
-
-        protected:
-            bytes_type bytes_;
-        };
+        typedef Digest<16> Md5Sum;
 
         class Md5
             : public Md5Sum
@@ -77,7 +44,7 @@ namespace framework
             boost::uint8_t const * digest() const;
 
         public:
-            static bytes_type apply(
+            static Md5Sum apply(
                 boost::uint8_t const * buf, 
                 size_t len);
 
@@ -85,20 +52,20 @@ namespace framework
             detail::Md5Ctx * ctx_;
         };
 
-        inline Md5::bytes_type md5(
+        inline Md5Sum md5(
             boost::uint8_t const * buf, 
             size_t len)
         {
             return Md5::apply(buf, len);
         }
 
-        inline Md5::bytes_type md5(
+        inline Md5Sum md5(
             std::string const & data)
         {
             return Md5::apply((boost::uint8_t const *)data.c_str(), data.size());
         }
 
-        inline Md5::bytes_type md5(
+        inline Md5Sum md5(
             std::vector<boost::uint8_t> const & data)
         {
             return Md5::apply(data.empty() ? NULL : &data.at(0), data.size());
@@ -107,7 +74,7 @@ namespace framework
         template <
             size_t N
         >
-        inline Md5::bytes_type md5(
+        inline Md5Sum md5(
             boost::uint8_t const (& data)[N])
         {
             return Md5::apply(data, N);
@@ -116,7 +83,7 @@ namespace framework
         template <
             size_t N
         >
-        inline Md5::bytes_type md5(
+        inline Md5Sum md5(
             boost::array<boost::uint8_t, N> const & data)
         {
             return Md5::apply(data.data(), data.size());

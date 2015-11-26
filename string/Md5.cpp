@@ -2,6 +2,7 @@
 
 #include "framework/Framework.h"
 #include "framework/string/Md5.h"
+#include "framework/string/Digest.hpp"
 #include "framework/string/Base16.h"
 #include "framework/system/LogicError.h"
 using namespace framework::system::logic_error;
@@ -60,43 +61,14 @@ namespace framework
             return bytes_.elems;
         }
 
-        Md5::bytes_type Md5::apply(
+        Md5Sum Md5::apply(
             boost::uint8_t const * buf, 
             size_t len)
         {
             Md5 sha;
             sha.update(buf, len);
             sha.final();
-            return sha.to_bytes();
-        }
-
-        std::string Md5Sum::to_string() const
-        {
-            char const * bytes = (char const *)bytes_.elems;
-            return Base16::encode(std::string(bytes, 16));
-        }
-
-        error_code Md5Sum::from_string(
-            std::string const & str)
-        {
-            std::string md5 = Base16::decode(str);
-            if (md5.size() == 16) {
-                memcpy((char *)bytes_.elems, md5.c_str(), 16);
-                return succeed;
-            } else {
-                return invalid_argument;
-            }
-        }
-
-        Md5::bytes_type Md5Sum::to_bytes() const
-        {
-            return bytes_;
-        }
-
-        void Md5Sum::from_bytes(
-            bytes_type const & bytes)
-        {
-            bytes_ = bytes;
+            return sha;
         }
 
     } // namespace string
