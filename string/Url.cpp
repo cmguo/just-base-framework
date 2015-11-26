@@ -44,19 +44,7 @@ namespace framework
                 oss << ':';
                 oss << svc_;
             }
-            oss << encode(path_, "/.");
-            if (!params_.empty()) {
-                char d = '?';
-                param_map::const_iterator i = params_.begin();
-                for (; i != params_.end(); ++i) {
-                    oss << d << i->key() << '=' << encode(i->value(), "/.@");
-                    d = '&';
-                }
-            }
-            if (!anchor_.empty()) {
-                oss << '#';
-                oss << anchor_;
-            }
+            oss << path_all();
             return oss.str();
         }
 
@@ -137,16 +125,21 @@ namespace framework
 
         std::string Url::path_all() const
         {
-            std::string path = path_;
+            std::ostringstream oss;
+            oss << encode(path_, "/.");
             if (!params_.empty()) {
-                path += "?";
-                path += join(params_.begin(), params_.end(), "&");
+                char d = '?';
+                param_map::const_iterator i = params_.begin();
+                for (; i != params_.end(); ++i) {
+                    oss << d << i->key() << '=' << encode(i->value(), "/.@");
+                    d = '&';
+                }
             }
             if (!anchor_.empty()) {
-                path += "#";
-                path += anchor_;
+                oss << "#";
+                oss << anchor_;
             }
-            return path;
+            return oss.str();
         }
 
         std::string Url::param(
