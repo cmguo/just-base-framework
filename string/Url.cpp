@@ -126,12 +126,12 @@ namespace framework
         std::string Url::path_all() const
         {
             std::ostringstream oss;
-            oss << encode(path_, "/.");
+            oss << encode(path_, "._-~!@#$&*()=:/,;?+'");
             if (!params_.empty()) {
                 char d = '?';
                 param_map::const_iterator i = params_.begin();
                 for (; i != params_.end(); ++i) {
-                    oss << d << i->key() << '=' << encode(i->value(), "/.@");
+                    oss << d << i->key() << '=' << encode(i->value(), "._-!*()'");
                     d = '&';
                 }
             }
