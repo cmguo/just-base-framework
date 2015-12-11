@@ -19,6 +19,11 @@ namespace framework
             typedef boost::array<boost::uint8_t, output_size> bytes_type;
 
         public:
+            Digest()
+            {
+                bytes_.fill(0);
+            }
+
             bytes_type to_bytes() const;
 
             void from_bytes(
