@@ -169,7 +169,7 @@ namespace framework
             }
 
             Block const * block;
-            map_id_t map_id;
+            detail::map_id_t map_id;
             size_t size;
             void * map_addr;
         };
@@ -658,7 +658,7 @@ namespace framework
             boost::uint32_t size, 
             error_code & ec)
         {
-            map_id_t id = 0;
+            detail::map_id_t id = 0;
             bool b = impl_->create(&id, inst_id_, key, size, ec);
             if (b == false) {
                 LOG_ERROR("[alloc_raw_block] create failed (ec = %1%)" % ec.message());
@@ -689,7 +689,7 @@ namespace framework
             boost::uint32_t size, 
             error_code & ec)
         {
-            map_id_t id = 0;
+            detail::map_id_t id = 0;
             bool b = impl_->open(&id, inst_id_, key, ec);
             if (b == false) {
                 LOG_ERROR("[open_raw_block] open failed (ec = %1%)" % ec.message());
