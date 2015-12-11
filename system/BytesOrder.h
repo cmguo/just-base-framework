@@ -72,8 +72,8 @@ namespace framework
                     static inline _Ty invoke(
                         _Ty v)
                     {
-                        boost::uint16_t r = rotate(*(boost::uint16_t*)&v);
-                        return *(_Ty *)&r;
+                        boost::uint16_t r = rotate((boost::uint16_t)v);
+                        return (_Ty)r;
                     }
                 };
 
@@ -85,8 +85,8 @@ namespace framework
                     static inline _Ty invoke(
                         _Ty v)
                     {
-                        boost::uint32_t r = rotate(*(boost::uint32_t*)&v);
-                        return *(_Ty *)&r;
+                        boost::uint32_t r = rotate((boost::uint32_t)v);
+                        return (_Ty)r;
                     }
                 };
 
@@ -98,8 +98,8 @@ namespace framework
                     static inline _Ty invoke(
                         _Ty v)
                     {
-                        boost::uint64_t r = rotate(*(boost::uint64_t*)&v);
-                        return *(_Ty *)&r;
+                        boost::uint64_t r = rotate((boost::uint64_t)v);
+                        return (_Ty)r;
                     }
                 };
 
