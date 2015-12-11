@@ -25,7 +25,7 @@ namespace framework
                 }
 
                 bool create( 
-                    void ** id, 
+                    map_id_t* id, 
                     boost::uint32_t iid, 
                     boost::uint32_t key, 
                     boost::uint32_t size, 
@@ -35,7 +35,7 @@ namespace framework
                         blocks_.insert(std::make_pair(iid, BlockSet())).first;
 
                     std::pair<BlockSet::iterator, bool> iter2 = 
-                        iter->second.insert(std::make_pair(key, std::make_pair((void *)0, 0)));
+                        iter->second.insert(std::make_pair(key, std::make_pair((map_id_t)0, 0)));
 
                     if (!iter2.second) {
                         ec = make_error_code(boost::system::posix_error::file_exists);
@@ -50,7 +50,7 @@ namespace framework
                         return false;
                     }
 
-                    iter2.first->second.first = p;
+                    iter2.first->second.first = (map_id_t)p;
                     iter2.first->second.second = 1;
                     *id = iter2.first->second.first;
 
@@ -60,7 +60,7 @@ namespace framework
                 }
 
                 bool open( 
-                    void ** id, 
+                    map_id_t* id, 
                     boost::uint32_t iid,
                     boost::uint32_t key,
                     boost::system::error_code & ec)
@@ -88,11 +88,11 @@ namespace framework
                 }
 
                 void * map(
-                    void * id,
+                    map_id_t id,
                     boost::uint32_t size,
                     boost::system::error_code & ec )
                 {
-                    return id;
+                    return (void *)id;
                 }
 
                 bool unmap(
@@ -104,7 +104,7 @@ namespace framework
                 }
 
                 bool close(
-                    void * id, 
+                    map_id_t id, 
                     boost::system::error_code & ec)
                 {
                     BlockSet2::iterator iter3 = 
@@ -188,11 +188,11 @@ namespace framework
 
             private:
                 PrivateMemory memory_;
-                typedef std::pair<void *, size_t> Block; // id, nref
+                typedef std::pair<map_id_t, size_t> Block; // id, nref
                 typedef std::map<boost::uint32_t, Block> BlockSet; // key -> Block
                 typedef std::map<boost::uint32_t, BlockSet> BlockSetSet; // iid -> BlockSet
                 typedef std::pair<boost::uint32_t, boost::uint32_t> Block2; // iid, key
-                typedef std::map<void *, Block2> BlockSet2; // id - > Block2
+                typedef std::map<map_id_t, Block2> BlockSet2; // id - > Block2
                 BlockSetSet blocks_;
                 BlockSet2 blocks2_;
             };

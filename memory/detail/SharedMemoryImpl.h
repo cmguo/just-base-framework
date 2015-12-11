@@ -16,6 +16,8 @@ namespace framework
         namespace detail
         {
 
+            typedef intptr_t map_id_t;
+
             class ObjectWrapper
             {
             public:
@@ -42,8 +44,8 @@ namespace framework
                     CloseFunc close_func)
                 {
                     assert(close_object_ == NULL);
-                    *(Object *)&obj_ = obj;
-                    close_func_ = (void *)close_func;
+                    obj_ = (map_id_t)obj;
+                    close_func_ = (map_id_t)close_func;
                     close_object_ = &ObjectWrapper::close_object<Object, CloseFunc>;
                 }
 
@@ -53,7 +55,7 @@ namespace framework
                     close_object_ = NULL;
                 }
 
-                void * release()
+                map_id_t release()
                 {
                     close_object_ = NULL;
                     return obj_;
@@ -63,9 +65,9 @@ namespace framework
                     typename Object
                 >
                 static Object cast_object(
-                    void * obj)
+                    map_id_t obj)
                 {
-                    return *(Object *)&obj;
+                    return (Object)obj;
                 }
 
             private:
@@ -74,16 +76,16 @@ namespace framework
                     typename CloseFunc
                 >
                 static void close_object(
-                    void * obj, 
-                    void * func)
+                    map_id_t obj, 
+                    map_id_t func)
                 {
-                    ((CloseFunc)func)(*(Object *)&obj);
+                    ((CloseFunc)func)((Object)obj);
                 }
 
             private:
-                void * obj_;
-                void * close_func_;
-                void (* close_object_)(void *, void *);
+                map_id_t obj_;
+                map_id_t close_func_;
+                void (* close_object_)(map_id_t, map_id_t);
             };
 
             class ErrorCodeWrapper
@@ -111,29 +113,29 @@ namespace framework
 
             public:
                 virtual bool create(
-                    void ** id, 
+                    map_id_t* id, 
                     boost::uint32_t iid, 
                     boost::uint32_t key, 
                     boost::uint32_t size,
                     boost::system::error_code & ec) = 0;
 
                 virtual bool open(
-                    void ** id, 
+                    map_id_t* id, 
                     boost::uint32_t iid, 
                     boost::uint32_t key, 
                     boost::system::error_code & ec) = 0;
 
                 virtual bool close(
-                    void * id, 
+                    map_id_t id, 
                     boost::system::error_code & ec) = 0;
 
                 virtual void * map(
-                    void * id, 
+                    map_id_t id, 
                     boost::uint32_t size,
                     boost::system::error_code & ec) = 0;
 
                 virtual bool unmap(
-                    void * id, 
+                    void * addr, 
                     boost::uint32_t size, 
                     boost::system::error_code & ec) = 0;
 

@@ -25,7 +25,7 @@ namespace framework
                 }
 
                 bool create(
-                    void ** id, 
+                    map_id_t* id, 
                     boost::uint32_t iid,
                     boost::uint32_t key, 
                     boost::uint32_t size,
@@ -58,7 +58,7 @@ namespace framework
                 }
 
                 bool open( 
-                    void ** id, 
+                    map_id_t* id, 
                     boost::uint32_t iid,
                     boost::uint32_t key,
                     boost::system::error_code & ec)
@@ -74,13 +74,13 @@ namespace framework
                         return false;
                     }
 
-                    *id = (void *)hFileMap;
+                    *id = (map_id_t)hFileMap;
 
                     return true;
                 }
 
                 void * map(
-                    void * id, 
+                    map_id_t id, 
                     boost::uint32_t size,
                     boost::system::error_code & ec)
                 {
@@ -120,7 +120,7 @@ namespace framework
                 }
 
                 bool close(
-                    void * id,
+                    map_id_t id,
                     boost::system::error_code & ec)
                 {
                     ErrorCodeWrapper ecw(ec);

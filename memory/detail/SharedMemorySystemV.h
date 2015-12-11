@@ -53,8 +53,9 @@ namespace framework
                     return ftok(file_name.c_str(), key);
                 }
 
+
                 bool create( 
-                    void ** id, 
+                    map_id_t* id, 
                     boost::uint32_t iid,
                     boost::uint32_t key, 
                     boost::uint32_t size, 
@@ -71,13 +72,13 @@ namespace framework
                         return false;
                     }
 
-                    *id = (void *)shmid;
+                    *id = (map_id_t)shmid;
 
                     return true;
                 }
 
                 bool open( 
-                    void ** id, 
+                    map_id_t* id, 
                     boost::uint32_t iid,
                     boost::uint32_t key,
                     boost::system::error_code & ec)
@@ -93,13 +94,13 @@ namespace framework
                         return false;
                     }
 
-                    *id = (void *)shmid;
+                    *id = (map_id_t)shmid;
 
                     return true;
                 }
 
                 void * map(
-                    void * id,
+                    map_id_t id,
                     boost::uint32_t size,
                     boost::system::error_code & ec )
                 {
@@ -137,7 +138,7 @@ namespace framework
                 }
 
                 bool close(
-                    void * id, 
+                    map_id_t id, 
                     boost::system::error_code & ec)
                 {
                     ec.clear();

@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include <iostream>
 namespace framework
 {
     namespace memory
@@ -24,7 +25,7 @@ namespace framework
             {
             private:
                 bool create( 
-                    void ** id, 
+                    map_id_t* id, 
                     boost::uint32_t iid, 
                     boost::uint32_t key, 
                     boost::uint32_t size, 
@@ -41,6 +42,7 @@ namespace framework
                         O_CREAT | O_RDWR | O_EXCL, 
                         00666);
 
+                    std::cout << "[create] fd=" << fd << std::endl;
                     if (fd == -1) {
                         return false;
                     }
@@ -73,7 +75,7 @@ namespace framework
                 }
 
                 bool open( 
-                    void ** id, 
+                    map_id_t* id, 
                     boost::uint32_t iid,
                     boost::uint32_t key,
                     boost::system::error_code & ec)
@@ -85,6 +87,7 @@ namespace framework
                         key_path(iid, key).c_str(),
                         O_RDWR);
 
+                    std::cout << "[open] fd=" << fd << std::endl;
                     if (fd == -1) {
                         return false;
                     }
@@ -107,7 +110,7 @@ namespace framework
                 }
 
                 void * map(
-                    void * id,
+                    map_id_t id,
                     boost::uint32_t size,
                     boost::system::error_code & ec )
                 {
@@ -115,6 +118,7 @@ namespace framework
 
                     int fd = ObjectWrapper::cast_object<int>(id);
 
+                    std::cout << "[map] fd=" << fd << std::endl;
                     void * p = ::mmap(
                         NULL, 
                         size, 
@@ -149,7 +153,7 @@ namespace framework
                 }
 
                 bool close(
-                    void * id, 
+                    map_id_t id, 
                     boost::system::error_code & ec)
                 {
                     ErrorCodeWrapper ecw(ec);
