@@ -68,7 +68,7 @@ namespace framework
 
             bool assign(
 #ifdef BOOST_WINDOWS_API
-                HANDLE handle, 
+                void * handle, 
 #else
                 int fd, 
 #endif
@@ -77,7 +77,7 @@ namespace framework
             bool is_open() const;
 
 #ifdef BOOST_WINDOWS_API
-            HANDLE native() const { return handle_; }
+            void * native() const { return handle_; }
 #else
             int native() const { return fd_; }
 #endif
@@ -104,15 +104,9 @@ namespace framework
         public:
             enum SeekDir
             {
-#ifdef BOOST_WINDOWS_API
-                beg = FILE_BEGIN, 
-                cur = FILE_CURRENT, 
-                end = FILE_END, 
-#else
-                beg = SEEK_SET, 
-                cur = SEEK_CUR, 
-                end = SEEK_END, 
-#endif
+                beg, 
+                cur, 
+                end, 
             };
 
             bool seek(
@@ -150,7 +144,7 @@ namespace framework
 
         private:
 #ifdef BOOST_WINDOWS_API
-            HANDLE handle_;
+            void * handle_;
 #else
             int fd_;
 #endif

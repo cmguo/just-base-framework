@@ -104,7 +104,7 @@ namespace framework
             if (is_open())
                 return ec = already_open;
 
-            std::string bin_file_path = bin_file.file_string();
+            std::string bin_file_path = bin_file.string();
             std::string cmdlinestr;
             if (bin_file_path.find(' ') == std::string::npos) {
                 cmdlinestr = bin_file_path;
@@ -226,7 +226,7 @@ namespace framework
                 ec = error_code();
             }
             LOG_DEBUG("create " 
-                << bin_file.file_string() 
+                << bin_file.string() 
                 << " " << (data_ ? data_->pid : 0) 
                 << " " << ec.message());
             return ec;
@@ -248,7 +248,7 @@ namespace framework
                     open(pis[0].pid, ec);
                 }
             }
-            LOG_DEBUG("open " << bin_file.file_string() 
+            LOG_DEBUG("open " << bin_file.string() 
                 << " " << (data_ ? data_->pid : 0) 
                 << " " << ec.message());
             return ec;

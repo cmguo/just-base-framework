@@ -6,6 +6,7 @@
 #include "framework/logger/Buffer.h"
 
 #ifdef BOOST_WINDOWS_API
+#  include <windows.h>
 #else
 #  include <stdio.h>
 #  include <sys/types.h>

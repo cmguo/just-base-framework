@@ -5,6 +5,10 @@
 #include "framework/configure/Config.h"
 using namespace framework::configure;
 
+#ifdef BOOST_WINDOWS_API
+#  include <windows.h>
+#endif
+
 namespace framework
 {
     namespace logger

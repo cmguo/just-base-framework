@@ -304,21 +304,23 @@ namespace framework
         {
             ec.clear();
 #ifdef BOOST_WINDOWS_API
+            UINT dirs[] = {FILE_BEGIN, FILE_CURRENT, FILE_END};
             LARGE_INTEGER i;
             i.QuadPart = offset;
             BOOL result = ::SetFilePointerEx(
                 handle_, 
                 i, 
                 NULL, 
-                dir);
+                dirs[dir]);
             if (result == FALSE) {
                 ec = framework::system::last_system_error();
             }
 #else
+            int dirs[] = {SEEK_SET, SEEK_CUR, SEEK_END};
             off_t of = ::lseek(
                 fd_, 
                 offset, 
-                dir);
+                dirs[dir]);
             if (of == -1) {
                 ec = framework::system::last_system_error();
             }

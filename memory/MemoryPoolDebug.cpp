@@ -8,6 +8,10 @@
 #include "framework/memory/detail/SymbolBuffer.h"
 #include "framework/debuging/BackTrace.h"
 
+#ifdef BOOST_WINDOWS_API
+#  include <windows.h>
+#endif
+
 namespace framework
 {
     namespace memory
@@ -199,7 +203,10 @@ namespace framework
         void MemoryPoolDebug::unmark(
             DebugInfo & info)
         {
+            assert(info.stack);
+            assert(dss_->find(*info.stack) != dss_->end());
             info.stack->unmark();
+            info.stack = NULL;
         }
 
         void MemoryPoolDebug::dump()
@@ -332,8 +339,10 @@ namespace framework
 #ifdef BOOST_WINDOWS_API
             OutputDebugStringA(msg);
 #else
-            write(0, msg, strlen(msg));
-            write(0, "\n", 1);
+            int n = 0;
+            n = write(0, msg, strlen(msg));
+            n = write(0, "\n", 1);
+            (void)n;
 #endif
         }
 
