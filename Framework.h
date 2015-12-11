@@ -1,6 +1,8 @@
 #ifndef _FRAMEWORK_H_
 #define _FRAMEWORK_H_
 
+#include <boost/config.hpp>
+
 // »ù±¾¿â
 #include <time.h>
 #include <string.h>
@@ -19,7 +21,6 @@
 #pragma warning( disable : 4819 )
 #endif
 
-#include <boost/config.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/asio/error.hpp>
 
