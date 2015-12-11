@@ -236,7 +236,11 @@ namespace framework
             closer_t closer = &Acceptor::closer<AcceptorType>;
             assert(closer_ == closer);
             (void)closer;
-            return *(AcceptorType *)buf_;
+            union {
+                char * n;
+                AcceptorType * t;
+            } u = {buf_};
+            return *u.t;
         }
 
     } // namespace network
