@@ -13,6 +13,8 @@
 #include "framework/configure/Profile.h"
 #include "framework/configure/ConfigItem.h"
 
+#include <boost/function.hpp>
+
 namespace framework
 {
     namespace configure
@@ -128,6 +130,38 @@ namespace framework
             }
 
         public:
+            // extension config
+
+            typedef boost::function<void (
+                std::string const &, 
+                std::string const &, 
+                std::string const &)
+            > set_config_t;
+
+            typedef boost::function<void (
+                std::string const &, 
+                std::string const &, 
+                std::string &)
+            > get_config_t;
+
+            void register_ext_config(
+                std::string const & key, 
+                set_config_t const & set, 
+                get_config_t const & get);
+
+            void set_ext_config(
+                std::string const & ext, 
+                std::string const & sec, 
+                std::string const & key, 
+                std::string const & value) const;
+
+            void get_ext_config(
+                std::string const & ext, 
+                std::string const & sec, 
+                std::string const & key, 
+                std::string & value) const;
+
+        public:
             // 注册一组配置参数，它们属于同一个模块
             ConfigModule & register_module(
                 std::string const & module);
@@ -197,6 +231,10 @@ namespace framework
 
         private:
             Profile pf_; // 配置文件内存镜像
+            typedef std::map<std::string, std::pair<
+                set_config_t, get_config_t>
+            > ext_config_map_t;
+            ext_config_map_t ext_configs_;
         };
 
         inline ConfigModule & ConfigModule::operator()(

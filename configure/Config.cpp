@@ -38,6 +38,40 @@ namespace framework
         {
         }
 
+        void Config::register_ext_config(
+            std::string const & key, 
+            set_config_t const & set, 
+            get_config_t const & get)
+        {
+            ext_configs_[key] = std::make_pair(set, get);
+        }
+
+        void Config::set_ext_config(
+            std::string const & ext, 
+            std::string const & sec, 
+            std::string const & key, 
+            std::string const & value) const
+        {
+            ext_config_map_t::const_iterator iter = 
+                ext_configs_.find(ext);
+            if (iter != ext_configs_.end()) {
+                iter->second.first(sec, key, value);
+            }
+        }
+
+        void Config::get_ext_config(
+            std::string const & ext, 
+            std::string const & sec, 
+            std::string const & key, 
+            std::string & value) const
+        {
+            ext_config_map_t::const_iterator iter = 
+                ext_configs_.find(ext);
+            if (iter != ext_configs_.end()) {
+                iter->second.second(sec, key, value);
+            }
+        }
+
         ConfigModule & Config::register_module(
             std::string const & module)
         {
@@ -145,7 +179,6 @@ namespace framework
         boost::system::error_code Config::sync(
             std::string const & m)
         {
-            const_iterator im = find(m);
             std::map<std::string, std::string> kvs;
             error_code ec = get(m, kvs);
             if (ec)

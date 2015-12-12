@@ -22,8 +22,8 @@ namespace framework
             {
             public:
                 ObjectWrapper()
-                    : obj_(NULL)
-                    , close_func_(NULL)
+                    : obj_(0)
+                    , close_func_(0)
                     , close_object_(NULL)
                 {
                 }
