@@ -51,7 +51,7 @@ namespace framework
             std::string const & str)
         {
             std::string uuid = Base16::decode(str);
-            if (uuid.length() != 32) {
+            if (uuid.length() != 16) {
                 return invalid_argument;
             }
             bytes_type bytes;
