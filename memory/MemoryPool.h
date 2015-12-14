@@ -104,6 +104,18 @@ namespace framework
             }
 
         public:
+            enum ObjectStatus
+            {
+                none, // not in this pool
+                free, 
+                used, 
+                invalid, 
+            };
+
+            virtual int check_object(
+                void const * obj) const = 0;
+
+        public:
             void debug_dump()
             {
 #ifdef FRAMEWORK_MEMORY_DEBUG_MEMORY_POOL

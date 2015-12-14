@@ -114,6 +114,21 @@ namespace framework
                 }
             };
 
+            int check_object(
+                void const * obj) const
+            {
+                if (obj < this || obj >= (char const *)this + size_block_)
+                    return MemoryPool::none;
+                if (obj > (char const *)this + size_block_ - size_object_)
+                    return MemoryPool::invalid;
+                if ((((char const *)obj - (char const *)this) & size_object_) != 0)
+                    return MemoryPool::invalid;
+                for (Object const * fobj = free_objs_.first(); fobj; fobj = free_objs_.next(fobj))
+                    if (obj == fobj)
+                        return MemoryPool::free;
+                return MemoryPool::used;
+            }
+
             template <
                 typename Pool
             >
@@ -432,6 +447,22 @@ namespace framework
             {
                 return max_object() > num_object() ? 
                     max_object() - num_object() : 0;
+            }
+
+            virtual int check_object(
+                void const * obj) const
+            {
+                Block const * blk = free_blocks_.first();
+                for (; blk; blk = free_blocks_.next(blk)) {
+                    int n = blk->check_object(obj);
+                    if (n) return n;
+                }
+                blk = empty_blocks_.first();
+                for (; blk; blk = empty_blocks_.next(blk)) {
+                    int n = blk->check_object(obj);
+                    if (n) return n;
+                }
+                return 0;
             }
 
         private:
