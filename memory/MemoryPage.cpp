@@ -29,5 +29,16 @@ namespace framework
 #endif
         }
 
+        size_t MemoryPage::allocation_granularity()
+        {
+#ifdef _WIN32
+            SYSTEM_INFO sSysInfo;
+            GetSystemInfo(&sSysInfo);
+            return sSysInfo.dwAllocationGranularity;
+#else
+            return getpagesize();
+#endif
+        }
+
     }
 }

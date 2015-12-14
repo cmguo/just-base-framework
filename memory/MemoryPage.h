@@ -18,16 +18,15 @@ namespace framework
         public:
             static size_t page_size();
 
+            static size_t allocation_granularity();
+
             static void align_page(
                 boost::uint64_t & offset, 
                 size_t & size)
             {
                 boost::uint64_t end = offset + size;
-                if (offset & (page_size() - 1)) {
-                    offset &= ~(page_size() - 1);
-                }
-                if (end  & (page_size() - 1)) {
-                    end = (end & (~(page_size() - 1))) + page_size();
+                if (offset & (allocation_granularity() - 1)) {
+                    offset &= ~(allocation_granularity() - 1);
                 }
                 size = (size_t)(end - offset);
             }

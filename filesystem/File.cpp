@@ -202,10 +202,10 @@ namespace framework
                 dwFlags = PAGE_READONLY;
             if (flags & fm_write)
                 dwFlags = PAGE_READWRITE;
-            if (flags & fm_shared)
-                dwFlags |= 0;
-            else
-                dwFlags |= PAGE_WRITECOPY;
+            //if (flags & fm_shared)
+            //    dwFlags |= 0;
+            //else
+            //    dwFlags |= PAGE_WRITECOPY;
             HANDLE hFileMap = ::CreateFileMappingA(
                 handle_, 
                 NULL, 
@@ -219,14 +219,23 @@ namespace framework
                 return NULL;
             }
 
-            void * p = MapViewOfFile(
+            DWORD dwDesiredAccess = 0;
+            if (flags & fm_read)
+                dwDesiredAccess = FILE_MAP_READ;
+            if (flags & fm_write)
+                dwDesiredAccess = FILE_MAP_WRITE;
+            //if (flags & fm_shared)
+            //    dwDesiredAccess |= 0;
+            //else
+            //    dwDesiredAccess |= FILE_MAP_COPY;
+            void * addr = MapViewOfFile(
                 hFileMap, 
-                FILE_MAP_ALL_ACCESS, 
-                0, 
-                0, 
-                0);
+                dwDesiredAccess, 
+                (DWORD)(o >> 32), 
+                (DWORD)o, 
+                (SIZE_T)size);
 
-            if (p == NULL) {
+            if (addr == NULL) {
                 ec = framework::system::last_system_error();
                 ::CloseHandle(
                     hFileMap);
@@ -236,7 +245,7 @@ namespace framework
             ::CloseHandle(
                 hFileMap);
             ec.clear();
-            return (char *)p + size_t(offset - o);
+            
 #else
             int p = 0;
             int f = 0;
@@ -261,8 +270,8 @@ namespace framework
                 return NULL;
             }
             ec.clear();
-            return (char *)addr + size_t(offset - o);
 #endif
+            return (char *)addr + size_t(offset - o);
         }
 
         bool File::unmap(
