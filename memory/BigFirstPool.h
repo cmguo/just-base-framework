@@ -220,6 +220,12 @@ namespace framework
 
             void check();
 
+            virtual int check_object(
+                const void * obj) const
+            {
+                return 0;
+            }
+
         private:
             typedef framework::container::Ordered<
                 Object, 

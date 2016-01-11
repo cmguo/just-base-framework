@@ -1,11 +1,9 @@
-// ObjectAllocator.h
+// PoolAllocator.h
 
-// 适应标准库的allocator，默认使用ObjectMemoryPool
-// 该allocator使用了静态成员变量，由于全局变量的初始化顺序不确定的问题，
-// 使用该allocator的标准库容器不能在全局构造（不能定义全局变量或者类静态成员变量，但可以是指针）
+// 适应标准库的allocator，默认使用 BigFixedPool
 
-#ifndef _FRAMEWORK_MEMORY_OBJECT_ALLOCATOR_H_
-#define _FRAMEWORK_MEMORY_OBJECT_ALLOCATOR_H_
+#ifndef _FRAMEWORK_MEMORY_POOL_ALLOCATOR_H_
+#define _FRAMEWORK_MEMORY_POOL_ALLOCATOR_H_
 
 #include "framework/memory/MemoryPool.h"
 #include "framework/memory/PrivateMemory.h"
@@ -18,46 +16,46 @@ namespace framework
     {
 
         template <
+            typename _BTy, // base type
+            typename _Pl
+        >
+        inline _Pl & allocator_pool()
+        {
+            static PrivateMemory _pm;
+            static _Pl _pl(_pm);
+            return _pl;
+        }
+
+        template <
             typename _Ty, 
+            typename _BTy = _Ty, // base type
             typename _Pl = framework::memory::BigFixedPool, 
             typename _Pt = framework::generic::NativePointerTraits<_Ty>
         >
-        class ObjectAllocator
+        class PoolAllocator
         {
         public:
             typedef _Ty value_type;
+            typedef _BTy base_type;
 
             typedef typename _Pt::pointer pointer;
-
             typedef typename _Pt::const_pointer const_pointer;
-
             typedef typename _Pt::reference reference;
-
             typedef typename _Pt::const_reference const_reference;
-
             typedef typename _Pt::size_type size_type;
-
             typedef typename _Pt::difference_type difference_type;
 
         public:
-            ObjectAllocator()
-                : pool_(PrivateMemory())
+            PoolAllocator()
             {
             }
 
-            ObjectAllocator(
-                _Pl const & pool)
-                : pool_(pool)
+            PoolAllocator(
+                PoolAllocator const & r)
             {
             }
 
-            ObjectAllocator(
-                ObjectAllocator const & r)
-                : pool_(r.pool_)
-            {
-            }
-
-            ~ObjectAllocator()
+            ~PoolAllocator()
             {
             }
 
@@ -77,7 +75,7 @@ namespace framework
                 size_type n, 
                 const_pointer = 0) throw(std::bad_alloc)
             {
-                void * p = pool_.alloc(n * sizeof(_Ty));
+                void * p = _pool().alloc(n * sizeof(_Ty));
                 if (!p)
                     throw std::bad_alloc();
                 return pointer(static_cast<value_type *>(p));
@@ -87,14 +85,14 @@ namespace framework
                 pointer p, 
                 size_type n)
             {
-                pool_.free(p, n * sizeof(_Ty));
+                _pool().free(p, n * sizeof(_Ty));
             }
 
             void deallocate(
                 void * p, 
                 size_type)
             {
-                pool_.free(p);
+                _pool().free(p);
             }
 
             size_type max_size() const
@@ -104,13 +102,13 @@ namespace framework
 
         public:
             bool operator == (
-                const ObjectAllocator &) const
+                const PoolAllocator &) const
             {
                 return true;
             }
 
             bool operator != (
-                const ObjectAllocator &) const
+                const PoolAllocator &) const
             {
                 return false;
             }
@@ -130,19 +128,19 @@ namespace framework
             }
 
         public:
-            _Pl const & pool() const
+            static _Pl const & pool()
             {
-                return pool_;
+                return allocator_pool<_BTy, _Pl>();
             }
 
             template <typename _Ty1>
-            ObjectAllocator(
-                ObjectAllocator<
+            PoolAllocator(
+                PoolAllocator<
                     _Ty1, 
+                    _BTy, 
                     _Pl, 
                     typename _Pt::template rebind<_Ty1>::type
                 > const & r)
-                : pool_(r.pool(), (framework::memory::AllocatorBind *)NULL)
             {
             }
 			
@@ -150,23 +148,27 @@ namespace framework
             struct rebind
             {
                 typedef typename _Pt::template rebind<_Ty1>::type _Pt1;
-                typedef ObjectAllocator<_Ty1, _Pl, _Pt1> other;
+                typedef PoolAllocator<_Ty1, _BTy, _Pl, _Pt1> other;
             };
 
         private:
             void operator = (
-                const ObjectAllocator &);
+                const PoolAllocator &);
 
-        private:
-            _Pl pool_;
+            _Pl & _pool()
+            {
+                return allocator_pool<_BTy, _Pl>();
+            }
+
         };
 
 
         template<
+            typename _BTy, 
             typename _Pl, 
             typename _Pt
         >
-        class ObjectAllocator<void, _Pl, _Pt>
+        class PoolAllocator<void, _BTy, _Pl, _Pt>
         {
         public:
             typedef void value_type;
@@ -179,8 +181,9 @@ namespace framework
             template <class _Ty1>
             struct rebind
             {
-                typedef ObjectAllocator<
+                typedef PoolAllocator<
                     _Ty1, 
+                    _BTy, 
                     _Pl, 
                     typename _Pt::template rebind<_Ty1>::type> other;
             };
@@ -189,4 +192,4 @@ namespace framework
     } // namespace memory
 } // namespace framework
 
-#endif // _FRAMEWORK_MEMORY_OBJECT_ALLOCATOR_H_
+#endif // _FRAMEWORK_MEMORY_POOL_ALLOCATOR_H_
