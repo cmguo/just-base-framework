@@ -24,6 +24,33 @@ namespace framework
                 unspec_protocol, 
             };
 
+            enum TypeEnum
+            {
+                local   = 0x00,
+                nat     = 0x10,
+                turn    = 0x20,
+                reflex  = 0x30,
+            };
+
+            friend ProtocolEnum operator|(
+                TypeEnum t,
+                ProtocolEnum p)
+            {
+                return ProtocolEnum((int)t | (int)p);
+            }
+
+            static TypeEnum type(
+                ProtocolEnum p)
+            {
+                return TypeEnum(p & 0xf0);
+            }
+
+            static ProtocolEnum proto(
+                ProtocolEnum p)
+            {
+                return ProtocolEnum(p & 0x0f);
+            }
+
             enum FamilyEnum
             {
                 v4, 
@@ -126,15 +153,26 @@ namespace framework
             }
 
         public:
+            TypeEnum type() const
+            {
+                return type(protocol_);
+            }
+
+            void type(
+                TypeEnum t)
+            {
+                protocol_ = t | protocol();
+            }
+
             ProtocolEnum protocol() const
             {
-                return protocol_;
+                return proto(protocol_);
             }
 
             void protocol(
                 ProtocolEnum p)
             {
-                protocol_ = p;
+                protocol_ = type() | p;
             }
 
             FamilyEnum family() const

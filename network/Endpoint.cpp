@@ -52,34 +52,47 @@ namespace framework
 
         Endpoint::operator boost::asio::ip::udp::endpoint() const
         {
-            assert(protocol_ == unspec_protocol || protocol_ == udp);
+            assert(protocol() == unspec_protocol || protocol() == udp);
             return boost::asio::ip::udp::endpoint(ip(), port_);
         }
 
         Endpoint::operator boost::asio::ip::tcp::endpoint() const
         {
-            assert(protocol_ == unspec_protocol || protocol_ == tcp);
+            assert(protocol() == unspec_protocol || protocol() == tcp);
             return boost::asio::ip::tcp::endpoint(ip(), port_);
         }
 
         std::string Endpoint::to_string() const
         {
-            char const * proto = protocol_ == tcp ? "(tcp)" : (protocol_ == udp ? "(udp)" : "");
-            return proto + ip_str() + ":" + format(port_);
+            char const * proto_str = protocol() == tcp ? "(tcp)" : (protocol() == udp ? "(udp)" : "");
+            char const * type_str = type() == nat ? "(nat)" : (type() == turn ? "(turn)" : (type() == reflex ? "(reflex)" : ""));
+            return std::string() + proto_str + type_str + ip_str() + ":" + format(port_);
         }
 
         error_code Endpoint::from_string(
             std::string const & str)
         {
             std::string::size_type beg = 0;
+            ProtocolEnum proto = unspec_protocol;
             if (str.compare(beg, 5, "(tcp)", 5) == 0) {
-                protocol_ = tcp;
+                proto = tcp;
                 beg += 5;
             } else if (str.compare(beg, 5, "(udp)", 5) == 0) {
-                protocol_ = udp;
+                proto = udp;
                 beg += 5;
             }
-            if (str.empty())
+            TypeEnum type = local;
+            if (str.compare(beg, 5, "(nat)", 5) == 0) {
+                type = nat;
+                beg += 5;
+            } else if (str.compare(beg, 5, "(turn)", 5) == 0) {
+                type = turn;
+                beg += 6;
+            } else if (str.compare(beg, 5, "(reflex)", 5) == 0) {
+                type = reflex;
+                beg += 8;
+            }
+            if (str.size() == beg)
                 return succeed;
             if (str.at(beg) == '[') { // ipv6 with port
                 std::string::size_type p = str.find(']', beg + 1);
@@ -128,6 +141,7 @@ namespace framework
                 }
                 port_ = port;
             }
+            protocol_ = type | proto;
             return succeed;
         }
 
