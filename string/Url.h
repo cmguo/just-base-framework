@@ -152,6 +152,10 @@ namespace framework
                     && l.anchor_ == r.anchor_;
             }
 
+            friend Url operator+(
+                Url const & l,
+                Url const & r);
+
         public:
             void protocol(
                 std::string const & v)

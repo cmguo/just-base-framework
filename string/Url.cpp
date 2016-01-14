@@ -277,5 +277,29 @@ namespace framework
             return result;
         }
 
+        Url operator+(
+            Url const & l, 
+            Url const & r)
+        {
+            Url t(l);
+            assert(l.protocol() == r.protocol());
+            if (!r.user_.empty())
+                t.user_ = r.user_;
+            if (!r.password_.empty())
+                t.password_ = r.password_;
+            if (!r.host_.empty())
+                t.host_ = r.host_;
+            if (!r.svc_.empty())
+                t.svc_ = r.svc_;
+            if (!r.path_.empty())
+                t.path_ = r.path_;
+            for (Url::param_const_iterator i = r.param_begin(); i != r.param_end(); ++i) {
+                t.param(i->key(), i->value());
+            }
+            if (!r.anchor_.empty())
+                t.anchor_ = r.anchor_;
+            return t;
+        }
+
     } // namespace string
 } // namespace framework
