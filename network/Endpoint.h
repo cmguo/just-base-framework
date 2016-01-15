@@ -193,7 +193,7 @@ namespace framework
                 return ip_v4_;
             }
 
-            ip_v6_bytes_type ip_v6() const
+            ip_v6_bytes_type const & ip_v6() const
             {
                 return ip_v6_;
             }
@@ -202,6 +202,12 @@ namespace framework
                 boost::uint32_t ip_v4)
             {
                 ip_v4_ = ip_v4;
+            }
+
+            void ip_v6(
+                ip_v6_bytes_type const & ip_v6)
+            {
+                ip_v6_ = ip_v6;
             }
 
             std::string ip_str() const;
