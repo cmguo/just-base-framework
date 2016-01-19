@@ -79,6 +79,7 @@ namespace std
     std::string to_string(
         std::pair<_Ty1, _Ty2> const & v)
     {
+        using framework::string::to_string;
         return to_string(v.first) + pair_def<_Ty1, _Ty2>::delim() + to_string(v.second);
     }
 

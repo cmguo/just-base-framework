@@ -94,6 +94,7 @@ namespace std
         std::string str2;
         typedef typename boost::remove_const<_Ty1>::type typef;
         boost::system::error_code ec;
+        using framework::string::from_string;
         return !st.next_token(str1, ec)
             && from_string(str1, const_cast<typef &>(v.first))
             && from_string(st.remain(), v.second);
