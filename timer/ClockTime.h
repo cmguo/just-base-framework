@@ -5,6 +5,8 @@
 
 #include <boost/date_time/posix_time/posix_time_config.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
+#include <boost/date_time/posix_time/time_parsers.hpp>
+#include <boost/date_time/posix_time/time_formatters.hpp>
 #include <boost/operators.hpp>
 
 namespace framework
@@ -16,6 +18,8 @@ namespace framework
         class Time;
         class Duration;
         class ClockTime;
+
+        extern Time const time_launch;
 
         class Duration
             : private boost::less_than_comparable<
@@ -79,6 +83,23 @@ namespace framework
             boost::int64_t total_microseconds() const
             {
                 return d_ * 1000;
+            }
+
+        public:
+            bool from_string(
+                std::string const & str)
+            {
+                try {
+                    d_ = boost::posix_time::duration_from_string(str).total_milliseconds();
+                    return true;
+                } catch (...) {
+                    return false;
+                }
+            }
+
+            std::string to_string() const
+            {
+                return boost::posix_time::to_simple_string(to_posix_duration());
             }
 
         public:

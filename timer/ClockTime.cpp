@@ -34,6 +34,8 @@ namespace framework
             return Time(ClockTime::tick_count());
         }
 
+        Time const time_launch;
+
         boost::uint64_t ClockTime::tick_count()
         {
 #ifdef BOOST_WINDOWS_API
