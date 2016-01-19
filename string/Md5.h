@@ -3,7 +3,7 @@
 #ifndef _FRAMEWORK_STRING_MD5_H_
 #define _FRAMEWORK_STRING_MD5_H_
 
-#include "framework/string/Digest.h"
+#include "framework/string/Digest.hpp"
 
 #include <boost/array.hpp>
 

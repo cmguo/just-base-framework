@@ -43,7 +43,7 @@ namespace framework
 
         std::string Uuid::to_string() const
         {
-            bytes_type bytes = to_big_endian_bytes();
+            bytes_type bytes = to_bytes();
             return Base16::encode(std::string((char const *)bytes.elems, sizeof(UUID)));
         }
 
@@ -56,7 +56,7 @@ namespace framework
             }
             bytes_type bytes;
             memcpy(bytes.elems, &uuid[0], sizeof(UUID));
-            from_big_endian_bytes(bytes);
+            from_bytes(bytes);
             return succeed;
         }
 
