@@ -72,6 +72,17 @@ namespace framework
                     return size_used == 0;
                 }
 
+                Object const * first() const
+                {
+                    return reinterpret_cast<Object const *>(this + 1);
+                }
+
+                Object const * last() const
+                {
+                    return reinterpret_cast<Object const *>(
+                        reinterpret_cast<char const *>(this) + size);
+                }
+
                 Object * first()
                 {
                     return reinterpret_cast<Object *>(this + 1);
@@ -107,6 +118,12 @@ namespace framework
                     size_t size)
                     : MemoryPool::Object<ObjectHead>(blk, size)
                 {
+                }
+
+                Object const * successive() const
+                {
+                    return reinterpret_cast<Object const *>(
+                        reinterpret_cast<char const *>(this) + size);
                 }
 
                 Object * successive()
@@ -151,37 +168,37 @@ namespace framework
 
                 void use()
                 {
-                    blk = (Block *)((unsigned long)blk | 1);
+                    blk = (Block *)((intptr_t)blk | 1);
                 }
 
                 void unuse()
                 {
-                    blk = (Block *)((unsigned long)blk & -2);
+                    blk = (Block *)((intptr_t)blk & -2);
                 }
 
-                bool is_used()
+                bool is_used() const
                 {
-                    return ((unsigned long)blk & 1) != 0;
+                    return ((intptr_t)blk & 1) != 0;
                 }
 
                 void mark()
                 {
-                    blk = (Block *)((unsigned long)blk | 2);
+                    blk = (Block *)((intptr_t)blk | 2);
                 }
 
                 void unmark()
                 {
-                    blk = (Block *)((unsigned long)blk & -3);
+                    blk = (Block *)((intptr_t)blk & -3);
                 }
 
-                bool is_marked()
+                bool is_marked() const
                 {
-                    return ((unsigned long)blk & 2) != 0;
+                    return ((intptr_t)blk & 2) != 0;
                 }
 
                 void unusemark()
                 {
-                    blk = (Block *)((unsigned long)blk & -4);
+                    blk = (Block *)((intptr_t)blk & -4);
                 }
 
                 bool operator < (
@@ -221,10 +238,7 @@ namespace framework
             void check();
 
             virtual int check_object(
-                const void * obj) const
-            {
-                return 0;
-            }
+                void const * obj) const;
 
         private:
             typedef framework::container::Ordered<

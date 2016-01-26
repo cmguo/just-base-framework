@@ -61,6 +61,7 @@ namespace framework
             assert(!obj->is_used());
 
             Block * blk = obj->blk;
+            assert(obj >= blk->first() && obj < blk->last());
             blk->size_used -= obj->size;
 
             //check();
@@ -81,6 +82,7 @@ namespace framework
                 }
                 obj1 = obj1->successive();
             }
+            assert(obj1 <= obj);
 
             obj1 = obj->successive();
             if (obj1 < blk->last() && !obj1->is_used()) {
@@ -191,6 +193,29 @@ namespace framework
                 free_block(blk, blk->size);
             }
             assert(free_objs_.empty());
+        }
+
+        int BigFirstPool::check_object(
+            void const * obj) const
+        {
+            Object * o = (Object *)obj;
+            for (Block const * blk = blocks_.first(); blk; blk = blocks_.next(blk)) {
+                if (o >= blk->first() && o < blk->last()) {
+                    Object const * obj1 = blk->first();
+                    while (obj1 < o) {
+                        obj1 = obj1->successive();
+                    }
+                    if (obj1 == o) {
+                        if (o->is_used())
+                            return used;
+                        else
+                            return 1;//free;
+                    } else {
+                        return invalid;
+                    }
+                }
+            }
+            return none;
         }
 
         void BigFirstPool::check()
