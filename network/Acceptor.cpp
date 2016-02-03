@@ -20,7 +20,8 @@ namespace framework
         Acceptor::~Acceptor()
         {
             if (closer_) {
-                close();
+                boost::system::error_code ec;
+                close(ec);
             };
         }
 
