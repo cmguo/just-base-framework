@@ -15,7 +15,7 @@
 namespace framework {
 namespace container {
 
-struct detail
+namespace detail
 {
 
     template <typename Elem, typename Bfs, typename Alloc, size_t BF_SHIFT = Bfs::BF_TYPE::BF_SHIFT>
@@ -38,7 +38,7 @@ struct detail
         index_t live_;
         index_t full_;
         mutable index_t nget_;
-        index_t nset_;
+        mutable index_t nset_;
         ptr_t array_[ITEM_COUNT];
 
         Array(int)
@@ -59,6 +59,7 @@ struct detail
         {
             return full_ == ITEM_COUNT;
         }
+
 
         template <bool C>
         class Iterator
@@ -290,6 +291,36 @@ struct detail
             }
         }
 
+        base_t nget(
+            size_t l, 
+            base_t n) const
+        {
+            if (l == 0) {
+                index_t n = nget_;
+                nget_ = 0;
+                return n;
+            } else {
+                index_t i = bitf_t::get(n);
+                ptr_t ptr = array_[i];
+                return (ptr == NULL) ? 0 : ptr->nget(l - 1, n);
+            }
+        }
+
+        base_t nset(
+            size_t l, 
+            base_t n) const
+        {
+            if (l == 0) {
+                index_t t = nset_;
+                nset_ = 0;
+                return t;
+            } else {
+                index_t i = bitf_t::get(n);
+                ptr_t ptr = array_[i];
+                return (ptr == NULL) ? 0 : ptr->nset(l - 1, n);
+            }
+        }
+
         void release(
             base_t f, 
             base_t t)
@@ -374,7 +405,7 @@ struct detail
         index_t live_;
         index_t full_;
         mutable index_t nget_;
-        index_t nset_;
+        mutable index_t nset_;
         item_t array_[ITEM_COUNT];
 
         Array(int)
@@ -550,6 +581,26 @@ struct detail
             }
         }
 
+        index_t nget(
+            size_t l, 
+            base_t n) const
+        {
+            assert(l == 0);
+            index_t t = nget_;
+            nget_ = 0;
+            return t;
+        }
+
+        index_t nset(
+            size_t l, 
+            base_t n) const
+        {
+            assert(l == 0);
+            index_t t = nset_;
+            nset_ = 0;
+            return t;
+        }
+
         void release(
             base_t f, 
             base_t t)
@@ -579,7 +630,8 @@ struct detail
             full_ -= ITEM_COUNT - i;
         }
     };
-};
+
+} // namespace detail
 
 template <
     size_t N0, 
@@ -887,6 +939,20 @@ public:
         boost::dynamic_bitset<boost::uint32_t> & map)
     {
         array_->get_full_map(level, from, to, map);
+    }
+
+    size_type nget(
+        size_t level, 
+        size_type index) const
+    {
+        return array_->nget(level, index);
+    }
+
+    size_type nset(
+        size_t level, 
+        size_type index) const
+    {
+        return array_->nset(level, index);
     }
 
 private:
