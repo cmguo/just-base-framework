@@ -29,13 +29,6 @@ namespace framework {
                     {
                     }
 
-                    friend bool operator<(
-                        SparseArrayItem const & l, 
-                        SparseArrayItem const & r)
-                    {
-                        return l.index == r.index;
-                    }
-
                     friend bool operator==(
                         SparseArrayItem const & l, 
                         SparseArrayItem const & r)

@@ -148,11 +148,11 @@ namespace framework
                 typename CompatibleCompare
             >
             static pointer find(
-            pointer top,
-            pointer y,
-            KeyFromValue const & key,
-            CompatibleKey const & x,
-            CompatibleCompare const & comp)
+                pointer top,
+                pointer y,
+                KeyFromValue const & key,
+                CompatibleKey const & x,
+                CompatibleCompare const & comp)
             {
                 pointer y0 = y;
 
@@ -174,11 +174,11 @@ namespace framework
                 typename CompatibleCompare
             >
             static pointer lower_bound(
-            pointer top,
-            pointer y,
-            KeyFromValue const & key,
-            CompatibleKey const & x,
-            CompatibleCompare const & comp)
+                pointer top,
+                pointer y,
+                KeyFromValue const & key,
+                CompatibleKey const & x,
+                CompatibleCompare const & comp)
             {
                 while (top) {
                     if (!comp(key(*top),x)) {
@@ -197,11 +197,11 @@ namespace framework
                 typename CompatibleCompare
             >
             static pointer upper_bound(
-            pointer top,
-            pointer y,
-            KeyFromValue const & key,
-            CompatibleKey const & x,
-            CompatibleCompare const & comp)
+                pointer top,
+                pointer y,
+                KeyFromValue const & key,
+                CompatibleKey const & x,
+                CompatibleCompare const & comp)
             {
                 while (top) {
                     if (comp(x, key(*top))) {
@@ -220,11 +220,11 @@ namespace framework
                 typename CompatibleCompare
             >
             static std::pair<pointer, pointer> equal_range(
-            pointer top,
-            pointer y,
-            KeyFromValue const & key,
-            CompatibleKey const & x,
-            CompatibleCompare const & comp)
+                pointer top,
+                pointer y,
+                KeyFromValue const & key,
+                CompatibleKey const & x,
+                CompatibleCompare const & comp)
             {
                 while (top) {
                     if (comp(key(*top), x)) {
