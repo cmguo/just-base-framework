@@ -65,6 +65,8 @@ END_NAME_SPACE
 
 #undef VERSION
 
+#undef VERSION_MAJOR
+
 #undef NAME
 
 #undef LIB

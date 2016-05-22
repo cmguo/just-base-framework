@@ -115,7 +115,7 @@ static inline char const * name_string()
         BOOST_PP_STRINGIZE(PLATFORM_NAME) "-" \
         BOOST_PP_STRINGIZE(TOOL_NAME) \
         BOOST_PP_STRINGIZE(CONFIG_NAME) "-" \
-        BOOST_PP_STRINGIZE(VERSION) \
+        BOOST_PP_STRINGIZE(VERSION_MAJOR) \
         BOOST_PP_STRINGIZE(SUFFIX);
 #endif
 }
@@ -145,6 +145,8 @@ END_NAME_SPACE
 #undef BEGIN_NAME_SPACE
 
 #undef VERSION
+
+#undef VERSION_MAJOR
 
 #undef NAME
 
