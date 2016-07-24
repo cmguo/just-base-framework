@@ -94,7 +94,7 @@ namespace system {
         static BF_BASE_TYPE inc(
             BF_BASE_TYPE n)
         {
-            assert(((n >> BF_SHIFT) + 1) < BF_MAX);
+            assert((((n & BF_MASK) >> BF_SHIFT) + 1) < BF_MAX);
             return ((n >> BF_SHIFT) + 1) << BF_SHIFT;
         }
 
@@ -103,7 +103,7 @@ namespace system {
             BF_BASE_TYPE n, 
             BF_RESULT d)
         {
-            assert(((n >> BF_SHIFT) + d) < BF_MAX);
+            assert((((n & BF_MASK) >> BF_SHIFT) + d) < BF_MAX);
             return ((n >> BF_SHIFT) + d) << BF_SHIFT;
         }
     };
