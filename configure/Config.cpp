@@ -75,8 +75,23 @@ namespace framework
         ConfigModule & Config::register_module(
             std::string const & module)
         {
-            iterator im = insert(std::make_pair(module, ConfigModule(module, *this))).first;
-            return im->second;
+            iterator im = find(module);
+            if (im == end())
+                im = insert(std::make_pair(module, new ConfigModule(module, *this))).first;
+            return *static_cast<ConfigModule *>(im->second);
+        }
+
+        bool Config::register_module(
+            std::string const & name, 
+            ConfigModuleBase * module)
+        {
+            iterator im = find(name);
+            if (im == end()) {
+                insert(std::make_pair(name, module));
+                return true;
+            } else {
+                return false;
+            }
         }
 
         void Config::register_param(
@@ -99,7 +114,7 @@ namespace framework
             iterator im = find(m);
             if (im == end())
                 return error_code(item_not_exist);
-            error_code ec = im->second.set(k, v);
+            error_code ec = im->second->set(k, v);
             if (!ec)
                 pf_.set(m, k, v, save);
             return ec;
@@ -128,7 +143,7 @@ namespace framework
             const_iterator im = find(m);
             if (im == end())
                 return item_not_exist;
-            return im->second.get(k, v);
+            return im->second->get(k, v);
         }
 
         error_code Config::get_force(
@@ -150,7 +165,7 @@ namespace framework
             const_iterator im = find(m);
             if (im == end())
                 return item_not_exist;
-            return im->second.get(kvs);
+            return im->second->get(kvs);
         }
 
         error_code Config::get(
@@ -159,7 +174,7 @@ namespace framework
             const_iterator im = begin();
             for (; im != end(); ++im) {
                 std::map<std::string, std::string> & kvs = mkvs[im->first];
-                im->second.get(kvs);
+                im->second->get(kvs);
             }
             return succeed;
         }
@@ -195,7 +210,7 @@ namespace framework
             const_iterator im = begin();
             for (; im != end(); ++im) {
                 std::map<std::string, std::string> kvs;
-                im->second.get(kvs);
+                im->second->get(kvs);
                 for (std::map<std::string, std::string>::const_iterator iter = kvs.begin(); iter != kvs.end(); ++iter) {
                     pf_.set(im->first, iter->first, iter->second, false);
                 }

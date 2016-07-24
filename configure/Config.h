@@ -7,11 +7,11 @@
 * 可以指定自定义的读取器和设置器，用自定义的方式响应读写请求
 */
 
-#ifndef __FRAMEWORK_CONFIGURE_CONFIG_H_
-#define __FRAMEWORK_CONFIGURE_CONFIG_H_
+#ifndef _FRAMEWORK_CONFIGURE_CONFIG_H_
+#define _FRAMEWORK_CONFIGURE_CONFIG_H_
 
 #include "framework/configure/Profile.h"
-#include "framework/configure/ConfigItem.h"
+#include "framework/configure/ConfigModule.h"
 
 #include <boost/function.hpp>
 
@@ -19,96 +19,9 @@ namespace framework
 {
     namespace configure
     {
-        class Config;
-
-        class ConfigModule
-            : private std::map<std::string, ConfigItem *>
-        {
-        public:
-            ConfigModule(
-                std::string const & name, 
-                Config & conf)
-                : name_(name)
-                , conf_(conf)
-            {
-            }
-
-            ~ConfigModule()
-            {
-                for (iterator ik = begin(); ik != end(); ++ik) {
-                    (ik->second)->del();
-                    (ik->second) = NULL;
-                }
-            }
-
-        public:
-            ConfigModule & operator()(
-                std::string const & key, 
-                ConfigItem * item);
-
-            template <typename T>
-            ConfigModule & operator()(
-                std::string const & key, 
-                T & t, 
-                unsigned int flag)
-            {
-                (*this)(key, make_item(flag, t));
-                return *this;
-            }
-
-            ConfigModule & operator()(
-                std::pair<std::string const, ConfigItem *> key_item)
-            {
-                (*this)(key_item.first, key_item.second);
-                return *this;
-            }
-
-            ConfigModule & operator<<(
-                std::pair<std::string const, ConfigItem *> key_item)
-            {
-                (*this)(key_item.first, key_item.second);
-                return *this;
-            }
-
-            boost::system::error_code set(
-                std::string const & key, 
-                std::string const & value)
-            {
-                const_iterator ik = find(key);
-                if (ik == end())
-                    return framework::system::logic_error::item_not_exist;
-                return ik->second->set(value);
-            }
-
-            boost::system::error_code get(
-                std::string const & key, 
-                std::string & value) const
-            {
-                const_iterator ik = find(key);
-                if (ik == end())
-                    return framework::system::logic_error::item_not_exist;
-                return ik->second->get(value);
-            }
-
-            boost::system::error_code get(
-                std::map<std::string, std::string> & kvs) const
-            {
-                for (const_iterator ik = begin(); ik != end(); ++ik) {
-                    std::string value;
-                    if (!ik->second->get(value)) {
-                        kvs[ik->first] = value;
-                    }
-                }
-                return framework::system::logic_error::succeed;
-            }
-
-        private:
-            std::string name_;
-            Config const & conf_;
-        };
 
         class Config
-            : private std::map<std::string, ConfigModule>
+            : private std::map<std::string, ConfigModuleBase *>
         {
         public:
             Config();
@@ -165,6 +78,10 @@ namespace framework
             // 注册一组配置参数，它们属于同一个模块
             ConfigModule & register_module(
                 std::string const & module);
+
+            bool register_module(
+                std::string const & name, 
+                ConfigModuleBase * module);
 
             // 注册一个配置参数
             template <typename T>
@@ -237,21 +154,7 @@ namespace framework
             ext_config_map_t ext_configs_;
         };
 
-        inline ConfigModule & ConfigModule::operator()(
-            std::string const & key, 
-            ConfigItem * item)
-        {
-            iterator it = find( key );
-            if ( it != end() )
-                (it->second)->del();
-
-            (*this)[key] = item;
-
-            conf_.register_param(name_, key, item);
-            return *this;
-        }
-
     } // namespace configure
 } // namespace framework
 
-#endif // __FRAMEWORK_CONFIGURE_CONFIG_H_
+#endif // _FRAMEWORK_CONFIGURE_CONFIG_H_
