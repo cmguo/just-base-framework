@@ -40,6 +40,7 @@ namespace framework
             typedef typename pointer_traits::const_pointer const_pointer;
             typedef typename _Key::value_type key_type;
             typedef node_type value_type;
+            typedef std::size_t size_type;
 
         public:
             typedef btree_iterator<node_type, pointer_traits> iterator;
@@ -185,7 +186,7 @@ namespace framework
                 return header()->parent() == pointer(0);
             }
 
-            size_t size() const
+            size_type size() const
             {
                 return count_all_nodes(root());
             }
@@ -213,11 +214,11 @@ namespace framework
                 }
             }
 
-            size_t erase(
+            size_type erase(
                 key_type const & x)
             {
                 std::pair<iterator, iterator> p = equal_range(x);
-                size_t s = 0;
+                size_type s = 0;
                 while (p.first != p.second) {
                     p.first = erase(p.first);
                     ++s;
@@ -273,16 +274,16 @@ namespace framework
             }
 
             template<typename CompatibleKey>
-            size_t count(CompatibleKey const & x) const
+            size_type count(CompatibleKey const & x) const
             {
                 return count(x, comp_);
             }
 
             template<typename CompatibleKey, typename CompatibleCompare>
-            size_t count(CompatibleKey const & x, CompatibleCompare const & comp) const
+            size_type count(CompatibleKey const & x, CompatibleCompare const & comp) const
             {
                 std::pair<iterator, iterator> p = node_type::equal_range(x, comp);
-                size_t n = std::distance(p.first, p.second);
+                size_type n = std::distance(p.first, p.second);
                 return n;
             }
 
@@ -615,7 +616,7 @@ namespace framework
                 x->unlink();
             }
 
-            size_t count_all_nodes(
+            size_type count_all_nodes(
                 const_pointer x) const
             {
                 if (!x)
