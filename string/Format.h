@@ -81,6 +81,14 @@ namespace framework
             }
 
             static std::string invoke(
+                void * v)
+            {
+                std::ostringstream oss;
+                oss << v;
+                return oss.str();
+            }
+
+            static std::string invoke(
                 void const * v)
             {
                 std::ostringstream oss;
