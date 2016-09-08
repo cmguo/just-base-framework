@@ -66,7 +66,7 @@ namespace framework
                 std::string const & ext, 
                 std::string const & sec, 
                 std::string const & key, 
-                std::string const & value) const;
+                std::string const & value);
 
             void get_ext_config(
                 std::string const & ext, 
@@ -124,9 +124,12 @@ namespace framework
                 std::string const & m, 
                 std::map<std::string, std::string> & kvs);
 
+            typedef std::map<std::string, std::string> kv_map_t;
+            typedef std::map<std::string, kv_map_t> mkv_map_t;
+
             // 获取所有配置参数的名称及数值
             boost::system::error_code get(
-                std::map<std::string, std::map<std::string, std::string> > & mkvs);
+                mkv_map_t & mkvs);
 
             boost::system::error_code sync(
                 std::string const & m, 
@@ -148,8 +151,15 @@ namespace framework
 
         private:
             Profile pf_; // 配置文件内存镜像
-            typedef std::map<std::string, std::pair<
-                set_config_t, get_config_t>
+            struct ExtConfig
+            {
+                set_config_t set;
+                get_config_t get;
+                mkv_map_t preset;
+            };
+            typedef std::map<
+                std::string, 
+                ExtConfig
             > ext_config_map_t;
             ext_config_map_t ext_configs_;
         };

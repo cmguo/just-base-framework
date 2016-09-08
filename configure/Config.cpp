@@ -43,19 +43,27 @@ namespace framework
             set_config_t const & set, 
             get_config_t const & get)
         {
-            ext_configs_[key] = std::make_pair(set, get);
+            ExtConfig & ext = ext_configs_[key];
+            ext.set = set;
+            ext.get = get;
+            for (mkv_map_t::const_iterator iter = ext.preset.begin(); iter != ext.preset.end(); ++iter) {
+                for (kv_map_t::const_iterator iter2 = iter->second.begin(); iter2 != iter->second.end(); ++iter2) {
+                    ext.set(iter->first, iter2->first, iter2->second);
+                }
+            }
         }
 
         void Config::set_ext_config(
             std::string const & ext, 
             std::string const & sec, 
             std::string const & key, 
-            std::string const & value) const
+            std::string const & value)
         {
-            ext_config_map_t::const_iterator iter = 
-                ext_configs_.find(ext);
-            if (iter != ext_configs_.end()) {
-                iter->second.first(sec, key, value);
+            ExtConfig & extcfg = ext_configs_[ext];
+            if (extcfg.set.empty()) {
+                extcfg.preset[sec][key] = value;
+            } else {
+                extcfg.set(sec, key, value);
             }
         }
 
@@ -68,7 +76,7 @@ namespace framework
             ext_config_map_t::const_iterator iter = 
                 ext_configs_.find(ext);
             if (iter != ext_configs_.end()) {
-                iter->second.second(sec, key, value);
+                iter->second.get(sec, key, value);
             }
         }
 
@@ -160,7 +168,7 @@ namespace framework
 
         error_code Config::get(
             std::string const & m, 
-            std::map<std::string, std::string> & kvs)
+            kv_map_t & kvs)
         {
             const_iterator im = find(m);
             if (im == end())
@@ -169,11 +177,11 @@ namespace framework
         }
 
         error_code Config::get(
-            std::map<std::string, std::map<std::string, std::string> > & mkvs)
+            mkv_map_t & mkvs)
         {
             const_iterator im = begin();
             for (; im != end(); ++im) {
-                std::map<std::string, std::string> & kvs = mkvs[im->first];
+                kv_map_t & kvs = mkvs[im->first];
                 im->second->get(kvs);
             }
             return succeed;
@@ -194,11 +202,11 @@ namespace framework
         boost::system::error_code Config::sync(
             std::string const & m)
         {
-            std::map<std::string, std::string> kvs;
+            kv_map_t kvs;
             error_code ec = get(m, kvs);
             if (ec)
                 return ec;
-            for (std::map<std::string, std::string>::const_iterator iter = kvs.begin(); iter != kvs.end(); ++iter) {
+            for (kv_map_t::const_iterator iter = kvs.begin(); iter != kvs.end(); ++iter) {
                 pf_.set(m, iter->first, iter->second, false);
             }
             pf_.save();
@@ -209,9 +217,9 @@ namespace framework
         {
             const_iterator im = begin();
             for (; im != end(); ++im) {
-                std::map<std::string, std::string> kvs;
+                kv_map_t kvs;
                 im->second->get(kvs);
-                for (std::map<std::string, std::string>::const_iterator iter = kvs.begin(); iter != kvs.end(); ++iter) {
+                for (kv_map_t::const_iterator iter = kvs.begin(); iter != kvs.end(); ++iter) {
                     pf_.set(im->first, iter->first, iter->second, false);
                 }
             }
