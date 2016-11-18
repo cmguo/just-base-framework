@@ -60,6 +60,44 @@ namespace framework
             return succeed;
         }
 
+        std::string Uuid::to_little_endian_string() const
+        {
+            bytes_type bytes = to_little_endian_bytes();
+            return Base16::encode(std::string((char const *)bytes.elems, sizeof(UUID)));
+        }
+
+        error_code Uuid::from_little_endian_string(
+            std::string const & str)
+        {
+            std::string uuid = Base16::decode(str);
+            if (uuid.length() != 16) {
+                return invalid_argument;
+            }
+            bytes_type bytes;
+            memcpy(bytes.elems, &uuid[0], sizeof(UUID));
+            from_little_endian_bytes(bytes);
+            return succeed;
+        }
+
+        std::string Uuid::to_big_endian_string() const
+        {
+            bytes_type bytes = to_big_endian_bytes();
+            return Base16::encode(std::string((char const *)bytes.elems, sizeof(UUID)));
+        }
+
+        error_code Uuid::from_big_endian_string(
+            std::string const & str)
+        {
+            std::string uuid = Base16::decode(str);
+            if (uuid.length() != 16) {
+                return invalid_argument;
+            }
+            bytes_type bytes;
+            memcpy(bytes.elems, &uuid[0], sizeof(UUID));
+            from_big_endian_bytes(bytes);
+            return succeed;
+        }
+
         Uuid::bytes_type Uuid::to_bytes() const
         {
             bytes_type bytes;

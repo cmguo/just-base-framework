@@ -62,6 +62,16 @@ namespace framework
             boost::system::error_code from_string(
                 std::string const & str);
 
+            std::string to_big_endian_string() const;
+
+            boost::system::error_code from_big_endian_string(
+                std::string const & str);
+
+            std::string to_little_endian_string() const;
+
+            boost::system::error_code from_little_endian_string(
+                std::string const & str);
+
         public:
             bytes_type to_bytes() const;
 
