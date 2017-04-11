@@ -81,7 +81,7 @@ namespace framework
 
         private:
             std::string name_;
-            Config const & conf_;
+            Config & conf_;
         };
 
     } // namespace configure

@@ -14,6 +14,8 @@
 #include "framework/configure/ConfigModule.h"
 
 #include <boost/function.hpp>
+#include <boost/bind.hpp>
+#include <boost/thread/condition_variable.hpp>
 
 namespace framework
 {
@@ -72,7 +74,7 @@ namespace framework
                 std::string const & ext, 
                 std::string const & sec, 
                 std::string const & key, 
-                std::string & value) const;
+                std::string & value);
 
         public:
             // 注册一组配置参数，它们属于同一个模块
@@ -139,7 +141,6 @@ namespace framework
                 std::string const & m);
 
             boost::system::error_code sync();
-
         private:
             friend class ConfigModule;
 
@@ -147,7 +148,7 @@ namespace framework
             void register_param(
                 std::string const & module, 
                 std::string const & key, 
-                ConfigItem * item) const;
+                ConfigItem * item);
 
         private:
             Profile pf_; // 配置文件内存镜像
@@ -162,6 +163,7 @@ namespace framework
                 ExtConfig
             > ext_config_map_t;
             ext_config_map_t ext_configs_;
+            boost::mutex mutex_;
         };
 
     } // namespace configure

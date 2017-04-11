@@ -43,6 +43,7 @@ namespace framework
             set_config_t const & set, 
             get_config_t const & get)
         {
+            boost::mutex::scoped_lock lock(mutex_);
             ExtConfig & ext = ext_configs_[key];
             ext.set = set;
             ext.get = get;
@@ -59,6 +60,7 @@ namespace framework
             std::string const & key, 
             std::string const & value)
         {
+            boost::mutex::scoped_lock lock(mutex_);
             ExtConfig & extcfg = ext_configs_[ext];
             if (extcfg.set.empty()) {
                 extcfg.preset[sec][key] = value;
@@ -71,8 +73,9 @@ namespace framework
             std::string const & ext, 
             std::string const & sec, 
             std::string const & key, 
-            std::string & value) const
+            std::string & value)
         {
+            boost::mutex::scoped_lock lock(mutex_);
             ext_config_map_t::const_iterator iter = 
                 ext_configs_.find(ext);
             if (iter != ext_configs_.end()) {
@@ -83,6 +86,7 @@ namespace framework
         ConfigModule & Config::register_module(
             std::string const & module)
         {
+            boost::mutex::scoped_lock lock(mutex_);
             iterator im = find(module);
             if (im == end())
                 im = insert(std::make_pair(module, new ConfigModule(module, *this))).first;
@@ -93,6 +97,7 @@ namespace framework
             std::string const & name, 
             ConfigModuleBase * module)
         {
+            boost::mutex::scoped_lock lock(mutex_);
             iterator im = find(name);
             if (im == end()) {
                 insert(std::make_pair(name, module));
@@ -105,8 +110,9 @@ namespace framework
         void Config::register_param(
             std::string const & module, 
             std::string const & key, 
-            ConfigItem * item) const
+            ConfigItem * item)
         {
+            boost::mutex::scoped_lock lock(mutex_);
             std::string value;
             if (pf_.get_inherit(module, key, value) == 0) {
                 item->init(value);
@@ -119,6 +125,7 @@ namespace framework
             std::string const & v, 
             bool save)
         {
+            boost::mutex::scoped_lock lock(mutex_);
             iterator im = find(m);
             if (im == end())
                 return error_code(item_not_exist);
@@ -127,6 +134,7 @@ namespace framework
                 pf_.set(m, k, v, save);
             return ec;
         }
+
 
         error_code Config::set_force(
             std::string const & m, 
@@ -137,6 +145,7 @@ namespace framework
             error_code ec = set(m, k, v, save);
             if (ec == no_permission || ec == item_not_exist) {
                 // 即使不存在，或者没权限，也让设置
+                boost::mutex::scoped_lock lock(mutex_);
                 pf_.set(m, k, v, save);
                 //ec = success;
             }
@@ -148,6 +157,7 @@ namespace framework
             std::string const & k, 
             std::string & v)
         {
+            boost::mutex::scoped_lock lock(mutex_);
             const_iterator im = find(m);
             if (im == end())
                 return item_not_exist;
@@ -161,6 +171,7 @@ namespace framework
         {
             error_code ec = get(m, k, v);
             if (ec == no_permission || ec == item_not_exist) {
+                boost::mutex::scoped_lock lock(mutex_);
                 pf_.get(m, k, v);
             }
             return ec;
@@ -170,6 +181,7 @@ namespace framework
             std::string const & m, 
             kv_map_t & kvs)
         {
+            boost::mutex::scoped_lock lock(mutex_);
             const_iterator im = find(m);
             if (im == end())
                 return item_not_exist;
@@ -179,6 +191,7 @@ namespace framework
         error_code Config::get(
             mkv_map_t & mkvs)
         {
+            boost::mutex::scoped_lock lock(mutex_);
             const_iterator im = begin();
             for (; im != end(); ++im) {
                 kv_map_t & kvs = mkvs[im->first];
@@ -191,6 +204,7 @@ namespace framework
             std::string const & m, 
             std::string const & k)
         {
+            boost::mutex::scoped_lock lock(mutex_);
             std::string v;
             error_code ec = get(m, k, v);
             if (ec)
@@ -203,6 +217,7 @@ namespace framework
             std::string const & m)
         {
             kv_map_t kvs;
+            boost::mutex::scoped_lock lock(mutex_);
             error_code ec = get(m, kvs);
             if (ec)
                 return ec;
@@ -215,6 +230,7 @@ namespace framework
 
         boost::system::error_code Config::sync()
         {
+            boost::mutex::scoped_lock lock(mutex_);
             const_iterator im = begin();
             for (; im != end(); ++im) {
                 kv_map_t kvs;
