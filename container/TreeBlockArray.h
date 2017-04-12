@@ -30,11 +30,11 @@ namespace framework {
                 struct TreeBlockArrayItem
                     : OrderedHook<TreeBlockArrayItem<Value, Block> >::type
                 {
-                    size_t index;
+                    boost::uint64_t index;
                     Value values[Block];
 
                     TreeBlockArrayItem(
-                        size_t i)
+                        boost::uint64_t i)
                         : index(i)
                     {
                         if (boost::is_pod<Value>::value)
@@ -43,10 +43,10 @@ namespace framework {
 
                     struct Key
                     {
-                        typedef size_t value_type;
-                        typedef size_t result_type;
+                        typedef boost::uint64_t value_type;
+                        typedef boost::uint64_t result_type;
 
-                        size_t operator()(
+                        boost::uint64_t operator()(
                             TreeBlockArrayItem const & i) const
                         {
                             return i.index;
@@ -55,7 +55,7 @@ namespace framework {
                 };
 
             template <typename T, bool C>
-                struct IteratorType
+                struct TreeBlockIteratorType
                 {
                     typedef typename boost::mpl::if_c<C, 
                             typename T::const_iterator,
@@ -64,17 +64,17 @@ namespace framework {
                 };
 
             template <typename T, bool C>
-                struct ReferenceType
+                struct TreeBlockReferenceType
                 {
                     typedef typename boost::mpl::if_c<C, T const &, T &>::type type;
                 };
 
             template <typename Value, size_t Block, bool C>
-                struct IndexExtractor
+                struct TreeBlockIndexExtractor
                 {
-                    typedef size_t value_type;
-                    typedef typename ReferenceType<size_t, C>::type reference_type;
-                    typedef typename ReferenceType<TreeBlockArrayItem<Value, Block>, C>::type item_reference_type;
+                    typedef boost::uint64_t value_type;
+                    typedef typename TreeBlockReferenceType<boost::uint64_t , C>::type reference_type;
+                    typedef typename TreeBlockReferenceType<TreeBlockArrayItem<Value, Block>, C>::type item_reference_type;
 
                     static reference_type extract(
                         item_reference_type item, 
@@ -85,11 +85,11 @@ namespace framework {
                 };
 
             template <typename Value, size_t Block, bool C>
-                struct ValueExtractor
+                struct TreeBlockValueExtractor
                 {
                     typedef Value value_type;
-                    typedef typename ReferenceType<Value, C>::type reference_type;
-                    typedef typename ReferenceType<TreeBlockArrayItem<Value, Block>, C>::type item_reference_type;
+                    typedef typename TreeBlockReferenceType<Value, C>::type reference_type;
+                    typedef typename TreeBlockReferenceType<TreeBlockArrayItem<Value, Block>, C>::type item_reference_type;
 
                     static reference_type extract(
                         item_reference_type item, 
@@ -111,10 +111,10 @@ namespace framework {
             public:
                 typedef TreeBlockArrayItem<Value, Block> item_t;
                 typedef Ordered<item_t, typename item_t::Key> ordered_t;
-                typedef typename IteratorType<ordered_t, C>::type item_iter_t;
+                typedef typename TreeBlockIteratorType<ordered_t, C>::type item_iter_t;
                 typedef Extractor<Value, Block, C> extractor_t;
                 typedef typename extractor_t::reference_type reference_type;
-                typedef size_t size_type;
+                typedef boost::uint64_t size_type;
 
                 TreeBlockArrayIterator(
                     item_iter_t iter, 
@@ -186,7 +186,7 @@ namespace framework {
             {
             public:
                 typedef Value value_t;
-                typedef size_t size_type;
+                typedef boost::uint64_t size_type;
                 typedef ptrdiff_t difference_type;
                 typedef value_t & reference;
                 typedef value_t const & const_reference;
@@ -201,9 +201,9 @@ namespace framework {
                 typedef Ordered<item_t, typename item_t::Key> ordered_t;
 
             public:
-                typedef detail::TreeBlockArrayIterator<Value, Block, detail::IndexExtractor, true> index_iterator;
-                typedef detail::TreeBlockArrayIterator<Value, Block, detail::ValueExtractor, true> value_const_iterator;
-                typedef detail::TreeBlockArrayIterator<Value, Block, detail::ValueExtractor, false> value_iterator;
+                typedef detail::TreeBlockArrayIterator<Value, Block, detail::TreeBlockIndexExtractor, true> index_iterator;
+                typedef detail::TreeBlockArrayIterator<Value, Block, detail::TreeBlockValueExtractor, true> value_const_iterator;
+                typedef detail::TreeBlockArrayIterator<Value, Block, detail::TreeBlockValueExtractor, false> value_iterator;
 
             public:
                 TreeBlockArray()
@@ -324,7 +324,7 @@ namespace framework {
 
             private:
                 value_t * get(
-                    size_t index)
+                    size_type index)
                 {
                     typename ordered_t::iterator iter = items_.lower_bound(index);
                     if (iter == items_.end() || iter->index + block_size <= index || iter->index > index) {
@@ -335,7 +335,7 @@ namespace framework {
                 }
 
                 value_t const * get(
-                    size_t index) const
+                    size_type index) const
                 {
                     typename ordered_t::const_iterator iter = items_.lower_bound(index);
                     if (iter == items_.end() || iter->index + block_size <= index) {

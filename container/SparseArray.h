@@ -87,61 +87,82 @@ namespace framework {
                   size_t> 
             {
             public:
-                typedef typename PointerType<SparseArrayItem<Value>, C>::type item_ptr_t;;
+                typedef SparseArrayItem<Value> item_t;
+                typedef typename PointerType<item_t, C>::type item_ptr_t;
                 typedef Extractor<Value, C> extractor_t;
                 typedef typename extractor_t::reference_type reference_type;
                 typedef size_t size_type;
 
                 SparseArrayIterator(
-                    item_ptr_t ptr)
-                    : ptr_(ptr)
+                    item_ptr_t * ptr)
+                    : pptr_(ptr)
                 {
+                }
+
+                SparseArrayIterator(
+                    SparseArrayIterator const & o)
+                    : pptr_(o.pptr_)
+                {
+                    o.pptr_ = NULL;
                 }
 
                 friend class SparseArrayIterator<Value, Extractor, !C>;
 
                 SparseArrayIterator(
                     SparseArrayIterator<Value, Extractor, !C> const & o)
-                    : ptr_(o.ptr_)
+                    : pptr_(conv(o.pptr_))
                 {
+                    o.pptr_ = NULL;
+                }
+
+                ~SparseArrayIterator() {
+                    if (pptr_)
+                        *pptr_ = NULL;
                 }
 
             public:
                 size_type index() const
                 {
-                    return ptr_->index;
+                    return (*pptr_)->index;
                 }
 
                 void increment()
                 {
-                    ++ptr_;
+                    ++*pptr_;
                 }
 
                 void decrement()
                 {
-                    --ptr_;
+                    --*pptr_;
                 }
 
                 void advance(
                     boost::int64_t d)
                 {
-                    ptr_ += d;
+                    *pptr_ += d;
                 }
 
                 reference_type dereference() const
                 {
-                    return extractor_t::extract(*ptr_);
+                    return extractor_t::extract(**pptr_);
                 }
 
                 template <bool C1>
                     bool equal(
                         SparseArrayIterator<Value, Extractor, C1> const & o) const
                     {
-                        return ptr_ == o.ptr_;
+                        return *pptr_ == *o.pptr_;
                     }
 
             private:
-                item_ptr_t ptr_;
+                item_t const ** conv(
+                    item_t ** pptr)
+                {
+                    return (item_t const **)pptr;
+                }
+
+            private:
+                mutable item_ptr_t * pptr_;
             };
 
         } // namespace detail
@@ -180,6 +201,9 @@ namespace framework {
                     } else {
                         items_ = alloc_t::allocate(init_capacity);
                     }
+                    for (int i = 0; i < 4; ++i) {
+                        iter_ptrs_[i] = NULL;
+                    }
                 }
 
                 ~SparseArray()
@@ -204,22 +228,22 @@ namespace framework {
 
                 index_iterator index_begin() const
                 {
-                    return index_iterator(&items_[0]);
+                    return index_iterator(iter_ptr(items_));
                 }
 
                 index_iterator index_end() const
                 {
-                    return index_iterator(&items_[size_]);
+                    return index_iterator(iter_ptr(items_ + size_));
                 }
 
                 value_iterator value_begin()
                 {
-                    return value_iterator(&items_[0]);
+                    return value_iterator(iter_ptr(items_));
                 }
 
                 value_const_iterator value_begin() const
                 {
-                    return value_const_iterator(&items_[0]);
+                    return value_const_iterator(iter_ptr(items_));
                 }
 
                 value_const_iterator value_cbegin() const
@@ -229,12 +253,12 @@ namespace framework {
 
                 value_iterator value_end()
                 {
-                    return value_iterator(&items_[size_]);
+                    return value_iterator(iter_ptr(items_ + size_));
                 }
 
                 value_const_iterator value_end() const
                 {
-                    return value_const_iterator(&items_[size_]);
+                    return value_const_iterator(iter_ptr(items_ + size_));
                 }
 
                 value_const_iterator value_cend() const
@@ -300,10 +324,33 @@ namespace framework {
                 }
 
             private:
+                struct remove_comp
+                {
+                    item_t * item_end_;
+                    item_t ** iter_ptrs_;
+                    remove_comp(item_t * item_end, item_t ** iter_ptrs)
+                    {
+                        item_end_ = item_end;
+                        iter_ptrs_ = iter_ptrs;
+                    }
+                    bool operator()(item_t & item)
+                    {
+                        if (!(item.value == EMPTY))
+                            return false;
+                        for (int i = 0; i < 4; ++i) {
+                            if (iter_ptrs_[i] >= &item && iter_ptrs_[i] < item_end_) {
+                                assert(iter_ptrs_[i] != &item);
+                                --iter_ptrs_[i];
+                            }
+                        }
+                        return true;
+                    }
+                };
+
                 void gc()
                 {
                     item_t * end = items_ + size_;
-                    item_t * ptr = std::remove(items_, end, item_t(0, EMPTY));
+                    item_t * ptr = std::remove_if(items_, end, remove_comp(end, iter_ptrs_));
                     for (; ptr < end; ++ptr) {
                         alloc_t::destroy(ptr);
                         --size_;
@@ -338,10 +385,14 @@ namespace framework {
                         alloc_t::construct(end, item);
                         std::copy_backward(items_ + pos, end, end + 1);
                         items_[pos] = item;
+                        for (int i = 0; i < 4; ++i) {
+                            if (iter_ptrs_[i] >= items_ + pos)
+                                iter_ptrs_[i]++;
+                        }
                     } else {
                         size_t capacity = capacity_ < 4 ? 8 : capacity_ * 2;
                         item_t * items = alloc_t::allocate(capacity);
-                        item_t const * from = items_;
+                        item_t * from = items_;
                         item_t const * mid = items_ + pos;
                         item_t const * end = items_ + size_;
                         item_t * to = items;
@@ -350,6 +401,18 @@ namespace framework {
                         alloc_t::construct(to++, item);
                         for (; from < end; ++from)
                             alloc_t::construct(to++, *from);
+                        for (from = items_; from < end; ++from)
+                            alloc_t::destroy(from);
+                        if (capacity_ > 4)
+                            alloc_t::deallocate(items_, capacity_);
+                        for (int i = 0; i < 4; ++i) {
+                            if (iter_ptrs_[i] < items_)
+                                ;
+                            else if (iter_ptrs_[i] < mid)
+                                iter_ptrs_[i] = items + (iter_ptrs_[i] - items_);
+                            else if (iter_ptrs_[i] < end)
+                                iter_ptrs_[i] = items + (iter_ptrs_[i] - items_) + 1;
+                        }
                         items_ = items;
                         capacity_ = capacity;
                     }
@@ -375,12 +438,31 @@ namespace framework {
                     return items_[i];
                 }
 
+                item_t const ** iter_ptr(
+                    item_t const * item) const
+                {
+                    return (item_t const **)iter_ptr((item_t *)item);
+                }
+
+                item_t ** iter_ptr(
+                    item_t * item) const
+                {
+                    for (int i = 0; i < 4; ++i)
+                        if (iter_ptrs_[i] == NULL) {
+                            iter_ptrs_[i] = item;
+                            return iter_ptrs_ + i;
+                        }
+                    assert(false);
+                    return NULL;
+                }
+
             private:
                 size_t capacity_;
                 size_t size_;
                 size_t dirty_;
                 item_t * items_;
                 char qbuf_[sizeof(item_t) * 4];
+                mutable item_t * iter_ptrs_[4];
                 static value_t const EMPTY;
             };
 
