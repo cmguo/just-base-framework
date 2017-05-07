@@ -50,6 +50,12 @@ namespace detail
             memset(array_, 0, sizeof(array_));
         }
 
+        ~Array()
+        {
+            for (int i = 0; i < ITEM_COUNT; ++i)
+                free(array_[i]);
+        }
+        
         bool is_live() const
         {
             return live_ + full_;
@@ -418,6 +424,12 @@ namespace detail
                 memset(array_, 0, sizeof(array_));
         }
 
+        ~Array()
+        {
+            if (boost::is_pod<elem_t>::value)
+                memset(array_, 0, sizeof(array_));
+        }
+
         bool is_live() const
         {
             return live_ + full_;
@@ -490,11 +502,11 @@ namespace detail
                 ptr_ = ptr;
             }
 
-            void clear()
+            void reset()
             {
                 ptr_ = NULL;
             }
-
+            
         protected:
             base_t n_;
 
@@ -936,7 +948,7 @@ public:
         size_t level, 
         size_type from, 
         size_type to, 
-        boost::dynamic_bitset<boost::uint32_t> & map)
+        boost::dynamic_bitset<boost::uint32_t> & map) const
     {
         array_->get_full_map(level, from, to, map);
     }
@@ -955,6 +967,11 @@ public:
         return array_->nset(level, index);
     }
 
+    array_t & array()
+    {
+        return *array_;
+    }
+    
 private:
     template <bool C>
     friend class Iterator;
