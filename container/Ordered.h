@@ -258,6 +258,14 @@ namespace framework
                 empty_initialize();
             }
 
+            template <typename Destructor>
+            void clear(
+                Destructor const & destructor)
+            {
+                delete_all_nodes(root(), destructor);
+                empty_initialize();
+            }
+
             template<typename CompatibleKey>
             iterator find(
                 const CompatibleKey & x) const
@@ -604,6 +612,19 @@ namespace framework
                         return link_point(k, inf, ordered_non_unique_tag());
                     }
                 }
+            }
+
+            template <typename Destructor>
+            void delete_all_nodes(
+                pointer x, 
+                Destructor const & destructor)
+            {
+                if (!x)
+                    return;
+                delete_all_nodes(x->left(), destructor);
+                delete_all_nodes(x->right(), destructor);
+                x->unlink();
+                destructor(x);
             }
 
             void delete_all_nodes(
