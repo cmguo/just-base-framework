@@ -322,26 +322,34 @@ namespace framework {
                     }
                 }
 
+
+            ordered_t & items()
+            {
+                return items_;
+            }
+
             private:
                 value_t * get(
                     size_type index)
                 {
-                    typename ordered_t::iterator iter = items_.lower_bound(index);
-                    if (iter == items_.end() || iter->index + block_size <= index || iter->index > index) {
-                        iter = items_.insert(iter, new item_t(index / block_size * block_size)).first;
+                    size_type index2 = index / block_size * block_size;
+                    typename ordered_t::iterator iter = items_.find(index2);
+                    if (iter == items_.end()) {
+                        iter = items_.insert(iter, new item_t(index2)).first;
                     }
                     item_t & item = const_cast<item_t &>(*iter);
-                    return &item.values[index - item.index];
+                    return &item.values[index - index2];
                 }
 
                 value_t const * get(
                     size_type index) const
                 {
-                    typename ordered_t::const_iterator iter = items_.lower_bound(index);
-                    if (iter == items_.end() || iter->index + block_size <= index) {
+                    size_type index2 = index / block_size * block_size;
+                    typename ordered_t::const_iterator iter = items_.find(index2);
+                    if (iter == items_.end()) {
                         return NULL;
                     }
-                    return &iter->values[index - iter->index];
+                    return &iter->values[index - index2];
                 }
 
             private:
