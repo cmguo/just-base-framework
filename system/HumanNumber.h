@@ -33,6 +33,12 @@ namespace framework
             {
             }
  
+            HumanNumber(
+                std::string const & str)
+            {
+                from_string(str);
+            }
+ 
         public:
             operator _Ty() const
             {
