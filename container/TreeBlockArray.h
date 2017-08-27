@@ -202,8 +202,8 @@ namespace framework {
 
             public:
                 typedef detail::TreeBlockArrayIterator<Value, Block, detail::TreeBlockIndexExtractor, true> index_iterator;
-                typedef detail::TreeBlockArrayIterator<Value, Block, detail::TreeBlockValueExtractor, true> value_const_iterator;
-                typedef detail::TreeBlockArrayIterator<Value, Block, detail::TreeBlockValueExtractor, false> value_iterator;
+                typedef detail::TreeBlockArrayIterator<Value, Block, detail::TreeBlockValueExtractor, true> const_iterator;
+                typedef detail::TreeBlockArrayIterator<Value, Block, detail::TreeBlockValueExtractor, false> iterator;
 
             public:
                 TreeBlockArray()
@@ -236,34 +236,101 @@ namespace framework {
                     return index_iterator(items_.end());
                 }
 
-                value_iterator value_begin()
+                iterator begin()
                 {
-                    return value_iterator(items_.begin());
+                    return iterator(items_.begin());
                 }
 
-                value_const_iterator value_begin() const
+                const_iterator begin() const
                 {
-                    return value_const_iterator(items_.begin());
+                    return const_iterator(items_.begin());
                 }
 
-                value_const_iterator value_cbegin() const
+                const_iterator cbegin() const
                 {
-                    return value_begin();
+                    return begin();
                 }
 
-                value_iterator value_end()
+                iterator end()
                 {
-                    return value_iterator(items_.end());
+                    return iterator(items_.end());
                 }
 
-                value_const_iterator value_end() const
+                const_iterator end() const
                 {
-                    return value_const_iterator(items_.end());
+                    return const_iterator(items_.end());
                 }
 
-                value_const_iterator value_cend() const
+                const_iterator cend() const
                 {
-                    return value_end();
+                    return end();
+                }
+
+            public:
+                iterator find(
+                    size_type index)
+                {
+                    size_type index2 = index / block_size * block_size;
+                    index -= index2;
+                    typename ordered_t::iterator iter = items_.find(index2);
+                    if (iter == items_.end())
+                        index = 0;
+                    return iterator(iter, index);
+                }
+
+                const_iterator find(
+                    size_type index) const
+                {
+                    size_type index2 = index / block_size * block_size;
+                    index -= index2;
+                    typename ordered_t::iterator iter = items_.find(index2);
+                    if (iter == items_.end())
+                        index = 0;
+                    return const_iterator(iter, index);
+                }
+
+                iterator lower_bound(
+                    size_type index)
+                {
+                    size_type index2 = index / block_size * block_size;
+                    index -= index2;
+                    typename ordered_t::iterator iter = items_.lower_bound(index2);
+                    if (iter == items_.end() || iter->index != index2)
+                        index = 0;
+                    return iterator(iter, index);
+                }
+
+                const_iterator lower_bound(
+                    size_type index) const
+                {
+                    size_type index2 = index / block_size * block_size;
+                    index -= index2;
+                    typename ordered_t::iterator iter = items_.lower_bound(index2);
+                    if (iter == items_.end() || iter->index != index2)
+                        index = 0;
+                    return const_iterator(iter, index);
+                }
+
+                iterator upper_bound(
+                    size_type index)
+                {
+                    size_type index2 = index / block_size * block_size;
+                    index -= index2;
+                    typename ordered_t::iterator iter = items_.upper_bound(index2);
+                    if (iter == items_.end() || iter->index != index2)
+                        index = 0;
+                    return iterator(iter, index);
+                }
+
+                const_iterator upper_bound(
+                    size_type index) const
+                {
+                    size_type index2 = index / block_size * block_size;
+                    index -= index2;
+                    typename ordered_t::iterator iter = items_.upper_bound(index2);
+                    if (iter == items_.end() || iter->index != index2)
+                        index = 0;
+                    return const_iterator(iter, index);
                 }
 
             public:
