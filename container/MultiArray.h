@@ -160,7 +160,6 @@ namespace detail
             std::cout << pre << "full: " << (int)full_ << std::endl;
             pre -= 2;
             index_t m = bitf_t::get(n);
-            if (m == 0) m = ITEM_COUNT;
             for (index_t i = 0; i < m; ++i) {
                 std::cout << pre << "item " << (int)i << ": " << (void *)array_[i] << std::endl;
                 if (array_[i])
@@ -349,7 +348,8 @@ namespace detail
                 ptr_t & ptr(array_[i]);
                 if (ptr) {
                     if (ptr->is_full()) --full_;
-                    free(ptr);
+                    if (!ptr->is_live())
+                        free(ptr);
                 }
             }
             if (bitf_t::get_sub(t)) {
@@ -906,7 +906,7 @@ public:
         size_type index) const
     {
         assert(index < size_);
-        elem_t const * elem(array_->get(index));
+        elem_t const * elem(const_cast<array_t const *>(array_)->get(index));
         return elem ? *elem : elem_;
     }
 

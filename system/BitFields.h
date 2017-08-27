@@ -59,7 +59,7 @@ namespace system {
             return BF_RESULT((n & BF_MASK) >> BF_SHIFT);
         }
 
-        static BF_RESULT get_all(
+        static BF_RESULT_ALL get_all(
             BF_BASE_TYPE n)
         {
             return BF_RESULT_ALL(n & BF_MASK_ALL);
